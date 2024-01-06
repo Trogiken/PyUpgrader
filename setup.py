@@ -12,4 +12,9 @@ setup(
     description='Python library that allows the version of a program to be updated.',
     packages=['pyupdate'],
     install_requires=requirements,
+    entry_points={
+        'console_scripts': [
+            'pyupdate=pyupdate.main:cli'
+        ]
+    },
 )
