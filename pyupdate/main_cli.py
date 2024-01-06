@@ -11,7 +11,3 @@ def cli():
 
     if args.test:
         print("Test")
-
-
-def main():
-    print("Main Function")

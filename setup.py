@@ -14,7 +14,7 @@ setup(
     install_requires=requirements,
     entry_points={
         'console_scripts': [
-            'pyupdate=pyupdate.main:cli'
+            'pyupdate=pyupdate.main_cli:cli'
         ]
     },
 )
