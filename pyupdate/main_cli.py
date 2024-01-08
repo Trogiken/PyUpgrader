@@ -14,5 +14,5 @@ def cli():
         print(f'Folder "{args.folder}" does not exist')
         sys.exit(1)
     
-    builder = Builder(args.folder)
+    builder = Builder(args.folder, args.exclude)
     builder.build()
