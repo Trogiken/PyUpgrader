@@ -1,5 +1,5 @@
 import pyupdate.hashing as hashing
-import pyupdate.build as build
+from pyupdate.build import Builder
 
 
 def info():
