@@ -33,23 +33,13 @@ class PathError(Exception):
 
 class Builder:
     """Builds a project into a pyupdate project"""
-    def __init__(self, folder_path, exclude_paths=[]):
-        self.folder_path = folder_path
-        self.exclude_paths = exclude_paths
-        # Remove trailing slashes
-        if self.folder_path.endswith('/'):
-            self.folder_path = self.folder_path[:-1]
-        if self.folder_path.endswith('\\'):
-            self.folder_path = self.folder_path[:-1]
-        for i, path in enumerate(self.exclude_paths):
-            if path.endswith('/'):
-                self.exclude_paths[i] = path[:-1]
-            if path.endswith('\\'):
-                self.exclude_paths[i] = path[:-1]
+    def __init__(self):
+        self.folder_path = None
+        self.exclude_paths = None
 
-        self.pyudpdate_folder = os.path.join(folder_path, '.pyupdate')
-        self.config_path = os.path.join(self.pyudpdate_folder, 'config.yaml')
-        self.hash_db_path = os.path.join(self.pyudpdate_folder, 'hashes.db')
+        self._pyudpdate_folder = None
+        self._config_path = None
+        self._hash_db_path = None
 
         self.default_config_data = """\
 # Config file for pyupdate, attributes marked with a * are changable by the user
@@ -63,16 +53,13 @@ description: "Description of the project"
 # Name of the hash database file
 hash_db_name: hashes.db
 """
-    
+
     def build(self):
         """Builds a project into a pyupdate project"""
-        if not os.path.exists(self.folder_path):
-            raise FileNotFoundError(f'Folder "{self.folder_path}" does not exist')
-        else:
-            print(f'Building project from "{self.folder_path}"')
-        if self.folder_path in self.exclude_paths:
-            raise PathError(f'Folder path cannot be excluded')
-        
+        self._validate_paths()
+
+        print('Building project...')
+
         try:
             self._create_pyupdate_folder()
         except Exception as error:
@@ -89,29 +76,56 @@ hash_db_name: hashes.db
             raise HashDBError(f'Failed to create hash database | {error}')
 
         print('Done!')
-        print(f'Project built at "{self.pyudpdate_folder}"')
+        print(f'Project built at "{self._pyudpdate_folder}"')
+    
+    def _validate_paths(self):
+        """Validates and set paths"""
+        if self.folder_path is None:
+            raise BuildError('Folder path not set')
+        if self.exclude_paths is None:
+            raise BuildError('Exclude paths not set')
+
+        if not os.path.exists(self.folder_path):
+            raise FileNotFoundError(f'Folder "{self.folder_path}" does not exist')
+        if self.folder_path in self.exclude_paths:
+            raise PathError(f'Folder path cannot be excluded')
+        
+        # Remove trailing slashes
+        if self.folder_path.endswith('/'):
+            self.folder_path = self.folder_path[:-1]
+        if self.folder_path.endswith('\\'):
+            self.folder_path = self.folder_path[:-1]
+        for i, path in enumerate(self.exclude_paths):
+            if path.endswith('/'):
+                self.exclude_paths[i] = path[:-1]
+            if path.endswith('\\'):
+                self.exclude_paths[i] = path[:-1]
+        
+        self._pyudpdate_folder = os.path.join(self.folder_path, '.pyupdate')
+        self._config_path = os.path.join(self._pyudpdate_folder, 'config.yaml')
+        self._hash_db_path = os.path.join(self._pyudpdate_folder, 'hashes.db')
     
     def _create_pyupdate_folder(self):
         """Creates the .pyupdate folder"""
-        if os.path.exists(self.pyudpdate_folder):
-            print(f'Folder "{self.pyudpdate_folder}" already exists')
+        if os.path.exists(self._pyudpdate_folder):
+            print(f'Folder "{self._pyudpdate_folder}" already exists')
             print('Deleting folder')
-            shutil.rmtree(self.pyudpdate_folder)
+            shutil.rmtree(self._pyudpdate_folder)
 
-        print(f'Creating folder at "{self.pyudpdate_folder}"')
-        os.mkdir(self.pyudpdate_folder)
+        print(f'Creating folder at "{self._pyudpdate_folder}"')
+        os.mkdir(self._pyudpdate_folder)
     
     def _create_config_file(self):
         """Creates the config file"""
-        print(f'Creating config file at "{self.config_path}"')
-        with open(self.config_path, 'w') as f:
+        print(f'Creating config file at "{self._config_path}"')
+        with open(self._config_path, 'w') as f:
             f.write(self.default_config_data)
         
         # Validate config file
-        print(yaml.safe_load(self.config_path))
+        print(yaml.safe_load(self._config_path))
     
     def _create_hash_db(self):
         """Creates the hash database"""
-        print(f'Creating hash database at "{self.hash_db_path}"')
-        exclude_paths = [".pyupdate"] + self.exclude_paths
-        hashing.create_hash_db(self.folder_path, self.hash_db_path, exclude_paths)
+        print(f'Creating hash database at "{self._hash_db_path}"')
+        excluded_paths = [".pyupdate"] + self.exclude_paths
+        hashing.create_hash_db(self.folder_path, self._hash_db_path, excluded_paths)
