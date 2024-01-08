@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import patch
-from .. import pyupdate
-from ..pyupdate.build import PathError
+import pyupdate
+from pyupdate.build import PathError
 
 
 class BuildTestCase(unittest.TestCase):
