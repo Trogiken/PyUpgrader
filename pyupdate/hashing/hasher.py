@@ -38,7 +38,7 @@ def create_hash(file_path: str) -> Tuple[str, str]:
         return file_path, '?'
 
 
-def create_hash_db(hash_dir_path: str, db_save_path: str, exclude_dirs=[]) -> int:
+def create_hash_db(hash_dir_path: str, db_save_path: str, exclude_paths=[]) -> int:
     """Create a hash database from a directory path and save it to a file path. Return the file path and number of files hashed."""
     if os.path.exists(db_save_path):
         print(f"\nHash database already exists at '{db_save_path}'\nDelete it? (y/n)\n")
@@ -74,7 +74,7 @@ def create_hash_db(hash_dir_path: str, db_save_path: str, exclude_dirs=[]) -> in
     with Pool() as pool:
         start_time = time.time()  # Start timer
         for root, _, files in os.walk(hash_dir_path):
-            if any(excluded_dir in root for excluded_dir in exclude_dirs):
+            if any(excluded_dir in root for excluded_dir in exclude_paths):
                 continue
 
             file_paths = [os.path.join(root, file) for file in files]

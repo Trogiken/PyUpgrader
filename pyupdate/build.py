@@ -23,8 +23,9 @@ class HashDBError(Exception):
 
 class Builder:
     """Builds a project into a pyupdate project"""
-    def __init__(self, folder_path):
+    def __init__(self, folder_path, exclude_paths=[]):
         self.folder_path = folder_path
+        self.exclude_paths = exclude_paths
         self.pyudpdate_folder = os.path.join(folder_path, '.pyupdate')
         self.config_path = os.path.join(self.pyudpdate_folder, 'config.yaml')
         self.hash_db_path = os.path.join(self.pyudpdate_folder, 'hashes.db')
@@ -72,8 +73,7 @@ hash_db_name: hashes.db
         if os.path.exists(self.pyudpdate_folder):
             print(f'Folder "{self.pyudpdate_folder}" already exists')
             print('Deleting folder')
-            # shutil.rmtree(self.pyudpdate_folder)
-            os.rmdir(self.pyudpdate_folder)
+            shutil.rmtree(self.pyudpdate_folder)
 
         print(f'Creating folder at "{self.pyudpdate_folder}"')
         os.mkdir(self.pyudpdate_folder)
@@ -90,4 +90,5 @@ hash_db_name: hashes.db
     def _create_hash_db(self):
         """Creates the hash database"""
         print(f'Creating hash database at "{self.hash_db_path}"')
-        hashing.create_hash_db(self.folder_path, self.hash_db_path, exclude_dirs=['.pyupdate'])
+        exclude_paths = [".pyupdate"] + self.exclude_paths
+        hashing.create_hash_db(self.folder_path, self.hash_db_path, exclude_paths)
