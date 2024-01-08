@@ -121,8 +121,16 @@ hash_db_name: hashes.db
         with open(self._config_path, 'w') as f:
             f.write(self.default_config_data)
         
-        # Validate config file
-        print(yaml.safe_load(self._config_path))
+        # Validate yaml file by loading it
+        with open(self._config_path, 'r') as f:
+            data = yaml.safe_load(f)
+
+            if 'version' not in data:
+                raise ConfigError('Missing "version" attribute')
+            if 'description' not in data:
+                raise ConfigError('Missing "description" attribute')
+            if 'hash_db_name' not in data:
+                raise ConfigError('Missing "hash_db_name" attribute')
     
     def _create_hash_db(self):
         """Creates the hash database"""
