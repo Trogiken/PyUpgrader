@@ -74,10 +74,15 @@ def create_hash_db(hash_dir_path: str, db_save_path: str, exclude_paths=[]) -> i
     with Pool() as pool:
         start_time = time.time()  # Start timer
         for root, _, files in os.walk(hash_dir_path):
-            if any(excluded_dir in root for excluded_dir in exclude_paths):
+            if root in exclude_paths:
                 continue
 
             file_paths = [os.path.join(root, file) for file in files]
+            if exclude_paths:
+                for path in exclude_paths:
+                    if path in file_paths:
+                        file_paths.remove(path)
+            
             results = pool.map(create_hash, file_paths)  # Use workers to create hashes
             batch_data.extend(results)
 
