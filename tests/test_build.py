@@ -2,11 +2,11 @@ import unittest
 import os
 import shutil
 import yaml
-from pyupdate.build import Builder, BuildError, FolderCreationError, ConfigError, HashDBError, PathError
+import pyupdate
 
 class TestBuilder(unittest.TestCase):
     def setUp(self):
-        self.builder = Builder()
+        self.builder = pyupdate.build.Builder()
         self.builder.folder_path = 'test_project'
         self.builder.exclude_paths = ['test_project/exclude']
 
@@ -22,12 +22,12 @@ class TestBuilder(unittest.TestCase):
 
     def test_build_folder_path_not_set(self):
         self.builder.folder_path = None
-        with self.assertRaises(BuildError):
+        with self.assertRaises(pyupdate.BuildError):
             self.builder.build()
 
     def test_build_exclude_paths_not_set(self):
         self.builder.exclude_paths = None
-        with self.assertRaises(BuildError):
+        with self.assertRaises(pyupdate.build.BuildError):
             self.builder.build()
 
     def test_build_folder_not_exist(self):
@@ -37,21 +37,21 @@ class TestBuilder(unittest.TestCase):
 
     def test_build_exclude_folder_path(self):
         self.builder.exclude_paths = ['test_project']
-        with self.assertRaises(PathError):
+        with self.assertRaises(pyupdate.build.PathError):
             self.builder.build()
 
     def test_build_folder_already_exists(self):
         os.mkdir('test_project/.pyupdate')
-        with self.assertRaises(FolderCreationError):
+        with self.assertRaises(pyupdate.build.FolderCreationError):
             self.builder.build()
 
     def test_build_config_file_creation_error(self):
         self.builder.default_config_data = "invalid_yaml"
-        with self.assertRaises(ConfigError):
+        with self.assertRaises(pyupdate.build.ConfigError):
             self.builder.build()
 
     def test_build_hash_db_creation_error(self):
-        with self.assertRaises(HashDBError):
+        with self.assertRaises(pyupdate.build.HashDBError):
             self.builder.build()
 
     def test_validate_paths(self):
