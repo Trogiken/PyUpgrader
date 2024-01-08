@@ -1,7 +1,7 @@
 import argparse
 import os
 import sys
-from pyupdate.build import Builder, BuildError
+from pyupdate.build import Builder
 
 
 def cli():
@@ -14,10 +14,7 @@ def cli():
         print(f'Folder "{args.folder}" does not exist')
         sys.exit(1)
     
-    try:
-        builder = Builder()
-        builder.folder_path = args.folder
-        builder.exclude_paths = args.exclude
-        builder.build()
-    except Exception as error:
-        raise BuildError(error)
+    builder = Builder()
+    builder.folder_path = args.folder
+    builder.exclude_paths = args.exclude
+    builder.build()
