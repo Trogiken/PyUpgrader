@@ -1,32 +1,82 @@
 import unittest
-from unittest.mock import patch
-import pyupdate
-from pyupdate.build import PathError
+import os
+import shutil
+import yaml
+from pyupdate.build import Builder, BuildError, FolderCreationError, ConfigError, HashDBError, PathError
 
-
-class BuildTestCase(unittest.TestCase):
+class TestBuilder(unittest.TestCase):
     def setUp(self):
-        self.build = pyupdate.Builder('/path/to/project')
+        self.builder = Builder()
+        self.builder.folder_path = 'test_project'
+        self.builder.exclude_paths = ['test_project/exclude']
 
-    def test_build_existing_folder(self):
-        with patch('os.path.exists', return_value=True):
-            with patch('Build._create_pyupdate_folder') as mock_create_folder:
-                with patch('Build._create_config_file') as mock_create_config:
-                    with patch('Build._create_hash_db') as mock_create_hash_db:
-                        self.build.build()
-                        mock_create_folder.assert_called_once()
-                        mock_create_config.assert_called_once()
-                        mock_create_hash_db.assert_called_once()
+    def tearDown(self):
+        if os.path.exists('test_project'):
+            shutil.rmtree('test_project')
 
-    def test_build_non_existing_folder(self):
-        with patch('os.path.exists', return_value=False):
-            with self.assertRaises(FileNotFoundError):
-                self.build.build()
+    def test_build_success(self):
+        self.builder.build()
+        self.assertTrue(os.path.exists('test_project/.pyupdate'))
+        self.assertTrue(os.path.exists('test_project/.pyupdate/config.yaml'))
+        self.assertTrue(os.path.exists('test_project/.pyupdate/hashes.db'))
 
-    def test_build_excluded_folder(self):
-        self.build.exclude_paths.append('/path/to/project')
+    def test_build_folder_path_not_set(self):
+        self.builder.folder_path = None
+        with self.assertRaises(BuildError):
+            self.builder.build()
+
+    def test_build_exclude_paths_not_set(self):
+        self.builder.exclude_paths = None
+        with self.assertRaises(BuildError):
+            self.builder.build()
+
+    def test_build_folder_not_exist(self):
+        self.builder.folder_path = 'nonexistent_folder'
+        with self.assertRaises(FileNotFoundError):
+            self.builder.build()
+
+    def test_build_exclude_folder_path(self):
+        self.builder.exclude_paths = ['test_project']
         with self.assertRaises(PathError):
-            self.build.build()
+            self.builder.build()
+
+    def test_build_folder_already_exists(self):
+        os.mkdir('test_project/.pyupdate')
+        with self.assertRaises(FolderCreationError):
+            self.builder.build()
+
+    def test_build_config_file_creation_error(self):
+        self.builder.default_config_data = "invalid_yaml"
+        with self.assertRaises(ConfigError):
+            self.builder.build()
+
+    def test_build_hash_db_creation_error(self):
+        with self.assertRaises(HashDBError):
+            self.builder.build()
+
+    def test_validate_paths(self):
+        self.builder.folder_path = 'test_project/'
+        self.builder.exclude_paths = ['test_project/exclude/']
+        self.builder._validate_paths()
+        self.assertEqual(self.builder.folder_path, 'test_project')
+        self.assertEqual(self.builder.exclude_paths, ['test_project/exclude'])
+
+    def test_create_pyupdate_folder(self):
+        self.builder._create_pyupdate_folder()
+        self.assertTrue(os.path.exists('test_project/.pyupdate'))
+
+    def test_create_config_file(self):
+        self.builder._create_config_file()
+        self.assertTrue(os.path.exists('test_project/.pyupdate/config.yaml'))
+        with open('test_project/.pyupdate/config.yaml', 'r') as f:
+            config_data = yaml.safe_load(f)
+        self.assertEqual(config_data['version'], '0.0.0')
+        self.assertEqual(config_data['description'], 'Description of the project')
+        self.assertEqual(config_data['hash_db_name'], 'hashes.db')
+
+    def test_create_hash_db(self):
+        self.builder._create_hash_db()
+        self.assertTrue(os.path.exists('test_project/.pyupdate/hashes.db'))
 
 if __name__ == '__main__':
     unittest.main()
