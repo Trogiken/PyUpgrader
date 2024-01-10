@@ -57,7 +57,7 @@ class Config:
                 print(f"{key}: {value}")
                 print()
     
-    def _valid_config(self, config: dict) -> tuple(bool, str):
+    def _valid_config(self, config: dict) -> (bool, str):
         """Validate the config"""
         if 'version' not in config:
             return False, 'Missing "version" attribute'
