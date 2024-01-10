@@ -6,6 +6,7 @@ class GitManager:
     """Class for managing web requests"""
     def __init__(self, url: str):
         self._url = url
+        self._hash_db = None # TODO
         self._config_man = helper.Config()
     
     def get_request(self, url: str) -> requests.Response:
@@ -27,4 +28,4 @@ class GitManager:
         """Get the config file from the url"""
         response = self.get_request(self._url)
         # TODO load this with the config manager and return as dict
-        raise NotImplementedError
+        self._config_man.load_config(response.text)
