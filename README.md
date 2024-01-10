@@ -1,2 +1,18 @@
 # PyUpdate
+
 Python library to keep projects updated on clients machines
+
+## Help/Information
+
+PyUpdate has built in help classes that contain information about attributes and functions
+
+### Example
+
+``` python
+from pyupdate.utilities import helper
+
+config_help = helper.Config()
+config_help.display_info()
+```
+
+This example of the Config helper class will show information about config attributes.
