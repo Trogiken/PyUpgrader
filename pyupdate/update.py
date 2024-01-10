@@ -1,14 +1,15 @@
 import os
 import requests
 import tempfile
-from pyupdate.utilities import helper
+from pyupdate.utilities import helper, GitManager
 
 
 class UpdateManager:
     """Class for managing updates for a program."""
-    def __init__(self, url: str, project_path: str):
-        self._url = url
-        self._project_path = project_path
+    def __init__(self, url: str, branch: str, project_path: str):
+        self.url = url
+        self.branch = branch
+        self.project_path = project_path
         self._pyupdate_path = os.path.join(self._project_path, '.pyupdate')
         self._config_path = os.path.join(self._pyupdate_path, 'config.yml')
         self._hash_db_path = None  # Set in _validate_attributes
@@ -16,16 +17,7 @@ class UpdateManager:
         self._validate_attributes()
 
         self._config_man = helper.Config()
-        
-        if self._update_ready():
-            pass
-
-    def _update_ready(self) -> bool:
-        """Check if there has been an update downloaded"""
-        config_data = self._config_man.load_config(self._config_path)
-        if config_data['update_path']:
-            return True
-        return False
+        self._git_man = GitManager(self.url, self.branch)
     
     def _validate_attributes(self):
         """Validate and set attributes of the class"""
@@ -50,3 +42,7 @@ class UpdateManager:
         # do not use context manager
         # will have to manually delete folder
         pass
+
+    def TEST_print_config(self):
+        """Prints the config file"""
+        return self._git_man.get_config()
