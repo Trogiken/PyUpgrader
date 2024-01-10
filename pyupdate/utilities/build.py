@@ -2,7 +2,7 @@
 
 import os
 import shutil
-import ruamel.yaml as ruamel
+import yaml
 import pyupdate.utilities.hashing as hashing
 
 
@@ -107,16 +107,16 @@ class Builder:
         print(f'Creating config file at "{self._config_path}"')
 
         with open(os.path.join(os.path.dirname(__file__), 'default.yml'), 'r') as default_yaml:
-            default_data = ruamel.round_trip_load(default_yaml)
+            default_data = yaml.safe_load(default_yaml)
 
         default_data['hash_db'] = os.path.basename(self._hash_db_path)
 
         with open(self._config_path, 'w') as config_file:
-            ruamel.round_trip_dump(default_data, config_file)
+            yaml.safe_dump(default_data, config_file)
         
         # Validate yaml file
         with open(self._config_path, 'r') as f:
-            yaml_check = ruamel.safe_load(f)
+            yaml_check = yaml.safe_load(f)
 
         if 'version' not in yaml_check:
             raise ConfigError('Missing "version" attribute')

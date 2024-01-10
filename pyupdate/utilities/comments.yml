@@ -1,0 +1,13 @@
+# Comments related to the default yaml file
+
+version: |
+  Dynamic - The version of the project, uses the packing.version module
+
+description: |
+  Dynamic - Description of the this version of the project
+
+hash_db: |
+  Static - Name of the database file
+
+has_update: |
+  Static - Whether or not the program has downloaded an update
