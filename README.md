@@ -2,6 +2,8 @@
 
 Python library to keep projects updated on clients machines
 
+**Pip Install:** `pip install git+https://github.com/Trogiken/PyUpdate`
+
 ## Help/Information
 
 PyUpdate has built in help classes that contain information about attributes and functions
