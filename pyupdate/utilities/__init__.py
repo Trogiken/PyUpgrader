@@ -1,2 +1,2 @@
-import utilities.hashing as hashing
-from utilities.build import Builder
+import pyupdate.utilities.hashing as hashing
+from pyupdate.utilities.build import Builder
