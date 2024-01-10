@@ -4,6 +4,6 @@ version: 0.0.0
 
 description: "Description of the project"
 
-hash_db: hashes.db
+hash_db: ""
 
-has_update: false
+update_path: ""

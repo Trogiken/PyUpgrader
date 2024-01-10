@@ -9,5 +9,5 @@ description: |
 hash_db: |
   Static - Name of the database file
 
-has_update: |
-  Static - Whether or not the program has downloaded an update
+update_path: |
+  Static - Path to the updated files
