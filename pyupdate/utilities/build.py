@@ -106,7 +106,7 @@ class Builder:
         """Creates the config file"""
         print(f'Creating config file at "{self._config_path}"')
 
-        with open(os.path.join(os.path.dirname(__file__), 'utilities', 'default.yml'), 'r') as default_yaml:
+        with open(os.path.join(os.path.dirname(__file__), 'default.yml'), 'r') as default_yaml:
             default_data = yaml.safe_load(default_yaml)
 
         default_data['hash_db'] = os.path.basename(self._hash_db_path)

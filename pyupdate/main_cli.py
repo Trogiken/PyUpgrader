@@ -1,7 +1,8 @@
 import argparse
 import os
 import sys
-from pyupdate.build import Builder, BuildError
+import pyupdate.utilities as util
+from pyupdate.utilities.build import BuildError
 
 
 def cli():
@@ -15,7 +16,7 @@ def cli():
         sys.exit(1)
     
     try:
-        builder = Builder()
+        builder = util.Builder()
         builder.folder_path = args.folder
         builder.exclude_paths = args.exclude
         builder.build()
