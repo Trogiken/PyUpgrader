@@ -50,4 +50,3 @@ class UpdateManager:
         # do not use context manager
         # will have to manually delete folder
         pass
-
