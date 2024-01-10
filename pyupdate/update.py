@@ -41,7 +41,7 @@ class UpdateManager:
             raise FileNotFoundError(self.config_path)
         
         config_data = self._config_man.load_config(self.config_path)
-        self.hash_db_path = os.path.join(self._pyupdate_path, config_data['hash_db'])
+        self._hash_db_path = os.path.join(self._pyupdate_path, config_data['hash_db'])
 
         if not os.path.exists(self.hash_db_path):
             raise FileNotFoundError(self.hash_db_path)
