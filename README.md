@@ -11,7 +11,7 @@ Importing pyupdate and initialize the UpdateManager object.
 ``` python
 import pyupdate
 
-update_man = pyupdate.UpdateManager("https://api.github.com/repos/{owner}/{repo}/contents/{path/to/.pyupdate}", {branch}, "path/to/project/folder")
+update_man = pyupdate.UpdateManager(r"https://api.github.com/repos/{owner}/{repo}/contents/{path/to/.pyupdate}", r"{branch}", r"path/to/project/folder")
 ```
 
 Replace the temporary url names `{}` with your repositories information.
