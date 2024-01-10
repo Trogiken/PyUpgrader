@@ -24,7 +24,7 @@ class Config:
             is_valid, error = self._valid_config(data)
             if not is_valid:
                 raise ValueError(error)
-            return yaml.safe_load(config_file)
+            return data
     
     def write_config(self, path: str, data: dict) -> None:
         """Dump data to yaml file at path"""
@@ -60,12 +60,12 @@ class Config:
     def _valid_config(self, config: dict) -> tuple(bool, str):
         """Validate the config"""
         if 'version' not in config:
-            return (False, 'Missing "version" attribute')
+            return False, 'Missing "version" attribute'
         if 'description' not in config:
-            return (False, 'Missing "description" attribute')
+            return False, 'Missing "description" attribute'
         if 'hash_db' not in config:
-            return (False, 'Missing "hash_db" attribute')
+            return False, 'Missing "hash_db" attribute'
         if 'update_path' not in config:
-            return (False, 'Missing "update_path" attribute')
+            return False, 'Missing "update_path" attribute'
 
-        return (True, "")
+        return True, ""
