@@ -1,6 +1,3 @@
-import pyupdate.utilities as util
-
-
 def info():
     info =  {
         "name": "PyUpdate",
