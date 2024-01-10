@@ -1,0 +1,9 @@
+# Config file for pyupdate
+
+version: 0.0.0
+
+description: "Description of the project"
+
+hash_db: ""
+
+update_path: ""
