@@ -41,19 +41,6 @@ class Builder:
         self._config_path = None
         self._hash_db_path = None
 
-        self.default_config_data = """\
-# Config file for pyupdate, attributes marked with a * are changable by the user
-
-# The version of the project, uses the packing.version module *
-version: 0.0.0
-
-# Description of the current version of the project *
-description: "Description of the project"
-
-# Name of the hash database file
-hash_db_name: hashes.db
-"""
-
     def build(self):
         """Builds a project into a pyupdate project"""
         self._validate_paths()
@@ -118,19 +105,27 @@ hash_db_name: hashes.db
     def _create_config_file(self):
         """Creates the config file"""
         print(f'Creating config file at "{self._config_path}"')
-        with open(self._config_path, 'w') as f:
-            f.write(self.default_config_data)
-        
-        # Validate yaml file by loading it
-        with open(self._config_path, 'r') as f:
-            data = yaml.safe_load(f)
 
-            if 'version' not in data:
-                raise ConfigError('Missing "version" attribute')
-            if 'description' not in data:
-                raise ConfigError('Missing "description" attribute')
-            if 'hash_db_name' not in data:
-                raise ConfigError('Missing "hash_db_name" attribute')
+        with open(os.path.join(os.path.dirname(__file__), 'utilities', 'default.yml'), 'r') as default_yaml:
+            default_data = yaml.safe_load(default_yaml)
+
+        default_data['hash_db'] = os.path.basename(self._hash_db_path)
+
+        with open(self._config_path, 'w') as config_file:
+            yaml.dump(default_data, config_file)
+        
+        # Validate yaml file
+        with open(self._config_path, 'r') as f:
+            yaml_check = yaml.safe_load(f)
+
+        if 'version' not in yaml_check:
+            raise ConfigError('Missing "version" attribute')
+        if 'description' not in yaml_check:
+            raise ConfigError('Missing "description" attribute')
+        if 'hash_db' not in yaml_check:
+            raise ConfigError('Missing "hash_db_name" attribute')
+        if 'has_update' not in yaml_check:
+            raise ConfigError('Missing "has_update" attribute')
     
     def _create_hash_db(self):
         """Creates the hash database"""

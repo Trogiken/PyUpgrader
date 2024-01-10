@@ -1,0 +1,14 @@
+# Config file for pyupdate
+# Attributes marked with a * are changable by the user
+
+# The version of the project, uses the packing.version module *
+version: 0.0.0
+
+# Description of the current version of the project *
+description: "Description of the project"
+
+# Name of the hash database file
+hash_db: hashes.db
+
+# Whether there has been a update downloaded
+has_update: false
