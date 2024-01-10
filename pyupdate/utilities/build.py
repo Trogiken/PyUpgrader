@@ -124,7 +124,7 @@ class Builder:
             raise ConfigError('Missing "description" attribute')
         if 'hash_db' not in yaml_check:
             raise ConfigError('Missing "hash_db_name" attribute')
-        if 'has_update' not in yaml_check:
+        if 'update_path' not in yaml_check:
             raise ConfigError('Missing "has_update" attribute')
     
     def _create_hash_db(self):
