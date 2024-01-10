@@ -2,8 +2,8 @@
 
 import os
 import shutil
-import yaml
 import pyupdate.utilities.hashing as hashing
+from pyupdate.utilities import helper
 
 
 class BuildError(Exception):
@@ -105,27 +105,16 @@ class Builder:
     def _create_config_file(self):
         """Creates the config file"""
         print(f'Creating config file at "{self._config_path}"')
+        config = helper.Config()
 
-        with open(os.path.join(os.path.dirname(__file__), 'default.yml'), 'r') as default_yaml:
-            default_data = yaml.safe_load(default_yaml)
-
+        default_data = config.load_config(config.default_config_path)
         default_data['hash_db'] = os.path.basename(self._hash_db_path)
-
-        with open(self._config_path, 'w') as config_file:
-            yaml.safe_dump(default_data, config_file)
+        config.write_config(self._config_path, default_data)
         
-        # Validate yaml file
-        with open(self._config_path, 'r') as f:
-            yaml_check = yaml.safe_load(f)
-
-        if 'version' not in yaml_check:
-            raise ConfigError('Missing "version" attribute')
-        if 'description' not in yaml_check:
-            raise ConfigError('Missing "description" attribute')
-        if 'hash_db' not in yaml_check:
-            raise ConfigError('Missing "hash_db_name" attribute')
-        if 'update_path' not in yaml_check:
-            raise ConfigError('Missing "has_update" attribute')
+        try:
+            config.load_config(self._config_path)
+        except ValueError as error:
+            raise ConfigError(f'Failed to validate config file | {error}')
     
     def _create_hash_db(self):
         """Creates the hash database"""
