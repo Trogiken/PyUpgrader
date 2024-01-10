@@ -8,17 +8,17 @@ class Config:
         self.default_config_path = os.path.join(os.path.dirname(__file__), 'default.yml')
         self.comments_path = os.path.join(os.path.dirname(__file__), 'comments.yml')
 
-    def load_comments(self, path: str) -> dict:
+    def load_comments(self) -> dict:
         """Load the comments from the comments.yml file"""
-        with open(path, 'r') as comments_file:
+        with open(self.comments_path, 'r') as comments_file:
             data = yaml.safe_load(comments_file)
             is_valid, error = self._valid_config(data)
             if not is_valid:
                 raise ValueError(error)
-            return yaml.safe_load(comments_file)
+            return data
 
     def load_config(self, path: str) -> dict:
-        """Load the config from the default.yml file"""
+        """Load a config file at path"""
         with open(path, 'r') as config_file:
             data = yaml.safe_load(config_file)
             is_valid, error = self._valid_config(data)
@@ -33,7 +33,7 @@ class Config:
 
     def display_info(self) -> None:
         """Display config values and comments"""
-        comments = self.load_comments(self.comments_path)
+        comments = self.load_comments()
         config = self.load_config(self.default_config_path)
 
         header = "Config Information"
@@ -57,7 +57,7 @@ class Config:
                 print(f"{key}: {value}")
                 print()
     
-    def _valid_config(self, config: dict) -> Tuple(bool, str):
+    def _valid_config(self, config: dict) -> tuple(bool, str):
         """Validate the config"""
         if 'version' not in config:
             return (False, 'Missing "version" attribute')
