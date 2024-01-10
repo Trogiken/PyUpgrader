@@ -20,6 +20,10 @@ class Config:
     def display_info(self):
         comments = self.load_comments()
         config = self.load_config()
+
+        header = "Config Information"
+        print(f"""\n\t{header}\n\t{'-' * len(header)}\n\tAttributes marked as Dynamic can be changed by the user""")
+
         for key, value in config.items():
             print(f"{key}: {value}")
             if key in comments:
