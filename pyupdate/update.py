@@ -14,10 +14,10 @@ class UpdateManager:
         self._config_path = os.path.join(self._pyupdate_path, 'config.yaml')
         self._hash_db_path = None  # Set in _validate_attributes
 
-        self._validate_attributes()
-
         self._config_man = helper.Config()
-        self._git_man = GitManager(self._url, self._branch)
+        self._git_man = None  # Set in _validate_attributes
+
+        self._validate_attributes()
 
     @property
     def url(self):
@@ -66,6 +66,7 @@ class UpdateManager:
         
         config_data = self._config_man.load_config(self._config_path)
         self._hash_db_path = os.path.join(self._pyupdate_path, config_data['hash_db'])
+        self._git_man = GitManager(self._url, self._branch)
 
         if not os.path.exists(self._hash_db_path):
             raise FileNotFoundError(self._hash_db_path)
