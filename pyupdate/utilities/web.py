@@ -12,7 +12,7 @@ class GitManager:
     def __init__(self, url: str, branch: str):
         self._url = url
         self._branch = branch
-        self._config_url = self._url + '/config.yml'
+        self._config_url = self._url + '/config.yaml'
         self._config_man = helper.Config()
     
     def get_request(self, url: str, params={}) -> requests.Response:
