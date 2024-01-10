@@ -11,7 +11,7 @@ class UpdateManager:
         self._branch = branch
         self._project_path = project_path
         self._pyupdate_path = os.path.join(self._project_path, '.pyupdate')
-        self._config_path = os.path.join(self._pyupdate_path, 'config.yml')
+        self._config_path = os.path.join(self._pyupdate_path, 'config.yaml')
         self._hash_db_path = None  # Set in _validate_attributes
 
         self._validate_attributes()
