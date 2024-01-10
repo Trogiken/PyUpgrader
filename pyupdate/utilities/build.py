@@ -3,7 +3,7 @@
 import os
 import yaml
 import shutil
-import pyupdate.hashing as hashing
+import utilities.hashing as hashing
 
 
 class BuildError(Exception):
