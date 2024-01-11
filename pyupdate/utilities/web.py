@@ -8,7 +8,19 @@ class GetRequestError(Exception):
 
 
 class GitManager:
-    """Class for managing web requests"""
+    """
+    Class for managing web requests
+    
+    Attributes:
+    url: str
+        URL to the .pyupdate folder
+    
+    Methods:
+    get_request(url: str) -> requests.Response
+        Get a request from the url
+    get_config() -> dict
+        Get the config file from the url
+    """
     def __init__(self, url: str):
         self._url = url
         self._config_url = self._url + '/config.yaml'

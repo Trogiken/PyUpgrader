@@ -4,6 +4,27 @@ from typing import Tuple
 
 
 class Config:
+    """
+    Config helper class
+
+    Attributes:
+    default_config_path: str
+        Path to the default config file
+    comments_path: str
+        Path to the comments file
+
+    Methods:
+    load_comments() -> dict
+        Load the comments from the comments.yml file
+    load_yaml(path: str) -> dict
+        Load a yaml file at path
+    loads_yaml(yaml_string: str) -> dict
+        Load a yaml from a string
+    write_yaml(path: str, data: dict) -> None
+        Dump data to yaml file at path
+    display_info() -> None
+        Display config values and comments
+    """
     def __init__(self):
         self.default_config_path = os.path.join(os.path.dirname(__file__), 'default.yml')
         self.comments_path = os.path.join(os.path.dirname(__file__), 'comments.yml')
