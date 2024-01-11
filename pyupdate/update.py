@@ -2,12 +2,13 @@ import os
 import requests
 import tempfile
 from pyupdate.utilities import helper, GitManager
+from pyupdate.utilities.web import GetRequestError
 
 
 class UpdateManager:
     """Class for managing updates for a program."""
     def __init__(self, url: str, project_path: str):
-        self._url = url
+        self._url = url.rstrip('/')  # Remove trailing slash
         self._project_path = project_path
         self._pyupdate_path = os.path.join(self._project_path, '.pyupdate')
         self._config_path = os.path.join(self._pyupdate_path, 'config.yaml')
@@ -23,8 +24,8 @@ class UpdateManager:
         return self._url
 
     @url.setter
-    def url(self, value):
-        self._url = value
+    def url(self, value: str):
+        self._url = value.rstrip('/')  # Remove trailing slash
         self._git_man = GitManager(self._url)
         self._validate_attributes()
 
@@ -53,7 +54,7 @@ class UpdateManager:
         if not os.path.exists(self._config_path):
             raise FileNotFoundError(self._config_path)
         
-        config_data = self._config_man.load_config(self._config_path)
+        config_data = self._config_man.load_yaml(self._config_path)
         self._hash_db_path = os.path.join(self._pyupdate_path, config_data['hash_db'])
         self._git_man = GitManager(self._url)
 

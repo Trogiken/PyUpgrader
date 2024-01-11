@@ -21,8 +21,9 @@ class GitManager:
             response.raise_for_status()
         except Exception as e:
             raise GetRequestError(f'Url: "{url}" | {e}')
+        return response
     
     def get_config(self) -> dict:
         """Get the config file from the url"""
         response = self.get_request(self._config_url)
-        return self._config_man.load_config(response.text)
+        return self._config_man.loads_yaml(response.text)

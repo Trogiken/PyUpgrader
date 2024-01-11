@@ -107,12 +107,12 @@ class Builder:
         print(f'Creating config file at "{self._config_path}"')
         config = helper.Config()
 
-        default_data = config.load_config(config.default_config_path)
+        default_data = config.load_yaml(config.default_config_path)
         default_data['hash_db'] = os.path.basename(self._hash_db_path)
-        config.write_config(self._config_path, default_data)
+        config.write_yaml(self._config_path, default_data)
         
         try:
-            config.load_config(self._config_path)
+            config.load_yaml(self._config_path)
         except ValueError as error:
             raise ConfigError(f'Failed to validate config file | {error}')
     
