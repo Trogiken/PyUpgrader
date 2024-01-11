@@ -1,6 +1,6 @@
 import os
 import yaml
-from typing import Tuple
+import requests
 
 
 class Config:
@@ -98,3 +98,37 @@ class Config:
             return False, 'Missing "update_path" attribute'
 
         return True, ""
+
+
+class Web:
+    """
+    Class for managing web requests
+    
+    Attributes:
+    url: str
+        URL to the .pyupdate folder
+    
+    Methods:
+    get_request(url: str) -> requests.Response
+        Get a request from the url
+    get_config() -> dict
+        Get the config file from the url
+    """
+    def __init__(self, url: str):
+        self._url = url
+        self._config_url = self._url + '/config.yaml'
+        self._config_man = Config()
+    
+    def get_request(self, url: str) -> requests.Response:
+        """Get a request from the url"""
+        try:
+            response = requests.get(url)
+            response.raise_for_status()
+        except Exception as e:
+            raise requests.ConnectionError(f'Url: "{url}" | {e}')
+        return response
+    
+    def get_config(self) -> dict:
+        """Get the config file from the url"""
+        response = self.get_request(self._config_url)
+        return self._config_man.loads_yaml(response.text)

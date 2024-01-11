@@ -2,7 +2,7 @@ import os
 import requests
 import tempfile
 from packaging.version import Version
-from pyupdate.utilities import helper, GitManager
+from pyupdate.utilities import helper
 
 
 class UpdateManager:
@@ -28,7 +28,7 @@ class UpdateManager:
         self._hash_db_path = None  # Set in _validate_attributes
 
         self._config_man = helper.Config()
-        self._git_man = None  # Set in _validate_attributes
+        self._web_man = None  # Set in _validate_attributes
 
         self._validate_attributes()
 
@@ -39,7 +39,7 @@ class UpdateManager:
     @url.setter
     def url(self, value: str) -> None:
         self._url = value.rstrip('/')  # Remove trailing slash
-        self._git_man = GitManager(self._url)
+        self._web_man = helper.Web(self._url)
         self._validate_attributes()
 
     @property
@@ -69,7 +69,7 @@ class UpdateManager:
         
         config_data = self._config_man.load_yaml(self._config_path)
         self._hash_db_path = os.path.join(self._pyupdate_path, config_data['hash_db'])
-        self._git_man = GitManager(self._url)
+        self._web_man = helper.Web(self._url)
 
         if not os.path.exists(self._hash_db_path):
             raise FileNotFoundError(self._hash_db_path)
@@ -84,14 +84,14 @@ class UpdateManager:
         Compare cloud and local version
         Return (bool, Description)
         """
-        git_config = self._git_man.get_config()
+        web_config = self._web_man.get_config()
         local_config = self._config_man.load_yaml(self._config_path)
 
-        git_version = Version(git_config['version'])
+        web_version = Version(web_config['version'])
         local_version = Version(local_config['version'])
 
-        if git_version > local_version:
-            return (True, git_config['description'])
+        if web_version > local_version:
+            return (True, web_config['description'])
         else:
             return (False, local_config['description'])
 
