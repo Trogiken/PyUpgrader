@@ -2,7 +2,7 @@
 
 Python library to keep projects updated on clients machines
 
-**Pip Install:** `pip install git+https://github.com/Trogiken/PyUpdate`
+**Pip Install Globally:** `pip install git+https://github.com/Trogiken/PyUpdate`
 
 ## Getting Started
 
