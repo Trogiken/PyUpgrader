@@ -55,7 +55,7 @@ class UpdateManager:
         
         config_data = self._config_man.load_config(self._config_path)
         self._hash_db_path = os.path.join(self._pyupdate_path, config_data['hash_db'])
-        self._git_man = GitManager(self._url, self._branch)
+        self._git_man = GitManager(self._url)
 
         if not os.path.exists(self._hash_db_path):
             raise FileNotFoundError(self._hash_db_path)
