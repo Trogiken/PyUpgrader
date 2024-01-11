@@ -9,22 +9,18 @@ class GetRequestError(Exception):
 
 class GitManager:
     """Class for managing web requests"""
-    def __init__(self, url: str, branch: str):
+    def __init__(self, url: str):
         self._url = url
-        self._branch = branch
         self._config_url = self._url + '/config.yaml'
         self._config_man = helper.Config()
     
-    def get_request(self, url: str, params={}) -> requests.Response:
+    def get_request(self, url: str) -> requests.Response:
         """Get a request from the url"""
-        if not params:
-            params = {'ref': self._branch}
-
         try:
-            response = requests.get(url, params=params)
+            response = requests.get(url)
             response.raise_for_status()
         except Exception as e:
-            raise GetRequestError(f'Url: "{url}" Parms: "{params}" | {e}')
+            raise GetRequestError(f'Url: "{url}" | {e}')
     
     def get_config(self) -> dict:
         """Get the config file from the url"""

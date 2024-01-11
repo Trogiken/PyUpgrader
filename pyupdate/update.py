@@ -6,10 +6,9 @@ from pyupdate.utilities import helper, GitManager
 
 class UpdateManager:
     """Class for managing updates for a program."""
-    def __init__(self, url: str, branch: str, project_path: str):
-        # TODO - Switch the url from using the api to the norma or raw one.
+    def __init__(self, url: str, project_path: str):
         self._url = url
-        self._branch = branch
+        self._branch = self._url.split('.com')[1].split('/')[2]  # Get the branch from the url
         self._project_path = project_path
         self._pyupdate_path = os.path.join(self._project_path, '.pyupdate')
         self._config_path = os.path.join(self._pyupdate_path, 'config.yaml')
