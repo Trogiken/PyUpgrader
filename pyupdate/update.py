@@ -1,8 +1,8 @@
 import os
 import requests
 import tempfile
+from packaging.version import Version
 from pyupdate.utilities import helper, GitManager
-from pyupdate.utilities.web import GetRequestError
 
 
 class UpdateManager:
@@ -66,6 +66,19 @@ class UpdateManager:
         # will have to manually delete folder
         pass
 
-    def TEST_print_config(self):
-        """Prints the config file"""
-        return self._git_man.get_config()
+    def check_update(self) -> (bool, str):
+        """
+        Compare cloud and local version
+        Return (bool, Description)
+        """
+        git_config = self._git_man.get_config()
+        local_config = self._config_man.load_yaml(self._config_path)
+
+        git_version = Version(git_config['version'])
+        local_version = Version(local_config['version'])
+
+        if git_version > local_version:
+            return (True, git_config['description'])
+        else:
+            return (False, local_config['description'])
+
