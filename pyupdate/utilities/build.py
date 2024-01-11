@@ -131,5 +131,6 @@ class Builder:
     def _create_hash_db(self):
         """Creates the hash database"""
         print(f'Creating hash database at "{self._hash_db_path}"')
+        # DEBUG Exclude paths need more testing
         excluded_paths = [self._pyudpdate_folder] + self.exclude_paths
         hashing.create_hash_db(self.folder_path, self._hash_db_path, excluded_paths)
