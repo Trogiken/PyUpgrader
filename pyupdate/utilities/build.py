@@ -2,8 +2,7 @@
 
 import os
 import shutil
-import pyupdate.utilities.hashing as hashing
-from pyupdate.utilities import helper
+from pyupdate.utilities import helper, hashing
 
 
 class BuildError(Exception):
