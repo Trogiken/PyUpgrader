@@ -18,9 +18,10 @@ class UpdateManager:
         Path to the project folder (Not the .pyupdate folder)
     
     Methods:
-    check_update() -> (bool, str)
-        Check if there is an update available.
-        Return (bool, Description)
+    check_update() -> dict
+        Compare cloud and local version and return a dict with the results
+    db_sum() -> DBSummary
+        Return a DBSummary object using the cloud and local hash databases
     """
     def __init__(self, url: str, project_path: str):
         self._url = url.rstrip('/')  # Remove trailing slash
