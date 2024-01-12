@@ -14,7 +14,20 @@ from dataclasses import dataclass
 
 @dataclass
 class DBSummary:
-    """Dataclass for database summary."""
+    """
+    Dataclass for database summary
+
+    Attributes
+    ----------
+    unique_files_local_db: list
+        List of files unique to the local database
+    unique_files_cloud_db: list
+        List of files unique to the cloud database
+    ok_files: list
+        List of in-common files that have the same hash
+    bad_files: list
+        List of in-common files that have different hashes
+    """
     unique_files_local_db: list
     unique_files_cloud_db: list
     ok_files: list
