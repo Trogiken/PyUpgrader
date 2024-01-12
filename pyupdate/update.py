@@ -93,12 +93,15 @@ class UpdateManager:
     
     def test_update(self) -> None:
         """Test the update process"""
-        #tmp = tempfile.mkdtemp()
-        hasher = hashing.Hasher(self._project_path)
+        tmp = tempfile.mkdtemp()
+        hasher = hashing.Hasher(os.path.basename(self._project_path))
 
-        #cloud_hash_db = self._web_man.download_hash_db(os.path.join(tmp, 'cloud_hashes.db'))
-        local_hash_db = hasher.create_hash_db(self._project_path, os.path.join("C:/Users/Owner/Desktop", 'local_hashes.db'))
+        cloud_hash_db = self._web_man.download_hash_db(os.path.join(tmp, 'cloud_hashes.db'))
+        local_hash_db = hasher.create_hash_db(self._project_path,
+                                              os.path.join(tmp, 'local_hashes.db'),
+                                              exclude_paths=[self._pyupdate_path])
 
-        #shutil.rmtree(tmp)
-        #summary = hasher.compare_hash_dbs(local_hash_db, cloud_hash_db)
-        #print(summary)
+        summary = hasher.compare_databases(local_hash_db, cloud_hash_db)
+        shutil.rmtree(tmp)
+        
+        return summary

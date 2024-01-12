@@ -79,8 +79,12 @@ class Hasher:
             for root, _, files in os.walk(hash_dir_path):
                 if root in exclude_paths:
                     continue
-
+                
+                # Get file paths
                 file_paths = [os.path.join(root, file) for file in files]
+                # Replace backslashes with forward slashes for consistency
+                file_paths = [file_path.replace('\\', '/') for file_path in file_paths]
+
                 if exclude_paths:
                     for path in exclude_paths:
                         if path in file_paths:
