@@ -77,10 +77,7 @@ class UpdateManager:
             raise FileNotFoundError(self._hash_db_path)
 
     def check_update(self) -> dict:
-        """
-        Compare cloud and local version
-        Return (bool, Description)
-        """
+        """Compare cloud and local version and return a dict with the results"""
         web_config = self._web_man.get_config()
         local_config = self._config_man.load_yaml(self._config_path)
 
