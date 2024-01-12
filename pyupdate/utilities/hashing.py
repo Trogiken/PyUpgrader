@@ -41,7 +41,6 @@ class Hasher:
             else:
                 raise ValueError(f"Project name '{self.project_name}' not found in file path '{file_path}'")
             
-            relative_file_path = file_path
             file_hash = hasher.hexdigest()
             return relative_file_path, file_hash
         except BaseException as error:

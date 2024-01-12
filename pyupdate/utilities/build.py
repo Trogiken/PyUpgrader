@@ -2,7 +2,7 @@
 
 import os
 import shutil
-from pyupdate.utilities import helper, Hasher
+from pyupdate.utilities import helper, hashing
 
 
 class BuildError(Exception):
@@ -130,7 +130,7 @@ class Builder:
     def _create_hash_db(self):
         """Creates the hash database"""
         print(f'Creating hash database at "{self._hash_db_path}"')
-        hasher = Hasher(os.path.basename(self.project_path))
+        hasher = hashing.Hasher(project_name=os.path.basename(self.project_path))
 
         # DEBUG Exclude paths need more testing
         excluded_paths = [self._pyudpdate_folder] + self.exclude_paths
