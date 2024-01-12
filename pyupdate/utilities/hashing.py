@@ -66,7 +66,7 @@ class Hasher:
         return relative_file_path
 
     def create_hash(self, file_path: str) -> (str, str):
-        """Create hash from file bytes using the chunk method, return hash as a string if found."""
+        """Create hash from file bytes using the chunk method, return relative file path and hash as a string."""
         try:
             chunk_size = 4096
             file_size = os.path.getsize(file_path)
@@ -91,7 +91,7 @@ class Hasher:
             raise HashingError(f"Error hashing file '{file_path}' | {error}")
 
     def create_hash_db(self, hash_dir_path: str, db_save_path: str, exclude_paths=[]) -> str:
-        """Create a hash database from a directory path and save it to a file path. Return the file path."""
+        """Create a hash database from a directory path and save it to a file path. Return the save file path."""
         if os.path.exists(db_save_path):
             os.remove(db_save_path)
 
