@@ -76,7 +76,7 @@ class UpdateManager:
         if not os.path.exists(self._hash_db_path):
             raise FileNotFoundError(self._hash_db_path)
 
-    def check_update(self) -> (bool, str):
+    def check_update(self) -> dict:
         """
         Compare cloud and local version
         Return (bool, Description)
@@ -88,9 +88,11 @@ class UpdateManager:
         local_version = Version(local_config['version'])
 
         if web_version > local_version:
-            return (True, web_config['description'])
+            has_update, description = True, web_config['description']
         else:
-            return (False, local_config['description'])
+            has_update, description = False, local_config['description']
+        
+        return {'has_update': has_update, 'description': description, 'web_version': web_version, 'local_version': local_version}
     
     def db_sum(self) -> hashing.DBSummary:
         """Return a DBSummary object using the cloud and local hash databases"""

@@ -6,15 +6,27 @@ Python library to keep projects updated on clients machines
 
 ## Getting Started
 
-Importing pyupdate and initialize the UpdateManager object.
+Build your project using the PyUpdate CLI and upload it.
+
+`pyupdate -f absolute/path/to/project`
+
+Importing PyUpdate and initialize the UpdateManager object.
 
 ``` python
 import pyupdate
 
-update_man = pyupdate.UpdateManager(r"https://raw.githubusercontent.com/{Owner}/{Repo}/{Branch}/{path/to/.pyupdate}", r"path/to/project/folder")
+update_man = pyupdate.UpdateManager(r"https://raw.githubusercontent.com/{Owner}/{Repo}/{Branch}/{path/to/.pyupdate}", r"{absolute/path/to/project}")
+
+if __name__ == '__main__':
+    update = update_man.check_update()
+
+    if update.get("has_update")
+        print(f"New Version Available")
+        print(f"{update.get('web_version')} <- {update.get('local_version')}")
+        print(update.get("description"))
 ```
 
-Replace the temporary url names `{}` with your repositories information.
+Replace the temporary values `{}` with your information.
 
 ## Help/Information
 
