@@ -56,7 +56,7 @@ class Builder:
         """Builds a project into a pyupdate project"""
         self._validate_paths()
 
-        print('Building project...')
+        print('Building project...\n')
 
         try:
             self._create_pyupdate_folder()
@@ -73,7 +73,7 @@ class Builder:
         except Exception as error:
             raise HashDBError(f'Failed to create hash database | {error}')
 
-        print('Done!')
+        print('\nDone!')
         print(f'Project built at "{self._pyudpdate_folder}"')
     
     def _validate_paths(self):
