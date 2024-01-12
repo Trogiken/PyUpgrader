@@ -91,7 +91,7 @@ class UpdateManager:
         else:
             return (False, local_config['description'])
     
-    def test_update(self) -> None:
+    def test_update(self) -> dict:
         """Test the update process"""
         tmp = tempfile.mkdtemp()
         hasher = hashing.Hasher(os.path.basename(self._project_path))
@@ -103,5 +103,5 @@ class UpdateManager:
 
         summary = hasher.compare_databases(local_hash_db, cloud_hash_db)
         shutil.rmtree(tmp)
-        
+
         return summary

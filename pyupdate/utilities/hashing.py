@@ -107,52 +107,44 @@ class Hasher:
 
         return db_save_path
 
-    def compare_databases(self, db1_path: str, db2_path: str) -> dict:
+    def compare_databases(self, local_db: str, cloud_db: str) -> dict:
         """Compare two hash databases and return a summary of the differences."""
-        connection1 = sqlite3.connect(db1_path)
+        connection1 = sqlite3.connect(local_db)
         cursor1 = connection1.cursor()
 
-        connection2 = sqlite3.connect(db2_path)
+        connection2 = sqlite3.connect(cloud_db)
         cursor2 = connection2.cursor()
 
         cursor1.execute('SELECT file_path, calculated_hash FROM hashes')
-        db1_files = {row[0]: row[1] for row in cursor1.fetchall()}
+        local_db_files = {row[0]: row[1] for row in cursor1.fetchall()}
 
         cursor2.execute('SELECT file_path, calculated_hash FROM hashes')
-        db2_files = {row[0]: row[1] for row in cursor2.fetchall()}
+        cloud_db_files = {row[0]: row[1] for row in cursor2.fetchall()}
 
-        common_files = set(db1_files.keys()) & set(db2_files.keys())
-        unique_files_db1 = set(db1_files.keys()) - set(db2_files.keys())
-        unique_files_db2 = set(db2_files.keys()) - set(db1_files.keys())
+        common_files = set(local_db_files.keys()) & set(cloud_db_files.keys())
+        unique_files_local_db = set(local_db_files.keys()) - set(cloud_db_files.keys())
+        unique_files_cloud_db = set(cloud_db_files.keys()) - set(local_db_files.keys())
 
         ok_files = [
-            (file_path, db1_files[file_path])
+            (file_path, local_db_files[file_path])
             for file_path in common_files
-            if db1_files[file_path] == db2_files[file_path]
+            if local_db_files[file_path] == cloud_db_files[file_path]
         ]
 
         bad_files = [
-            (file_path, db1_files[file_path], db2_files[file_path])
+            (file_path, local_db_files[file_path], cloud_db_files[file_path])
             for file_path in common_files
-            if db1_files[file_path] != db2_files[file_path]
+            if local_db_files[file_path] != cloud_db_files[file_path]
         ]
         
         connection1.close()
         connection2.close()
 
-        # 'number_common_files': len(common_files),
-        # 'number_unique_files_db1': len(unique_files_db1),
-        # 'number_unique_files_db2': len(unique_files_db2),
-        # 'number_ok_files': len(ok_files),
-        # 'number_bad_files': len(bad_files),
-        # 'number_unknown_files': len(unknown),
-        # 'common_files': common_files,
-
         summary = {
-            'db1_path': db1_path,
-            'db2_path': db2_path,
-            'unique_files_db1': unique_files_db1,
-            'unique_files_db2': unique_files_db2,
+            'local_db_path': local_db,
+            'cloud_db_path': cloud_db,
+            'unique_files_local_db': unique_files_local_db,
+            'unique_files_cloud_db': unique_files_cloud_db,
             'ok_files': ok_files,
             'bad_files': bad_files,
         }
