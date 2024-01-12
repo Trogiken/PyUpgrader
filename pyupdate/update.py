@@ -94,15 +94,18 @@ class UpdateManager:
     
     def db_sum(self) -> hashing.DBSummary:
         """Return a DBSummary object using the cloud and local hash databases"""
-        tmp = tempfile.mkdtemp()
-        hasher = hashing.Hasher(project_name=os.path.basename(self._project_path))
+        tmp_path = tempfile.mkdtemp()
 
-        cloud_hash_db = self._web_man.download_hash_db(os.path.join(tmp, 'cloud_hashes.db'))
-        local_hash_db = hasher.create_hash_db(self._project_path,
-                                              os.path.join(tmp, 'local_hashes.db'),
-                                              exclude_paths=[self._pyupdate_path])
+        try:
+            hasher = hashing.Hasher(project_name=os.path.basename(self._project_path))
 
-        summary = hasher.compare_databases(local_hash_db, cloud_hash_db)
-        shutil.rmtree(tmp)
+            cloud_hash_db = self._web_man.download_hash_db(os.path.join(tmp_path, 'cloud_hashes.db'))
+            local_hash_db = hasher.create_hash_db(self._project_path,
+                                                os.path.join(tmp_path, 'local_hashes.db'),
+                                                exclude_paths=[self._pyupdate_path])
 
-        return summary
+            return hasher.compare_databases(local_hash_db, cloud_hash_db)
+        except Exception as error:
+            raise error
+        finally:
+            shutil.rmtree(tmp_path)
