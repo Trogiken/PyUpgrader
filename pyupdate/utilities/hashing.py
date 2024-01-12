@@ -40,6 +40,19 @@ class HashingError(Exception):
 
 
 class Hasher:
+    """
+    A class that provides methods for hashing files and creating hash databases.
+
+    Attributes:
+    - project_name: str
+        The name of the project directory (Not the full path)
+
+    Methods:
+    - get_relative_path(self, file_path: str) -> str: Returns the relative path of a file path.
+    - create_hash(self, file_path: str) -> (str, str): Creates a hash from file bytes using the chunk method and returns the relative file path and hash as a string.
+    - create_hash_db(self, hash_dir_path: str, db_save_path: str, exclude_paths=[]) -> str: Creates a hash database from a directory path and saves it to a file path. Returns the file path.
+    - compare_databases(self, local_db_path: str, cloud_db_path: str) -> DBSummary: Compares two hash databases and returns a summary of the differences.
+    """
     def __init__(self, project_name: str):
         self.project_name = project_name
     
