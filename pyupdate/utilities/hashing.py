@@ -7,7 +7,6 @@ This module is a modified version of https://github.com/Trogiken/random-projects
 import hashlib
 import os
 import sqlite3
-import sys
 import time
 from multiprocessing import Pool
 from typing import Tuple
@@ -122,9 +121,18 @@ class Hasher:
         unique_files_db1 = set(db1_files.keys()) - set(db2_files.keys())
         unique_files_db2 = set(db2_files.keys()) - set(db1_files.keys())
 
-        ok_files = [(file_path, db1_files[file_path]) for file_path in common_files if db1_files[file_path] == db2_files[file_path]]
-        bad_files = [(file_path, db1_files[file_path], db2_files[file_path]) for file_path in common_files if db1_files[file_path] != db2_files[file_path]]
+        ok_files = [
+            (file_path, db1_files[file_path])
+            for file_path in common_files
+            if db1_files[file_path] == db2_files[file_path]
+        ]
 
+        bad_files = [
+            (file_path, db1_files[file_path], db2_files[file_path])
+            for file_path in common_files
+            if db1_files[file_path] != db2_files[file_path]
+        ]
+        
         connection1.close()
         connection2.close()
 
