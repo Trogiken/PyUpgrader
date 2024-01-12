@@ -48,11 +48,11 @@ class Hasher:
             file_hash = hasher.hexdigest()
             
             return relative_file_path, file_hash
-        except BaseException as error:
-            return relative_file_path, '?'
+        except Exception as error:
+            raise Exception(f"Error hashing file '{file_path}' | {error}")
 
-    def create_hash_db(self, hash_dir_path: str, db_save_path: str, exclude_paths=[]) -> int:
-        """Create a hash database from a directory path and save it to a file path. Return the file path and number of files hashed."""
+    def create_hash_db(self, hash_dir_path: str, db_save_path: str, exclude_paths=[]) -> str:
+        """Create a hash database from a directory path and save it to a file path. Return the file path."""
         if os.path.exists(db_save_path):
             os.remove(db_save_path)
 
@@ -97,13 +97,7 @@ class Hasher:
         connection.commit()
         connection.close()
 
-        connection = sqlite3.connect(db_save_path)
-        cursor = connection.cursor()
-        cursor.execute('SELECT COUNT(*) FROM hashes')
-        num_files = cursor.fetchone()[0]
-        connection.close()
-
-        return db_save_path, num_files
+        return db_save_path
 
     @staticmethod
     def compare_databases(db1_path: str, db2_path: str) -> dict:
@@ -126,9 +120,7 @@ class Hasher:
 
         ok_files = [(file_path, db1_files[file_path]) for file_path in common_files if db1_files[file_path] == db2_files[file_path]]
         bad_files = [(file_path, db1_files[file_path], db2_files[file_path]) for file_path in common_files if db1_files[file_path] != db2_files[file_path]]
-        unknown = [file_path for file_path in common_files if db1_files[file_path] == '?' or db2_files[file_path] == '?']
 
-        sys.stdout.flush()
         connection1.close()
         connection2.close()
 
@@ -136,18 +128,17 @@ class Hasher:
             'db1_path': db1_path,
             'db2_path': db2_path,
 
-            'number_common_files': len(common_files),
-            'number_unique_files_db1': len(unique_files_db1),
-            'number_unique_files_db2': len(unique_files_db2),
-            'number_ok_files': len(ok_files),
-            'number_bad_files': len(bad_files),
-            'number_unknown_files': len(unknown),
-            'common_files': common_files,
+            # 'number_common_files': len(common_files),
+            # 'number_unique_files_db1': len(unique_files_db1),
+            # 'number_unique_files_db2': len(unique_files_db2),
+            # 'number_ok_files': len(ok_files),
+            # 'number_bad_files': len(bad_files),
+            # 'number_unknown_files': len(unknown),
+            # 'common_files': common_files,
             'unique_files_db1': unique_files_db1,
             'unique_files_db2': unique_files_db2,
             'ok_files': ok_files,
             'bad_files': bad_files,
-            'unknown': unknown,
         }
 
         return summary
