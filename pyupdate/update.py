@@ -2,6 +2,7 @@ import os
 import requests
 import tempfile
 import shutil
+import pickle
 from packaging.version import Version
 from pyupdate.utilities import helper, hashing
 
@@ -91,10 +92,10 @@ class UpdateManager:
         else:
             return (False, local_config['description'])
     
-    def test_update(self) -> dict:
-        """Test the update process"""
+    def db_sum(self) -> hashing.DBSummary:
+        """Return a DBSummary object using the cloud and local hash databases"""
         tmp = tempfile.mkdtemp()
-        hasher = hashing.Hasher(os.path.basename(self._project_path))
+        hasher = hashing.Hasher(project_name=os.path.basename(self._project_path))
 
         cloud_hash_db = self._web_man.download_hash_db(os.path.join(tmp, 'cloud_hashes.db'))
         local_hash_db = hasher.create_hash_db(self._project_path,

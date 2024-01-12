@@ -9,7 +9,16 @@ import os
 import sqlite3
 import time
 from multiprocessing import Pool
-from typing import Tuple
+from dataclasses import dataclass
+
+
+@dataclass
+class DBSummary:
+    """Dataclass for database summary."""
+    unique_files_local_db: list
+    unique_files_cloud_db: list
+    ok_files: list
+    bad_files: list
 
 
 class HashingError(Exception):
@@ -30,7 +39,7 @@ class Hasher:
             raise ValueError(f"Project name '{self.project_name}' not found in file path '{file_path}'")
         return relative_file_path
 
-    def create_hash(self, file_path: str) -> Tuple[str, str]:
+    def create_hash(self, file_path: str) -> (str, str):
         """Create hash from file bytes using the chunk method, return hash as a string if found."""
         try:
             chunk_size = 4096
@@ -107,12 +116,12 @@ class Hasher:
 
         return db_save_path
 
-    def compare_databases(self, local_db: str, cloud_db: str) -> dict:
+    def compare_databases(self, local_db_path: str, cloud_db_path: str) -> DBSummary:
         """Compare two hash databases and return a summary of the differences."""
-        connection1 = sqlite3.connect(local_db)
+        connection1 = sqlite3.connect(local_db_path)
         cursor1 = connection1.cursor()
 
-        connection2 = sqlite3.connect(cloud_db)
+        connection2 = sqlite3.connect(cloud_db_path)
         cursor2 = connection2.cursor()
 
         cursor1.execute('SELECT file_path, calculated_hash FROM hashes')
@@ -122,8 +131,8 @@ class Hasher:
         cloud_db_files = {row[0]: row[1] for row in cursor2.fetchall()}
 
         common_files = set(local_db_files.keys()) & set(cloud_db_files.keys())
-        unique_files_local_db = set(local_db_files.keys()) - set(cloud_db_files.keys())
-        unique_files_cloud_db = set(cloud_db_files.keys()) - set(local_db_files.keys())
+        unique_files_local_db = list(set(local_db_files.keys()) - set(cloud_db_files.keys()))
+        unique_files_cloud_db = list(set(cloud_db_files.keys()) - set(local_db_files.keys()))
 
         ok_files = [
             (file_path, local_db_files[file_path])
@@ -140,13 +149,9 @@ class Hasher:
         connection1.close()
         connection2.close()
 
-        summary = {
-            'local_db_path': local_db,
-            'cloud_db_path': cloud_db,
-            'unique_files_local_db': unique_files_local_db,
-            'unique_files_cloud_db': unique_files_cloud_db,
-            'ok_files': ok_files,
-            'bad_files': bad_files,
-        }
-
-        return summary
+        return DBSummary(
+            unique_files_local_db=unique_files_local_db,
+            unique_files_cloud_db=unique_files_cloud_db,
+            ok_files=ok_files,
+            bad_files=bad_files
+        )
