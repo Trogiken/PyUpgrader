@@ -1,8 +1,10 @@
 import os
 import requests
 import tempfile
+import shutil
+import pickle
 from packaging.version import Version
-from pyupdate.utilities import helper
+from pyupdate.utilities import helper, hashing
 
 
 class UpdateManager:
@@ -16,9 +18,10 @@ class UpdateManager:
         Path to the project folder (Not the .pyupdate folder)
     
     Methods:
-    check_update() -> (bool, str)
-        Check if there is an update available.
-        Return (bool, Description)
+    check_update() -> dict
+        Compare cloud and local version and return a dict with the results
+    db_sum() -> DBSummary
+        Return a DBSummary object using the cloud and local hash databases
     """
     def __init__(self, url: str, project_path: str):
         self._url = url.rstrip('/')  # Remove trailing slash
@@ -74,16 +77,8 @@ class UpdateManager:
         if not os.path.exists(self._hash_db_path):
             raise FileNotFoundError(self._hash_db_path)
 
-    def _create_program_folder(self) -> None:
-        # do not use context manager
-        # will have to manually delete folder
-        pass
-
-    def check_update(self) -> (bool, str):
-        """
-        Compare cloud and local version
-        Return (bool, Description)
-        """
+    def check_update(self) -> dict:
+        """Compare cloud and local version and return a dict with the results"""
         web_config = self._web_man.get_config()
         local_config = self._config_man.load_yaml(self._config_path)
 
@@ -91,7 +86,23 @@ class UpdateManager:
         local_version = Version(local_config['version'])
 
         if web_version > local_version:
-            return (True, web_config['description'])
+            has_update, description = True, web_config['description']
         else:
-            return (False, local_config['description'])
+            has_update, description = False, local_config['description']
+        
+        return {'has_update': has_update, 'description': description, 'web_version': web_version, 'local_version': local_version}
+    
+    def db_sum(self) -> hashing.DBSummary:
+        """Return a DBSummary object using the cloud and local hash databases"""
+        tmp = tempfile.mkdtemp()
+        hasher = hashing.Hasher(project_name=os.path.basename(self._project_path))
 
+        cloud_hash_db = self._web_man.download_hash_db(os.path.join(tmp, 'cloud_hashes.db'))
+        local_hash_db = hasher.create_hash_db(self._project_path,
+                                              os.path.join(tmp, 'local_hashes.db'),
+                                              exclude_paths=[self._pyupdate_path])
+
+        summary = hasher.compare_databases(local_hash_db, cloud_hash_db)
+        shutil.rmtree(tmp)
+
+        return summary
