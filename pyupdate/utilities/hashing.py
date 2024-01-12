@@ -49,19 +49,12 @@ class Hasher:
             
             return relative_file_path, file_hash
         except BaseException as error:
-            print(f"Failed to create hash! | {error}")
             return relative_file_path, '?'
 
     def create_hash_db(self, hash_dir_path: str, db_save_path: str, exclude_paths=[]) -> int:
         """Create a hash database from a directory path and save it to a file path. Return the file path and number of files hashed."""
         if os.path.exists(db_save_path):
-            print(f"\nHash database already exists at '{db_save_path}'\nDelete it? (y/n)\n")
-            delete_database = input('Enter option: ')
-            if delete_database.casefold() == 'y':
-                os.remove(db_save_path)
-            else:
-                print('Canceled')
-                sys.exit(1)
+            os.remove(db_save_path)
 
         connection = sqlite3.connect(db_save_path)
         cursor = connection.cursor()
@@ -75,8 +68,6 @@ class Hasher:
         # Batch size for parameterized queries
         max_time_per_batch = 3  # seconds
         batch_data = []
-
-        print('\nCreating Hashes...\n')
 
         # Create a pool, default number of processes is the number of cores on the machine
         with Pool() as pool:
@@ -97,15 +88,12 @@ class Hasher:
                 elapsed_time = time.time() - start_time
                 if elapsed_time >= max_time_per_batch and batch_data:  # If the max time per batch has been reached and there are files to be inserted
                     cursor.executemany('INSERT OR REPLACE INTO hashes (file_path, calculated_hash) VALUES (?, ?)', batch_data)
-                    print(f"Processed {len(batch_data)} files")
                     batch_data = []
                     start_time = time.time()
 
             if batch_data:  # If there are any remaining files to be inserted
                 cursor.executemany('INSERT OR REPLACE INTO hashes (file_path, calculated_hash) VALUES (?, ?)', batch_data)
-                print(f"Processed {len(batch_data)} files")
 
-        sys.stdout.flush()
         connection.commit()
         connection.close()
 
@@ -132,15 +120,10 @@ class Hasher:
         cursor2.execute('SELECT file_path, calculated_hash FROM hashes')
         db2_files = {row[0]: row[1] for row in cursor2.fetchall()}
 
-        print('\nScanning Databases...\n')
-        print(f"Common files...")
         common_files = set(db1_files.keys()) & set(db2_files.keys())
-        print('Unique files in the first database...')
         unique_files_db1 = set(db1_files.keys()) - set(db2_files.keys())
-        print('Unique files in the second database...')
         unique_files_db2 = set(db2_files.keys()) - set(db1_files.keys())
 
-        print('Comparing hashes...')
         ok_files = [(file_path, db1_files[file_path]) for file_path in common_files if db1_files[file_path] == db2_files[file_path]]
         bad_files = [(file_path, db1_files[file_path], db2_files[file_path]) for file_path in common_files if db1_files[file_path] != db2_files[file_path]]
         unknown = [file_path for file_path in common_files if db1_files[file_path] == '?' or db2_files[file_path] == '?']

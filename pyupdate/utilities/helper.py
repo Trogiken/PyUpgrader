@@ -83,8 +83,7 @@ class Config:
         if misc_comments:
             print("Misc Comments:")
             for key, value in misc_comments.items():
-                print(f"{key}: {value}")
-                print()
+                print(f"{key}: {value}\n")
     
     def _valid_config(self, config: dict) -> (bool, str):
         """Validate the config"""
