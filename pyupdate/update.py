@@ -2,7 +2,7 @@ import os
 import requests
 import tempfile
 from packaging.version import Version
-from pyupdate.utilities import helper
+from pyupdate.utilities import helper, hashing
 
 
 class UpdateManager:
@@ -74,11 +74,6 @@ class UpdateManager:
         if not os.path.exists(self._hash_db_path):
             raise FileNotFoundError(self._hash_db_path)
 
-    def _create_program_folder(self) -> None:
-        # do not use context manager
-        # will have to manually delete folder
-        pass
-
     def check_update(self) -> (bool, str):
         """
         Compare cloud and local version
@@ -94,4 +89,14 @@ class UpdateManager:
             return (True, web_config['description'])
         else:
             return (False, local_config['description'])
+    
+    def test_update(self) -> None:
+        """Test the update process"""
+        tmp = tempfile.mkdtemp()
+        hasher = hashing.Hasher(self._project_path)
 
+        cloud_hash_db = self._web_man.download_hash_db(os.path.join(tmp, 'cloud_hashes.db'))
+        local_hash_db = hasher.create_hash_db(self._project_path, os.path.join(tmp, 'local_hashes.db'))
+
+        summary = hasher.compare_hash_dbs(local_hash_db, cloud_hash_db)
+        print(summary)

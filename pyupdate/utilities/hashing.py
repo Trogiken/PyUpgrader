@@ -19,7 +19,7 @@ class HashingError(Exception):
 
 
 class Hasher:
-    def __init__(self, project_name):
+    def __init__(self, project_name: str):
         self.project_name = project_name
     
     def get_relative_path(self, file_path: str) -> str:
@@ -104,8 +104,7 @@ class Hasher:
 
         return db_save_path
 
-    @staticmethod
-    def compare_databases(db1_path: str, db2_path: str) -> dict:
+    def compare_databases(self, db1_path: str, db2_path: str) -> dict:
         """Compare two hash databases and return a summary of the differences."""
         connection1 = sqlite3.connect(db1_path)
         cursor1 = connection1.cursor()
@@ -129,17 +128,17 @@ class Hasher:
         connection1.close()
         connection2.close()
 
+        # 'number_common_files': len(common_files),
+        # 'number_unique_files_db1': len(unique_files_db1),
+        # 'number_unique_files_db2': len(unique_files_db2),
+        # 'number_ok_files': len(ok_files),
+        # 'number_bad_files': len(bad_files),
+        # 'number_unknown_files': len(unknown),
+        # 'common_files': common_files,
+
         summary = {
             'db1_path': db1_path,
             'db2_path': db2_path,
-
-            # 'number_common_files': len(common_files),
-            # 'number_unique_files_db1': len(unique_files_db1),
-            # 'number_unique_files_db2': len(unique_files_db2),
-            # 'number_ok_files': len(ok_files),
-            # 'number_bad_files': len(bad_files),
-            # 'number_unknown_files': len(unknown),
-            # 'common_files': common_files,
             'unique_files_db1': unique_files_db1,
             'unique_files_db2': unique_files_db2,
             'ok_files': ok_files,

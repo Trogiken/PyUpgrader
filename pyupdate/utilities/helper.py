@@ -112,6 +112,8 @@ class Web:
         Get a request from the url
     get_config() -> dict
         Get the config file from the url
+    download_hash_db(save_path: str) -> str
+        Download the hash database and save it to save_path
     """
     def __init__(self, url: str):
         self._url = url
@@ -125,9 +127,20 @@ class Web:
             response.raise_for_status()
         except Exception as e:
             raise requests.ConnectionError(f'Url: "{url}" | {e}')
+        
         return response
     
     def get_config(self) -> dict:
         """Get the config file from the url"""
         response = self.get_request(self._config_url)
         return self._config_man.loads_yaml(response.text)
+    
+    def download_hash_db(self, save_path: str) -> str:
+        """Download the hash database and save it to save_path. Return the save_path"""
+        config = self.get_config()
+        response = self.get_request(self._url + '/' + config['hash_db'])
+
+        with open(save_path, 'wb') as f:
+            f.write(response.content)
+
+        return save_path
