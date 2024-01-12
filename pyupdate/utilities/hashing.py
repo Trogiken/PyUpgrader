@@ -13,6 +13,11 @@ from multiprocessing import Pool
 from typing import Tuple
 
 
+class HashingError(Exception):
+    """Exception raised for errors in the hashing process."""
+    pass
+
+
 class Hasher:
     def __init__(self, project_name):
         self.project_name = project_name
@@ -49,7 +54,7 @@ class Hasher:
             
             return relative_file_path, file_hash
         except Exception as error:
-            raise Exception(f"Error hashing file '{file_path}' | {error}")
+            raise HashingError(f"Error hashing file '{file_path}' | {error}")
 
     def create_hash_db(self, hash_dir_path: str, db_save_path: str, exclude_paths=[]) -> str:
         """Create a hash database from a directory path and save it to a file path. Return the file path."""
