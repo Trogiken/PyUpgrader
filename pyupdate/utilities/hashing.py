@@ -16,6 +16,15 @@ from typing import Tuple
 class Hasher:
     def __init__(self, project_name):
         self.project_name = project_name
+    
+    def get_relative_path(self, file_path: str) -> str:
+        """Get the relative path of a file path."""
+        proj_index = file_path.find(self.project_name)
+        if proj_index != -1:
+            relative_file_path = file_path[proj_index:]
+        else:
+            raise ValueError(f"Project name '{self.project_name}' not found in file path '{file_path}'")
+        return relative_file_path
 
     def create_hash(self, file_path: str) -> Tuple[str, str]:
         """Create hash from file bytes using the chunk method, return hash as a string if found."""
@@ -34,14 +43,10 @@ class Hasher:
                     if not chunk:
                         break
                     hasher.update(chunk)
-            
-            proj_index = file_path.find(self.project_name)
-            if proj_index != -1:
-                relative_file_path = file_path[proj_index:]
-            else:
-                raise ValueError(f"Project name '{self.project_name}' not found in file path '{file_path}'")
-            
+
+            relative_file_path = self.get_relative_path(file_path)
             file_hash = hasher.hexdigest()
+            
             return relative_file_path, file_hash
         except BaseException as error:
             print(f"Failed to create hash! | {error}")
@@ -66,12 +71,6 @@ class Hasher:
                             file_path TEXT PRIMARY KEY,
                             calculated_hash TEXT
                         )''')
-        # create attribute table
-        cursor.execute('''CREATE TABLE IF NOT EXISTS attributes (
-                            working_directory TEXT PRIMARY KEY
-                        )''')
-        # Insert working directory into the table
-        cursor.execute('INSERT OR REPLACE INTO attributes (working_directory) VALUES (?)', (hash_dir_path,))
 
         # Batch size for parameterized queries
         max_time_per_batch = 3  # seconds
