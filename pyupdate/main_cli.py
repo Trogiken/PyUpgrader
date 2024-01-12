@@ -17,9 +17,7 @@ def cli():
         sys.exit(1)
     
     try:
-        builder = util.Builder()
-        builder.folder_path = args.folder
-        builder.exclude_paths = args.exclude
+        builder = util.Builder(folder_path=args.folder, exclude_paths=args.exclude)
         builder.build()
     except Exception as error:
         raise BuildError(error)

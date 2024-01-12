@@ -1,9 +1,30 @@
 import os
 import yaml
-from typing import Tuple
+import requests
 
 
 class Config:
+    """
+    Config helper class
+
+    Attributes:
+    default_config_path: str
+        Path to the default config file
+    comments_path: str
+        Path to the comments file
+
+    Methods:
+    load_comments() -> dict
+        Load the comments from the comments.yml file
+    load_yaml(path: str) -> dict
+        Load a yaml file at path
+    loads_yaml(yaml_string: str) -> dict
+        Load a yaml from a string
+    write_yaml(path: str, data: dict) -> None
+        Dump data to yaml file at path
+    display_info() -> None
+        Display config values and comments
+    """
     def __init__(self):
         self.default_config_path = os.path.join(os.path.dirname(__file__), 'default.yml')
         self.comments_path = os.path.join(os.path.dirname(__file__), 'comments.yml')
@@ -17,8 +38,8 @@ class Config:
                 raise ValueError(error)
             return data
 
-    def load_config(self, path: str) -> dict:
-        """Load a config file at path"""
+    def load_yaml(self, path: str) -> dict:
+        """Load a yaml file at path"""
         with open(path, 'r') as config_file:
             data = yaml.safe_load(config_file)
             is_valid, error = self._valid_config(data)
@@ -26,7 +47,15 @@ class Config:
                 raise ValueError(error)
             return data
     
-    def write_config(self, path: str, data: dict) -> None:
+    def loads_yaml(self, yaml_string: str) -> dict:
+        """Load a yaml from a string"""
+        data = yaml.safe_load(yaml_string)
+        is_valid, error = self._valid_config(data)
+        if not is_valid:
+            raise ValueError(error)
+        return data
+    
+    def write_yaml(self, path: str, data: dict) -> None:
         """Dump data to yaml file at path"""
         with open(path, 'w') as config_file:
             yaml.safe_dump(data, config_file)
@@ -34,7 +63,7 @@ class Config:
     def display_info(self) -> None:
         """Display config values and comments"""
         comments = self.load_comments()
-        config = self.load_config(self.default_config_path)
+        config = self.load_yaml(self.default_config_path)
 
         header = "Config Information"
         print(f"""\n\t{header}\n\t{'-' * len(header)}\n\tAttributes marked as Dynamic can be changed by the user\n""")
@@ -69,3 +98,37 @@ class Config:
             return False, 'Missing "update_path" attribute'
 
         return True, ""
+
+
+class Web:
+    """
+    Class for managing web requests
+    
+    Attributes:
+    url: str
+        URL to the .pyupdate folder
+    
+    Methods:
+    get_request(url: str) -> requests.Response
+        Get a request from the url
+    get_config() -> dict
+        Get the config file from the url
+    """
+    def __init__(self, url: str):
+        self._url = url
+        self._config_url = self._url + '/config.yaml'
+        self._config_man = Config()
+    
+    def get_request(self, url: str) -> requests.Response:
+        """Get a request from the url"""
+        try:
+            response = requests.get(url)
+            response.raise_for_status()
+        except Exception as e:
+            raise requests.ConnectionError(f'Url: "{url}" | {e}')
+        return response
+    
+    def get_config(self) -> dict:
+        """Get the config file from the url"""
+        response = self.get_request(self._config_url)
+        return self._config_man.loads_yaml(response.text)

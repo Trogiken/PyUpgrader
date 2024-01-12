@@ -2,7 +2,7 @@
 
 Python library to keep projects updated on clients machines
 
-**Pip Install:** `pip install git+https://github.com/Trogiken/PyUpdate`
+**Pip Install Globally:** `pip install git+https://github.com/Trogiken/PyUpdate`
 
 ## Getting Started
 
@@ -11,7 +11,7 @@ Importing pyupdate and initialize the UpdateManager object.
 ``` python
 import pyupdate
 
-update_man = pyupdate.UpdateManager("https://api.github.com/repos/{owner}/{repo}", "path/to/project/folder")
+update_man = pyupdate.UpdateManager(r"https://raw.githubusercontent.com/{Owner}/{Repo}/{Branch}/{path/to/.pyupdate}", r"path/to/project/folder")
 ```
 
 Replace the temporary url names `{}` with your repositories information.

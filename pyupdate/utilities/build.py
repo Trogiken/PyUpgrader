@@ -2,8 +2,7 @@
 
 import os
 import shutil
-import pyupdate.utilities.hashing as hashing
-from pyupdate.utilities import helper
+from pyupdate.utilities import helper, hashing
 
 
 class BuildError(Exception):
@@ -32,10 +31,22 @@ class PathError(Exception):
 
 
 class Builder:
-    """Builds a project into a pyupdate project"""
-    def __init__(self):
-        self.folder_path = None
-        self.exclude_paths = None
+    """
+    Builds a project into a pyupdate project
+
+    Attributes:
+    folder_path: str
+        Path to the project folder
+    exclude_paths: list
+        List of absolute paths to exclude from the hash database
+    
+    Methods:
+    build() -> None
+        Builds the project
+    """
+    def __init__(self, folder_path: str, exclude_paths: list):
+        self.folder_path = folder_path
+        self.exclude_paths = exclude_paths
 
         self._pyudpdate_folder = None
         self._config_path = None
@@ -79,14 +90,14 @@ class Builder:
         
         # Remove trailing slashes
         if self.folder_path.endswith('/'):
-            self.folder_path = self.folder_path[:-1]
+            self.folder_path = self.folder_path.rstrip('/')
         if self.folder_path.endswith('\\'):
-            self.folder_path = self.folder_path[:-1]
+            self.folder_path = self.folder_path.rstrip('\\')
         for i, path in enumerate(self.exclude_paths):
             if path.endswith('/'):
-                self.exclude_paths[i] = path[:-1]
+                self.exclude_paths[i] = path.rstrip('/')
             if path.endswith('\\'):
-                self.exclude_paths[i] = path[:-1]
+                self.exclude_paths[i] = path.rstrip('\\')
         
         self._pyudpdate_folder = os.path.join(self.folder_path, '.pyupdate')
         self._config_path = os.path.join(self._pyudpdate_folder, 'config.yaml')
@@ -107,17 +118,18 @@ class Builder:
         print(f'Creating config file at "{self._config_path}"')
         config = helper.Config()
 
-        default_data = config.load_config(config.default_config_path)
+        default_data = config.load_yaml(config.default_config_path)
         default_data['hash_db'] = os.path.basename(self._hash_db_path)
-        config.write_config(self._config_path, default_data)
+        config.write_yaml(self._config_path, default_data)
         
         try:
-            config.load_config(self._config_path)
+            config.load_yaml(self._config_path)
         except ValueError as error:
             raise ConfigError(f'Failed to validate config file | {error}')
     
     def _create_hash_db(self):
         """Creates the hash database"""
         print(f'Creating hash database at "{self._hash_db_path}"')
-        excluded_paths = [".pyupdate"] + self.exclude_paths
+        # DEBUG Exclude paths need more testing
+        excluded_paths = [self._pyudpdate_folder] + self.exclude_paths
         hashing.create_hash_db(self.folder_path, self._hash_db_path, excluded_paths)

@@ -1,52 +1,97 @@
 import os
 import requests
 import tempfile
+from packaging.version import Version
 from pyupdate.utilities import helper
 
 
 class UpdateManager:
-    """Class for managing updates for a program."""
+    """
+    Class for managing updates for a program.
+
+    Attributes:
+    url: str
+        URL to the .pyupdate folder
+    project_path: str
+        Path to the project folder (Not the .pyupdate folder)
+    
+    Methods:
+    check_update() -> (bool, str)
+        Check if there is an update available.
+        Return (bool, Description)
+    """
     def __init__(self, url: str, project_path: str):
-        self._url = url
+        self._url = url.rstrip('/')  # Remove trailing slash
         self._project_path = project_path
         self._pyupdate_path = os.path.join(self._project_path, '.pyupdate')
-        self._config_path = os.path.join(self._pyupdate_path, 'config.yml')
+        self._config_path = os.path.join(self._pyupdate_path, 'config.yaml')
         self._hash_db_path = None  # Set in _validate_attributes
+
+        self._config_man = helper.Config()
+        self._web_man = None  # Set in _validate_attributes
 
         self._validate_attributes()
 
-        self._config_man = helper.Config()
-        
-        if self._update_ready():
-            pass
+    @property
+    def url(self) -> str:
+        return self._url
 
-    def _update_ready(self) -> bool:
-        """Check if there has been an update downloaded"""
-        config_data = self._config_man.load_config(self._config_path)
-        if config_data['update_path']:
-            return True
-        return False
+    @url.setter
+    def url(self, value: str) -> None:
+        self._url = value.rstrip('/')  # Remove trailing slash
+        self._web_man = helper.Web(self._url)
+        self._validate_attributes()
+
+    @property
+    def project_path(self) -> str:
+        return self._project_path
+
+    @project_path.setter
+    def project_path(self, value) -> None:
+        self._project_path = value
+        self._pyupdate_path = os.path.join(self._project_path, '.pyupdate')
+        self._config_path = os.path.join(self._pyupdate_path, 'config.yml')
+        self._hash_db_path = None  # Set in _validate_attributes
+        self._validate_attributes()
     
-    def _validate_attributes(self):
+    def _validate_attributes(self) -> None:
         """Validate and set attributes of the class"""
-        if not os.path.exists(self.project_path):
-            raise FileNotFoundError(self.project_path)
+        if not os.path.exists(self._project_path):
+            raise FileNotFoundError(self._project_path)
         try:
-            requests.get(self.url)
+            requests.get(self._url)
         except requests.exceptions.ConnectionError:
-            raise requests.exceptions.ConnectionError(self.url)
+            raise requests.exceptions.ConnectionError(self._url)
         if not os.path.exists(self._pyupdate_path):
             raise FileNotFoundError(self._pyupdate_path)
-        if not os.path.exists(self.config_path):
-            raise FileNotFoundError(self.config_path)
+        if not os.path.exists(self._config_path):
+            raise FileNotFoundError(self._config_path)
         
-        config_data = self._config_man.load_config(self.config_path)
+        config_data = self._config_man.load_yaml(self._config_path)
         self._hash_db_path = os.path.join(self._pyupdate_path, config_data['hash_db'])
+        self._web_man = helper.Web(self._url)
 
-        if not os.path.exists(self.hash_db_path):
-            raise FileNotFoundError(self.hash_db_path)
+        if not os.path.exists(self._hash_db_path):
+            raise FileNotFoundError(self._hash_db_path)
 
-    def _create_program_folder(self):
+    def _create_program_folder(self) -> None:
         # do not use context manager
         # will have to manually delete folder
         pass
+
+    def check_update(self) -> (bool, str):
+        """
+        Compare cloud and local version
+        Return (bool, Description)
+        """
+        web_config = self._web_man.get_config()
+        local_config = self._config_man.load_yaml(self._config_path)
+
+        web_version = Version(web_config['version'])
+        local_version = Version(local_config['version'])
+
+        if web_version > local_version:
+            return (True, web_config['description'])
+        else:
+            return (False, local_config['description'])
+
