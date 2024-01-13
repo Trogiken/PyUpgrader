@@ -90,7 +90,7 @@ class UpdateManager:
         else:
             has_update, description = False, local_config['description']
         
-        return {'has_update': has_update, 'description': description, 'web_version': web_version, 'local_version': local_version}
+        return {'has_update': has_update, 'description': description, 'web_version': str(web_version), 'local_version': str(local_version)}
     
     def db_sum(self) -> hashing.DBSummary:
         """Return a DBSummary object using the cloud and local hash databases"""
