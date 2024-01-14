@@ -8,6 +8,7 @@ import hashlib
 import os
 import sqlite3
 import time
+import fnmatch
 from multiprocessing import Pool
 from dataclasses import dataclass
 from pyupdate.utilities import helper
@@ -81,14 +82,14 @@ class Hasher:
         except Exception as error:
             raise HashingError(f"Error hashing file '{file_path}' | {error}")
 
-    def create_hash_db(self, hash_dir_path: str, db_save_path: str, exclude_paths=[]) -> str:
+    def create_hash_db(self, hash_dir_path: str, db_save_path: str, exclude_paths=[], wildcards=[]) -> str:
         """Create a hash database from a directory path and save it to a file path. Return the save file path."""
         if os.path.exists(db_save_path):
             os.remove(db_save_path)
         
         exclude_paths = helper.normalize_paths(exclude_paths)
 
-        # separate files and directors from exclude_paths
+        # separate files and directories from exclude_paths
         exclude_file_paths = [path for path in exclude_paths if os.path.isfile(path)]
         exclude_dir_paths = [path for path in exclude_paths if os.path.isdir(path)]
 
@@ -122,6 +123,13 @@ class Hasher:
                     for path in exclude_file_paths:
                         if path in file_paths:
                             file_paths.remove(path)
+                
+                if wildcards:
+                    file_paths = [
+                        path
+                        for path in file_paths
+                        if any(fnmatch.fnmatch(path, wildcard) for wildcard in wildcards)
+                    ]
                 
                 results = pool.map(self.create_hash, file_paths)  # Use workers to create hashes
                 batch_data.extend(results)

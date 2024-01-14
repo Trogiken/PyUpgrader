@@ -44,10 +44,11 @@ class Builder:
     build() -> None
         Builds the project
     """
-    def __init__(self, project_path: str, exclude_envs: bool = False, exclude_paths: list = []):
+    def __init__(self, project_path: str, exclude_envs: bool = False, exclude_hidden: bool = False, exclude_paths: list = []):
         self.project_path = project_path
         self.exclude_envs = exclude_envs
         self.exclude_paths = exclude_paths
+        self.exclude_hidden = exclude_hidden
 
         self.env_names = [
             '.venv',
@@ -157,5 +158,7 @@ class Builder:
             excluded_paths += self.exclude_paths
         if self.exclude_envs:
             excluded_paths += [os.path.join(self.project_path, path) for path in self.env_names]
-
-        hasher.create_hash_db(self.project_path, self._hash_db_path, excluded_paths)
+        if self.exclude_hidden:
+            hasher.create_hash_db(self.project_path, self._hash_db_path, excluded_paths, ['.*/.*'])
+        else:
+            hasher.create_hash_db(self.project_path, self._hash_db_path, excluded_paths)
