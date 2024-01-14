@@ -94,6 +94,10 @@ class Hasher:
         """Create a hash database from a directory path and save it to a file path. Return the save file path."""
         if os.path.exists(db_save_path):
             os.remove(db_save_path)
+        
+        # separate files and directors from exclude_paths
+        exclude_file_paths = [os.path.isfile(path) for path in exclude_paths]
+        exclude_dir_paths = [os.path.isdir(path) for path in exclude_paths]
 
         connection = sqlite3.connect(db_save_path)
         cursor = connection.cursor()
@@ -113,21 +117,23 @@ class Hasher:
             start_time = time.time()  # Start timer
             # DEBUG
             print("Start of Pool")
-            for root, _, files in os.walk(hash_dir_path):
-                if root in exclude_paths:
-                    # DEBUG
-                    print(f"Root path exclude block: {root}")
-                    continue
+            for root, dirs, files in os.walk(hash_dir_path):
+                if exclude_dir_paths:
+                    if any(exclude_dir_path in root for exclude_dir_path in exclude_dir_paths):  # If the root path contains an excluded directory path
+                        # DEBUG
+                        print(f"Root path exclude block: {root}")
+                        dirs[:] = []  # Skip subdirectories
+                        continue
                 
                 # Get file paths
                 file_paths = [os.path.join(root, file) for file in files]
                 # Replace backslashes with forward slashes for consistency
                 file_paths = [file_path.replace('\\', '/') for file_path in file_paths]
 
-                if exclude_paths:
+                if exclude_file_paths:
                     # DEBUG
                     print(f"Second exclude path block")
-                    for path in exclude_paths:
+                    for path in exclude_file_paths:
                         if path in file_paths:
                             file_paths.remove(path)
                             # DEBUG
