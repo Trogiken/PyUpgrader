@@ -96,8 +96,12 @@ class Hasher:
             os.remove(db_save_path)
         
         # separate files and directors from exclude_paths
-        exclude_file_paths = [os.path.isfile(path) for path in exclude_paths]
-        exclude_dir_paths = [os.path.isdir(path) for path in exclude_paths]
+        exclude_file_paths = [path for path in exclude_paths if os.path.isfile(path)]
+        exclude_dir_paths = [path for path in exclude_paths if os.path.isdir(path)]
+
+        # DEBUG
+        print(f"Exclude file paths: {exclude_file_paths}")
+        print(f"Exclude dir paths: {exclude_dir_paths}")
 
         connection = sqlite3.connect(db_save_path)
         cursor = connection.cursor()
@@ -119,7 +123,7 @@ class Hasher:
             print("Start of Pool")
             for root, dirs, files in os.walk(hash_dir_path):
                 if exclude_dir_paths:
-                    if any(exclude_dir_path in root for exclude_dir_path in exclude_dir_paths):  # If the root path contains an excluded directory path
+                    if root in exclude_dir_paths:
                         # DEBUG
                         print(f"Root path exclude block: {root}")
                         dirs[:] = []  # Skip subdirectories
