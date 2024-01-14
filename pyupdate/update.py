@@ -22,6 +22,8 @@ class UpdateManager:
         Compare cloud and local version and return a dict with the results
     db_sum() -> DBSummary
         Return a DBSummary object using the cloud and local hash databases
+    
+    # TODO Add new methods
     """
     def __init__(self, url: str, project_path: str):
         self._url = url.rstrip('/')  # Remove trailing slash
@@ -110,7 +112,24 @@ class UpdateManager:
     
     def download_all(self, save_path):
         """Download all files"""
-        raise NotImplementedError
+        temp_path = ""
+        cloud_db = None
+        try:
+            temp_path = tempfile.mkdtemp()
+
+            cloud_hash_db_path = self._web_man.download_hash_db(os.path.join(temp_path, 'cloud_hashes.db'))
+            cloud_db = hashing.HashDB(cloud_hash_db_path)
+
+            base_url = self._web_man.get_base_url()
+
+            #self._web_man.download()
+        except Exception as error:
+            raise error
+        finally:
+            if cloud_db is not None:
+                cloud_db.close()
+            if os.path.exists(temp_path):
+                shutil.rmtree(temp_path)
     
     def download_required(self, save_path):
         """Download only files that have been updated"""

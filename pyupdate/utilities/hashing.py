@@ -41,6 +41,38 @@ class HashingError(Exception):
     pass
 
 
+class HashDB:
+    """A class that provides methods to interact with a hash database. # TODO add methods"""
+    def __init__(self, db_path: str):
+        self.db_path = db_path
+
+        self.connection = None
+        self.cursor = None
+
+        self.open()
+    
+    # generator that yields file paths from the database
+    def get_file_paths(self):
+        """Generator that yields file paths from the database."""
+        self.cursor.execute('SELECT file_path FROM hashes')
+        for row in self.cursor.fetchall():
+            yield row[0]
+    
+    def get_file_hash(self, file_path: str) -> str:
+        """Return the hash of a file in the database."""
+        self.cursor.execute('SELECT calculated_hash FROM hashes WHERE file_path = ?', (file_path,))
+        return self.cursor.fetchone()[0]
+    
+    def open(self):
+        """Open the database connection."""
+        self.connection = sqlite3.connect(self.db_path)
+        self.cursor = self.connection.cursor()
+
+    def close(self):
+        """Close the database connection."""
+        self.connection.close()
+
+
 class Hasher:
     """
     A class that provides methods for hashing files and creating hash databases.
