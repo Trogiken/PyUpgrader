@@ -120,7 +120,8 @@ class UpdateManager:
             cloud_hash_db_path = self._web_man.download_hash_db(os.path.join(temp_path, 'cloud_hashes.db'))
             cloud_db = hashing.HashDB(cloud_hash_db_path)
 
-            base_url = self._web_man.get_base_url()
+            base_url = self._url.split(".pyupdate")[0]
+            print(base_url)
 
             #self._web_man.download()
         except Exception as error:

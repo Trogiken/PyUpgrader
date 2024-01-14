@@ -107,7 +107,7 @@ class Hasher:
                         break
                     hasher.update(chunk)
 
-            relative_file_path = helper.relative_path(self.project_name, file_path)
+            relative_file_path = file_path.split(self.project_name)[-1].lstrip('/')
             file_hash = hasher.hexdigest()
             
             return relative_file_path, file_hash

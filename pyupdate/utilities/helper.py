@@ -15,15 +15,6 @@ def normalize_paths(paths: Union[str, List[str]]) -> List[str]:
         raise TypeError("Input must be a string or a list of strings")
 
 
-# DEBUG Changed logic
-def relative_path(relative_name: str, file_path: str) -> str:
-    """Use relative_name to form a relative file path from file_path"""
-    if relative_name not in file_path:
-        raise ValueError(f"Relative name '{relative_name}' not found in file path '{file_path}'")
-    
-    return relative_name + file_path.split(relative_name)[-1]
-
-
 class Config:
     """
     Config helper class
