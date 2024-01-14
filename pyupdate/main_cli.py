@@ -10,7 +10,7 @@ def cli():
     parser = argparse.ArgumentParser(description='PyUpdate CLI')
     parser.add_argument('-p', '--project', help="Path to project folder", required=True)
     parser.add_argument('-no_env', help="Exclude Evironment Directories", action='store_true')
-    parser.add_argument('no_hidden', help="Exclude hidden files and directories", action='store_true')
+    parser.add_argument('-no_hidden', help="Exclude hidden files and directories", action='store_true')
     parser.add_argument('-e', '--exclude', help="Exclude files and directories", nargs='+', default=[])
     args = parser.parse_args()
     

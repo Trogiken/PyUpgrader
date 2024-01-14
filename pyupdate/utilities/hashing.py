@@ -128,7 +128,7 @@ class Hasher:
                     file_paths = [
                         path
                         for path in file_paths
-                        if any(fnmatch.fnmatch(path, wildcard) for wildcard in wildcards)
+                        if not any(fnmatch.fnmatch(path, wildcard) for wildcard in wildcards)
                     ]
                 
                 results = pool.map(self.create_hash, file_paths)  # Use workers to create hashes
