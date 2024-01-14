@@ -48,11 +48,13 @@ class Builder:
     build() -> None
         Builds the project
     """
-    def __init__(self, project_path: str, exclude_envs: bool = False, exclude_hidden: bool = False, exclude_paths: list = []):
+    def __init__(self, project_path: str, exclude_envs: bool = False, exclude_hidden: bool = False, exclude_patterns: list = [], exclude_paths: list = []):
         self.project_path = project_path
         self.exclude_envs = exclude_envs
-        self.exclude_paths = exclude_paths
         self.exclude_hidden = exclude_hidden
+        self.exclude_patterns = exclude_patterns
+        self.exclude_paths = exclude_paths
+
 
         self.env_names = [
             '.venv',
@@ -158,11 +160,11 @@ class Builder:
         hasher = hashing.Hasher(project_name=os.path.basename(self.project_path))
 
         excluded_paths = [self._pyudpdate_folder]
+        if self.exclude_hidden:
+            self.exclude_patterns.append(r'.*/\..*')
         if self.exclude_paths:
             excluded_paths += self.exclude_paths
         if self.exclude_envs:
             excluded_paths += [os.path.join(self.project_path, path) for path in self.env_names]
-        if self.exclude_hidden:
-            hasher.create_hash_db(self.project_path, self._hash_db_path, excluded_paths, [r'.*/\..*'])
-        else:
-            hasher.create_hash_db(self.project_path, self._hash_db_path, excluded_paths)
+            
+        hasher.create_hash_db(self.project_path, self._hash_db_path, excluded_paths, self.exclude_patterns)

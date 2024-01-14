@@ -51,7 +51,7 @@ class Hasher:
 
     Methods:
     - create_hash(self, file_path: str) -> (str, str): Creates a hash from file bytes using the chunk method and returns the relative file path and hash as a string.
-    - create_hash_db(self, hash_dir_path: str, db_save_path: str, exclude_paths=[], wildcards=[]) -> str: Creates a hash database from a directory path and saves it to a file path. Returns the file path.
+    - create_hash_db(self, hash_dir_path: str, db_save_path: str, exclude_paths=[], exclude_patterns=[]) -> str: Creates a hash database from a directory path and saves it to a file path. Returns the file path.
     - compare_databases(self, local_db_path: str, cloud_db_path: str) -> DBSummary: Compares two hash databases and returns a summary of the differences.
     """
     def __init__(self, project_name: str):
@@ -82,7 +82,7 @@ class Hasher:
         except Exception as error:
             raise HashingError(f"Error hashing file '{file_path}' | {error}")
 
-    def create_hash_db(self, hash_dir_path: str, db_save_path: str, exclude_paths=[], wildcards=[]) -> str:
+    def create_hash_db(self, hash_dir_path: str, db_save_path: str, exclude_paths=[], exclude_patterns=[]) -> str:
         """Create a hash database from a directory path and save it to a file path. Return the save file path."""
         if os.path.exists(db_save_path):
             os.remove(db_save_path)
@@ -117,9 +117,9 @@ class Hasher:
                         dirs[:] = []  # Skip subdirectories
                         continue
                 
-                if wildcards:
-                    # if any directory in the root matches a wildcard, skip it
-                    if any(re.search(wildcard, helper.normalize_paths(root)) for wildcard in wildcards):
+                if exclude_patterns:
+                    # if any directory in the root matches a pattern, skip it
+                    if any(re.search(pattern, helper.normalize_paths(root)) for pattern in exclude_patterns):
                         dirs[:] = []  # Skip subdirectories
                         continue
                 
@@ -130,12 +130,12 @@ class Hasher:
                         if path in file_paths:
                             file_paths.remove(path)
                 
-                if wildcards:
-                    # if any file in the root matches a wildcard, skip it
+                if exclude_patterns:
+                    # if any file in the root matches a pattern, skip it
                     file_paths = [
                         path
                         for path in file_paths
-                        if not any(re.search(wildcard, path) for wildcard in wildcards)
+                        if not any(re.search(pattern, path) for pattern in exclude_patterns)
                     ]
                 
                 results = pool.map(self.create_hash, file_paths)  # Use workers to create hashes
