@@ -17,8 +17,8 @@ if __name__ == '__main__':
     web_manager = helper.Web(r"https://raw.githubusercontent.com/Trogiken/PyUpdate/downloading-cloud-files/Testing/.pyupdate")
     print(web_manager.get_config())
     cloud_db = web_manager.download_hash_db(os.path.join(tempfile.mkdtemp(), 'cloud_hashes.db'))
-    hash_manager = hashing.HashDB()
-    for path in hash_manager.get_file_paths(cloud_db):
+    hash_manager = hashing.HashDB(cloud_db)
+    for path in hash_manager.get_file_paths():
         print(path)
         print(hash_manager.get_file_hash(path))
     

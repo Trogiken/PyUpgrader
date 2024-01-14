@@ -41,7 +41,7 @@ class HashingError(Exception):
     pass
 
 
-def compare_databases(self, local_db_path: str, cloud_db_path: str) -> DBSummary:
+def compare_databases(local_db_path: str, cloud_db_path: str) -> DBSummary:
     """Compare two hash databases and return a summary of the differences."""
     connection1 = sqlite3.connect(local_db_path)
     cursor1 = connection1.cursor()
