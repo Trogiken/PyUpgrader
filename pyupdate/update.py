@@ -99,11 +99,9 @@ class UpdateManager:
         tmp_path = ""
         try:
             tmp_path = tempfile.mkdtemp()
-            hasher = hashing.Hasher(project_name=os.path.basename(self._project_path))
-
             cloud_hash_db_path = self._web_man.download_hash_db(os.path.join(tmp_path, 'cloud_hashes.db'))
 
-            return hasher.compare_databases(self._local_hash_db_path, cloud_hash_db_path)
+            return hashing.compare_databases(self._local_hash_db_path, cloud_hash_db_path)
         except Exception as error:
             raise error
         finally:

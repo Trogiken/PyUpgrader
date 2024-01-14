@@ -41,6 +41,47 @@ class HashingError(Exception):
     pass
 
 
+def compare_databases(self, local_db_path: str, cloud_db_path: str) -> DBSummary:
+    """Compare two hash databases and return a summary of the differences."""
+    connection1 = sqlite3.connect(local_db_path)
+    cursor1 = connection1.cursor()
+
+    connection2 = sqlite3.connect(cloud_db_path)
+    cursor2 = connection2.cursor()
+
+    cursor1.execute('SELECT file_path, calculated_hash FROM hashes')
+    local_db_files = {row[0]: row[1] for row in cursor1.fetchall()}
+
+    cursor2.execute('SELECT file_path, calculated_hash FROM hashes')
+    cloud_db_files = {row[0]: row[1] for row in cursor2.fetchall()}
+
+    common_files = set(local_db_files.keys()) & set(cloud_db_files.keys())
+    unique_files_local_db = list(set(local_db_files.keys()) - set(cloud_db_files.keys()))
+    unique_files_cloud_db = list(set(cloud_db_files.keys()) - set(local_db_files.keys()))
+
+    ok_files = [
+        (file_path, local_db_files[file_path])
+        for file_path in common_files
+        if local_db_files[file_path] == cloud_db_files[file_path]
+    ]
+
+    bad_files = [
+        (file_path, local_db_files[file_path], cloud_db_files[file_path])
+        for file_path in common_files
+        if local_db_files[file_path] != cloud_db_files[file_path]
+    ]
+    
+    connection1.close()
+    connection2.close()
+
+    return DBSummary(
+        unique_files_local_db=unique_files_local_db,
+        unique_files_cloud_db=unique_files_cloud_db,
+        ok_files=ok_files,
+        bad_files=bad_files
+    )
+
+
 class HashDB:
     """
     A class that provides methods to interact with a hash database.
@@ -196,43 +237,3 @@ class Hasher:
         connection.close()
 
         return db_save_path
-
-    def compare_databases(self, local_db_path: str, cloud_db_path: str) -> DBSummary:
-        """Compare two hash databases and return a summary of the differences."""
-        connection1 = sqlite3.connect(local_db_path)
-        cursor1 = connection1.cursor()
-
-        connection2 = sqlite3.connect(cloud_db_path)
-        cursor2 = connection2.cursor()
-
-        cursor1.execute('SELECT file_path, calculated_hash FROM hashes')
-        local_db_files = {row[0]: row[1] for row in cursor1.fetchall()}
-
-        cursor2.execute('SELECT file_path, calculated_hash FROM hashes')
-        cloud_db_files = {row[0]: row[1] for row in cursor2.fetchall()}
-
-        common_files = set(local_db_files.keys()) & set(cloud_db_files.keys())
-        unique_files_local_db = list(set(local_db_files.keys()) - set(cloud_db_files.keys()))
-        unique_files_cloud_db = list(set(cloud_db_files.keys()) - set(local_db_files.keys()))
-
-        ok_files = [
-            (file_path, local_db_files[file_path])
-            for file_path in common_files
-            if local_db_files[file_path] == cloud_db_files[file_path]
-        ]
-
-        bad_files = [
-            (file_path, local_db_files[file_path], cloud_db_files[file_path])
-            for file_path in common_files
-            if local_db_files[file_path] != cloud_db_files[file_path]
-        ]
-        
-        connection1.close()
-        connection2.close()
-
-        return DBSummary(
-            unique_files_local_db=unique_files_local_db,
-            unique_files_cloud_db=unique_files_cloud_db,
-            ok_files=ok_files,
-            bad_files=bad_files
-        )
