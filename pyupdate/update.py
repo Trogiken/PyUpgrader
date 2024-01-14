@@ -108,7 +108,7 @@ class UpdateManager:
             if os.path.exists(tmp_path):
                 shutil.rmtree(tmp_path)
     
-    def download_all(self, save_path: str = "") -> None:
+    def download_files(self, save_path: str = "", required: bool = False) -> str:
         """Download all files to save_path, if save_path is empty, create a temp folder, return the save_path"""
         db_temp_path = ""
         cloud_db = None
@@ -119,10 +119,20 @@ class UpdateManager:
 
             cloud_hash_db_path = self._web_man.download_hash_db(os.path.join(db_temp_path, 'cloud_hashes.db'))
             cloud_db = hashing.HashDB(cloud_hash_db_path)
+            compare_db = self.db_sum()
 
             base_url = self._url.split(".pyupdate")[0]
             # Download all files in db and copy structure
             for file in cloud_db.get_file_paths():
+                if required:
+                    print('required')
+                    if file not in compare_db.bad_files:
+                        print('skipping' + file)
+                        continue
+                    if file not in compare_db.unique_files_cloud_db:
+                        print('skipping' + file)
+                        continue
+
                 download_url = base_url + file
 
                 # Create save path
@@ -142,7 +152,3 @@ class UpdateManager:
                 cloud_db.close()
             if os.path.exists(db_temp_path):
                 shutil.rmtree(db_temp_path)
-    
-    def download_required(self, save_path):
-        """Download only files that have been updated"""
-        raise NotImplementedError
