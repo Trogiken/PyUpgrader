@@ -107,3 +107,11 @@ class UpdateManager:
         finally:
             if os.path.exists(tmp_path):
                 shutil.rmtree(tmp_path)
+    
+    def download_all(self, save_path):
+        """Download all files"""
+        raise NotImplementedError
+    
+    def download_required(self, save_path):
+        """Download only files that have been updated"""
+        raise NotImplementedError
