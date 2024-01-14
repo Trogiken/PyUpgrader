@@ -10,3 +10,5 @@ if __name__ == '__main__':
         print("Update found!")
         print(f"{update_check.get('cloud_version')} <- {update_check.get('local_version')}")
         print(update_check.get('description'))
+    else:
+        print("No Updates")
