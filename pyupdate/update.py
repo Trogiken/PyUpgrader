@@ -123,23 +123,22 @@ class UpdateManager:
 
             base_url = self._url.split(".pyupdate")[0]
             # Download all files in db and copy structure
-            for file in cloud_db.get_file_paths():
+            for local_file_path in cloud_db.get_file_paths():
                 if required:
-                    print('required')
-                    if file not in compare_db.bad_files:
-                        print('skipping' + file)
-                        continue
-                    if file not in compare_db.unique_files_cloud_db:
-                        print('skipping' + file)
-                        continue
+                    for cloud_file_path, _, _ in compare_db.bad_files:
+                        if local_file_path != cloud_file_path:
+                            continue
+                    for cloud_file_path in compare_db.unique_files_cloud_db:
+                        if local_file_path != cloud_file_path:
+                            continue
 
-                download_url = base_url + file
+                download_url = base_url + local_file_path
 
                 # Create save path
-                relative_path = os.path.dirname(file)
+                relative_path = os.path.dirname(local_file_path)
                 save_folder = os.path.join(save_path, relative_path)
                 os.makedirs(save_folder, exist_ok=True)
-                save_file = os.path.join(save_folder, os.path.basename(file))
+                save_file = os.path.join(save_folder, os.path.basename(local_file_path))
 
                 self._web_man.download(download_url, save_file)
             
