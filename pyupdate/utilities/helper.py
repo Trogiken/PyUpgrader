@@ -126,8 +126,6 @@ class Web:
         Get the config file from the url
     download_hash_db(save_path: str) -> str
         Download the hash database and save it to save_path
-    
-    # TODO Add new methods
     """
     def __init__(self, url: str):
         self._url = url
@@ -151,7 +149,7 @@ class Web:
     
     def download(self, url_path: str, save_path) -> str:
         """Download a file from the url_path and save it to save_path. Return the save_path"""
-        response = self.get_request(self._url + '/' + url_path)
+        response = self.get_request(url_path)
 
         with open(save_path, 'wb') as f:
             f.write(response.content)
@@ -161,17 +159,4 @@ class Web:
     def download_hash_db(self, save_path: str) -> str:
         """Download the hash database and save it to save_path. Return the save_path"""
         config = self.get_config()
-        return self.download(config['hash_db'], save_path)
-
-    def get_branch(self) -> str:
-        """Get the branch from the url"""
-        match = re.search(r"/(\w+)/\w+/\.\w+", self._url)
-        if match:
-            return match.group(1)
-        else:
-            raise ValueError(f"Could not find branch in url '{self._url}'")
-    
-    def get_base_url(self) -> str:
-        """Remove the 'path to .pyupdate' part of the url"""
-        branch = self.get_branch()
-        return self._url.split(branch)[0] + branch
+        return self.download(self._url + '/' + config['hash_db'], save_path)

@@ -42,7 +42,18 @@ class HashingError(Exception):
 
 
 class HashDB:
-    """A class that provides methods to interact with a hash database. # TODO add methods"""
+    """
+    A class that provides methods to interact with a hash database.
+
+    Attributes:
+        db_path (str): The path to the hash database.
+
+    Methods:
+        get_file_paths() -> str: Generator that yields file paths from the database.
+        get_file_hash(file_path: str) -> str: Returns the hash of a file in the database.
+        open() -> None: Opens the database connection.
+        close() -> None: Closes the database connection.
+    """
     def __init__(self, db_path: str):
         self.db_path = db_path
 
@@ -51,8 +62,7 @@ class HashDB:
 
         self.open()
     
-    # generator that yields file paths from the database
-    def get_file_paths(self):
+    def get_file_paths(self) -> str:
         """Generator that yields file paths from the database."""
         self.cursor.execute('SELECT file_path FROM hashes')
         for row in self.cursor.fetchall():
@@ -63,12 +73,12 @@ class HashDB:
         self.cursor.execute('SELECT calculated_hash FROM hashes WHERE file_path = ?', (file_path,))
         return self.cursor.fetchone()[0]
     
-    def open(self):
+    def open(self) -> None:
         """Open the database connection."""
         self.connection = sqlite3.connect(self.db_path)
         self.cursor = self.connection.cursor()
 
-    def close(self):
+    def close(self) -> None:
         """Close the database connection."""
         self.connection.close()
 

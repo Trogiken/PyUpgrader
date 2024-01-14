@@ -110,7 +110,7 @@ class UpdateManager:
             if os.path.exists(tmp_path):
                 shutil.rmtree(tmp_path)
     
-    def download_all(self, save_path):
+    def download_all(self, save_path) -> None:
         """Download all files"""
         temp_path = ""
         cloud_db = None
@@ -121,9 +121,18 @@ class UpdateManager:
             cloud_db = hashing.HashDB(cloud_hash_db_path)
 
             base_url = self._url.split(".pyupdate")[0]
-            print(base_url)
+            # Download all files in db and copy structure
+            for file in cloud_db.get_file_paths():
+                download_url = base_url + file
 
-            #self._web_man.download()
+                # Create save path
+                relative_path = os.path.dirname(file)
+                save_folder = os.path.join(save_path, relative_path)
+                os.makedirs(save_folder, exist_ok=True)
+                save_file = os.path.join(save_folder, os.path.basename(file))
+
+                self._web_man.download(download_url, save_file)
+
         except Exception as error:
             raise error
         finally:
