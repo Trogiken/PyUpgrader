@@ -120,25 +120,25 @@ class UpdateManager:
             cloud_hash_db_path = self._web_man.download_hash_db(os.path.join(db_temp_path, 'cloud_hashes.db'))
             cloud_db = hashing.HashDB(cloud_hash_db_path)
             compare_db = self.db_sum()
+            
+            files_to_download = None
+            
+            if required:
+                bad_files = [path for path, _, _ in compare_db.bad_files]
+                files_to_download = compare_db.unique_files_cloud_db + bad_files
+            else:
+                files_to_download = [path for path in cloud_db.get_file_paths]
 
-            base_url = self._url.split(".pyupdate")[0]
             # Download all files in db and copy structure
-            for local_file_path in cloud_db.get_file_paths():
-                if required:
-                    for cloud_file_path, _, _ in compare_db.bad_files:
-                        if local_file_path != cloud_file_path:
-                            continue
-                    for cloud_file_path in compare_db.unique_files_cloud_db:
-                        if local_file_path != cloud_file_path:
-                            continue
-
-                download_url = base_url + local_file_path
+            base_url = self._url.split(".pyupdate")[0]
+            for file_path in files_to_download:
+                download_url = base_url + file_path
 
                 # Create save path
-                relative_path = os.path.dirname(local_file_path)
+                relative_path = os.path.dirname(file_path)
                 save_folder = os.path.join(save_path, relative_path)
                 os.makedirs(save_folder, exist_ok=True)
-                save_file = os.path.join(save_folder, os.path.basename(local_file_path))
+                save_file = os.path.join(save_folder, os.path.basename(file_path))
 
                 self._web_man.download(download_url, save_file)
             

@@ -1,5 +1,4 @@
-description: Display if there is not a update
+description: Cloud Desc
 hash_db: hashes.db
 update_path: ''
-version: 1.0.1
-
+version: 1.0.2
