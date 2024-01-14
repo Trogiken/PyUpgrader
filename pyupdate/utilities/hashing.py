@@ -87,6 +87,8 @@ class Hasher:
             os.remove(db_save_path)
         
         exclude_paths = helper.normalize_paths(exclude_paths)
+        # DEBUG
+        print(exclude_paths)
         # separate files and directors from exclude_paths
         exclude_file_paths = [path for path in exclude_paths if os.path.isfile(path)]
         exclude_dir_paths = [path for path in exclude_paths if os.path.isdir(path)]
@@ -115,7 +117,7 @@ class Hasher:
             print("Start of Pool")
             for root, dirs, files in os.walk(hash_dir_path):
                 if exclude_dir_paths:
-                    if root in exclude_dir_paths:
+                    if any([path in root for path in exclude_dir_paths]):
                         # DEBUG
                         print(f"Root path exclude block: {root}")
                         dirs[:] = []  # Skip subdirectories
