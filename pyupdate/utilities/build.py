@@ -37,6 +37,10 @@ class Builder:
     Attributes:
     project_path: str
         Path to the project folder
+    exclude_envs: bool
+        Whether to exclude common virtual environment folders
+    exclude_hidden: bool
+        Whether to exclude hidden files and folders
     exclude_paths: list
         List of absolute paths to exclude from the hash database
     

@@ -51,7 +51,7 @@ class Hasher:
 
     Methods:
     - create_hash(self, file_path: str) -> (str, str): Creates a hash from file bytes using the chunk method and returns the relative file path and hash as a string.
-    - create_hash_db(self, hash_dir_path: str, db_save_path: str, exclude_paths=[]) -> str: Creates a hash database from a directory path and saves it to a file path. Returns the file path.
+    - create_hash_db(self, hash_dir_path: str, db_save_path: str, exclude_paths=[], wildcards=[]) -> str: Creates a hash database from a directory path and saves it to a file path. Returns the file path.
     - compare_databases(self, local_db_path: str, cloud_db_path: str) -> DBSummary: Compares two hash databases and returns a summary of the differences.
     """
     def __init__(self, project_name: str):
@@ -112,17 +112,18 @@ class Hasher:
 
             for root, dirs, files in os.walk(hash_dir_path):
                 if exclude_dir_paths:
-                    if any(exclude_dir_path in helper.normalize_paths(root) for exclude_dir_path in exclude_dir_paths):  # If the root directory is in the exclude directories
+                    # If the root directory is in the exclude directories
+                    if any(exclude_dir_path in helper.normalize_paths(root) for exclude_dir_path in exclude_dir_paths):
                         dirs[:] = []  # Skip subdirectories
                         continue
                 
                 if wildcards:
-                    # if anay directory in the root matches a wildcard, skip it
+                    # if any directory in the root matches a wildcard, skip it
                     if any(re.search(wildcard, helper.normalize_paths(root)) for wildcard in wildcards):
-                        dirs[:] = []
+                        dirs[:] = []  # Skip subdirectories
                         continue
                 
-                file_paths = helper.normalize_paths([os.path.join(root, file) for file in files])
+                file_paths = helper.normalize_paths([os.path.join(root, file) for file in files])  # Get full file paths
 
                 if exclude_file_paths:
                     for path in exclude_file_paths:
@@ -130,6 +131,7 @@ class Hasher:
                             file_paths.remove(path)
                 
                 if wildcards:
+                    # if any file in the root matches a wildcard, skip it
                     file_paths = [
                         path
                         for path in file_paths
