@@ -8,7 +8,7 @@ import hashlib
 import os
 import sqlite3
 import time
-import fnmatch
+import re
 from multiprocessing import Pool
 from dataclasses import dataclass
 from pyupdate.utilities import helper
@@ -116,7 +116,12 @@ class Hasher:
                         dirs[:] = []  # Skip subdirectories
                         continue
                 
-                # Get file paths
+                if wildcards:
+                    # if anay directory in the root matches a wildcard, skip it
+                    if any(re.search(wildcard, helper.normalize_paths(root)) for wildcard in wildcards):
+                        dirs[:] = []
+                        continue
+                
                 file_paths = helper.normalize_paths([os.path.join(root, file) for file in files])
 
                 if exclude_file_paths:
@@ -128,7 +133,7 @@ class Hasher:
                     file_paths = [
                         path
                         for path in file_paths
-                        if not any(fnmatch.fnmatch(path, wildcard) for wildcard in wildcards)
+                        if not any(re.search(wildcard, path) for wildcard in wildcards)
                     ]
                 
                 results = pool.map(self.create_hash, file_paths)  # Use workers to create hashes
