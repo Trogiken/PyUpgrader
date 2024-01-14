@@ -10,6 +10,7 @@ import sqlite3
 import time
 from multiprocessing import Pool
 from dataclasses import dataclass
+from pyupdate.utilities import helper
 
 
 @dataclass
@@ -48,22 +49,12 @@ class Hasher:
         The name of the project directory (Not the full path)
 
     Methods:
-    - get_relative_path(self, file_path: str) -> str: Returns the relative path of a file path.
     - create_hash(self, file_path: str) -> (str, str): Creates a hash from file bytes using the chunk method and returns the relative file path and hash as a string.
     - create_hash_db(self, hash_dir_path: str, db_save_path: str, exclude_paths=[]) -> str: Creates a hash database from a directory path and saves it to a file path. Returns the file path.
     - compare_databases(self, local_db_path: str, cloud_db_path: str) -> DBSummary: Compares two hash databases and returns a summary of the differences.
     """
     def __init__(self, project_name: str):
         self.project_name = project_name
-    
-    def get_relative_path(self, file_path: str) -> str:
-        """Get the relative path of a file path."""
-        proj_index = file_path.find(self.project_name)
-        if proj_index != -1:
-            relative_file_path = file_path[proj_index:]
-        else:
-            raise ValueError(f"Project name '{self.project_name}' not found in file path '{file_path}'")
-        return relative_file_path
 
     def create_hash(self, file_path: str) -> (str, str):
         """Create hash from file bytes using the chunk method, return relative file path and hash as a string."""
@@ -83,7 +74,7 @@ class Hasher:
                         break
                     hasher.update(chunk)
 
-            relative_file_path = self.get_relative_path(file_path)
+            relative_file_path = helper.relative_path(self.project_name, file_path)
             file_hash = hasher.hexdigest()
             
             return relative_file_path, file_hash
@@ -95,6 +86,7 @@ class Hasher:
         if os.path.exists(db_save_path):
             os.remove(db_save_path)
         
+        exclude_paths = helper.normalize_paths(exclude_paths)
         # separate files and directors from exclude_paths
         exclude_file_paths = [path for path in exclude_paths if os.path.isfile(path)]
         exclude_dir_paths = [path for path in exclude_paths if os.path.isdir(path)]
@@ -130,9 +122,7 @@ class Hasher:
                         continue
                 
                 # Get file paths
-                file_paths = [os.path.join(root, file) for file in files]
-                # Replace backslashes with forward slashes for consistency
-                file_paths = [file_path.replace('\\', '/') for file_path in file_paths]
+                file_paths = helper.normalize_paths([os.path.join(root, file) for file in files])
 
                 if exclude_file_paths:
                     # DEBUG

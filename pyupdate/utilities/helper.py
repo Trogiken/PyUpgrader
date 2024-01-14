@@ -3,6 +3,21 @@ import yaml
 import requests
 
 
+def normalize_paths(path_list: list) -> list:
+    """Replace back with forward slashes in a list of paths"""
+    return [path.replace('\\', '/') for path in path_list]
+
+
+def relative_path(relative_name: str, file_path: str) -> str:
+    """Use relative_name to form a relative file path from file_path"""
+    name_index = file_path.find(relative_name)
+    if name_index != -1:
+        relative_file_path = file_path[name_index:]
+    else:
+        raise ValueError(f"Relative name '{relative_name}' not found in file path '{file_path}'")
+    return relative_file_path
+
+
 class Config:
     """
     Config helper class
