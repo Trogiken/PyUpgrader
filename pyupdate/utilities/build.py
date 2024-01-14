@@ -159,4 +159,7 @@ class Builder:
         if self.exclude_envs:
             excluded_paths += [os.path.join(self.project_path, path) for path in self.env_names]
         
+        # DEBUG
+        print(excluded_paths)
+        
         hasher.create_hash_db(self.project_path, self._hash_db_path, excluded_paths)

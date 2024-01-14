@@ -111,8 +111,12 @@ class Hasher:
         # Create a pool, default number of processes is the number of cores on the machine
         with Pool() as pool:
             start_time = time.time()  # Start timer
+            # DEBUG
+            print("Start of Pool")
             for root, _, files in os.walk(hash_dir_path):
                 if root in exclude_paths:
+                    # DEBUG
+                    print(f"Root path exclude block: {root}")
                     continue
                 
                 # Get file paths
@@ -121,9 +125,13 @@ class Hasher:
                 file_paths = [file_path.replace('\\', '/') for file_path in file_paths]
 
                 if exclude_paths:
+                    # DEBUG
+                    print(f"Second exclude path block")
                     for path in exclude_paths:
                         if path in file_paths:
                             file_paths.remove(path)
+                            # DEBUG
+                            print(f"File removed: {path}")
                 
                 results = pool.map(self.create_hash, file_paths)  # Use workers to create hashes
                 batch_data.extend(results)
