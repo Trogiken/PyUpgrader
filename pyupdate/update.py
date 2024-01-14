@@ -110,14 +110,16 @@ class UpdateManager:
             if os.path.exists(tmp_path):
                 shutil.rmtree(tmp_path)
     
-    def download_all(self, save_path) -> None:
-        """Download all files"""
-        temp_path = ""
+    def download_all(self, save_path: str = "") -> None:
+        """Download all files to save_path, if save_path is empty, create a temp folder, return the save_path"""
+        db_temp_path = ""
         cloud_db = None
         try:
-            temp_path = tempfile.mkdtemp()
+            db_temp_path = tempfile.mkdtemp()
+            if not save_path:
+                save_path = tempfile.mkdtemp()
 
-            cloud_hash_db_path = self._web_man.download_hash_db(os.path.join(temp_path, 'cloud_hashes.db'))
+            cloud_hash_db_path = self._web_man.download_hash_db(os.path.join(db_temp_path, 'cloud_hashes.db'))
             cloud_db = hashing.HashDB(cloud_hash_db_path)
 
             base_url = self._url.split(".pyupdate")[0]
@@ -132,14 +134,16 @@ class UpdateManager:
                 save_file = os.path.join(save_folder, os.path.basename(file))
 
                 self._web_man.download(download_url, save_file)
+            
+            return save_path
 
         except Exception as error:
             raise error
         finally:
             if cloud_db is not None:
                 cloud_db.close()
-            if os.path.exists(temp_path):
-                shutil.rmtree(temp_path)
+            if os.path.exists(db_temp_path):
+                shutil.rmtree(db_temp_path)
     
     def download_required(self, save_path):
         """Download only files that have been updated"""
