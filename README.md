@@ -6,9 +6,9 @@ Python library to keep projects updated on clients machines
 
 ## Getting Started
 
-Build your project using the PyUpdate CLI and upload it.
+Build your project using the PyUpdate CLI and upload it. Use the _-h_ flag to see a list of options.
 
-`pyupdate -f absolute/path/to/project -no_env`
+`pyupdate -f absolute/path/to/project -no_hidden`
 
 Importing PyUpdate and initialize the UpdateManager object.
 

@@ -8,6 +8,7 @@ import hashlib
 import os
 import sqlite3
 import time
+import re
 from multiprocessing import Pool
 from dataclasses import dataclass
 from pyupdate.utilities import helper
@@ -50,7 +51,7 @@ class Hasher:
 
     Methods:
     - create_hash(self, file_path: str) -> (str, str): Creates a hash from file bytes using the chunk method and returns the relative file path and hash as a string.
-    - create_hash_db(self, hash_dir_path: str, db_save_path: str, exclude_paths=[]) -> str: Creates a hash database from a directory path and saves it to a file path. Returns the file path.
+    - create_hash_db(self, hash_dir_path: str, db_save_path: str, exclude_paths=[], exclude_patterns=[]) -> str: Creates a hash database from a directory path and saves it to a file path. Returns the file path.
     - compare_databases(self, local_db_path: str, cloud_db_path: str) -> DBSummary: Compares two hash databases and returns a summary of the differences.
     """
     def __init__(self, project_name: str):
@@ -81,14 +82,14 @@ class Hasher:
         except Exception as error:
             raise HashingError(f"Error hashing file '{file_path}' | {error}")
 
-    def create_hash_db(self, hash_dir_path: str, db_save_path: str, exclude_paths=[]) -> str:
+    def create_hash_db(self, hash_dir_path: str, db_save_path: str, exclude_paths=[], exclude_patterns=[]) -> str:
         """Create a hash database from a directory path and save it to a file path. Return the save file path."""
         if os.path.exists(db_save_path):
             os.remove(db_save_path)
         
         exclude_paths = helper.normalize_paths(exclude_paths)
 
-        # separate files and directors from exclude_paths
+        # separate files and directories from exclude_paths
         exclude_file_paths = [path for path in exclude_paths if os.path.isfile(path)]
         exclude_dir_paths = [path for path in exclude_paths if os.path.isdir(path)]
 
@@ -111,17 +112,31 @@ class Hasher:
 
             for root, dirs, files in os.walk(hash_dir_path):
                 if exclude_dir_paths:
-                    if any(exclude_dir_path in helper.normalize_paths(root) for exclude_dir_path in exclude_dir_paths):  # If the root directory is in the exclude directories
+                    # If the root directory is in the exclude directories
+                    if any(exclude_dir_path in helper.normalize_paths(root) for exclude_dir_path in exclude_dir_paths):
                         dirs[:] = []  # Skip subdirectories
                         continue
                 
-                # Get file paths
-                file_paths = helper.normalize_paths([os.path.join(root, file) for file in files])
+                if exclude_patterns:
+                    # if any directory in the root matches a pattern, skip it
+                    if any(re.search(pattern, helper.normalize_paths(root)) for pattern in exclude_patterns):
+                        dirs[:] = []  # Skip subdirectories
+                        continue
+                
+                file_paths = helper.normalize_paths([os.path.join(root, file) for file in files])  # Get full file paths
 
                 if exclude_file_paths:
                     for path in exclude_file_paths:
                         if path in file_paths:
                             file_paths.remove(path)
+                
+                if exclude_patterns:
+                    # if any file in the root matches a pattern, skip it
+                    file_paths = [
+                        path
+                        for path in file_paths
+                        if not any(re.search(pattern, path) for pattern in exclude_patterns)
+                    ]
                 
                 results = pool.map(self.create_hash, file_paths)  # Use workers to create hashes
                 batch_data.extend(results)
