@@ -1,11 +1,17 @@
 import os
 import yaml
 import requests
+from typing import List, Union
 
 
-def normalize_paths(path_list: list) -> list:
-    """Replace back with forward slashes in a list of paths"""
-    return [path.replace('\\', '/') for path in path_list]
+def normalize_paths(paths: Union[str, List[str]]) -> List[str]:
+    """Replace backslashes with forward slashes in a path or a list of paths"""
+    if isinstance(paths, str):
+        return paths.replace('\\', '/')
+    elif isinstance(paths, list):
+        return [path.replace('\\', '/') for path in paths]
+    else:
+        raise TypeError("Input must be a string or a list of strings")
 
 
 def relative_path(relative_name: str, file_path: str) -> str:

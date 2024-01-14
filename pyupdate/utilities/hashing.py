@@ -87,15 +87,10 @@ class Hasher:
             os.remove(db_save_path)
         
         exclude_paths = helper.normalize_paths(exclude_paths)
-        # DEBUG
-        print(exclude_paths)
+
         # separate files and directors from exclude_paths
         exclude_file_paths = [path for path in exclude_paths if os.path.isfile(path)]
         exclude_dir_paths = [path for path in exclude_paths if os.path.isdir(path)]
-
-        # DEBUG
-        print(f"Exclude file paths: {exclude_file_paths}")
-        print(f"Exclude dir paths: {exclude_dir_paths}")
 
         connection = sqlite3.connect(db_save_path)
         cursor = connection.cursor()
@@ -113,13 +108,10 @@ class Hasher:
         # Create a pool, default number of processes is the number of cores on the machine
         with Pool() as pool:
             start_time = time.time()  # Start timer
-            # DEBUG
-            print("Start of Pool")
+
             for root, dirs, files in os.walk(hash_dir_path):
                 if exclude_dir_paths:
-                    if any([path in root for path in exclude_dir_paths]):
-                        # DEBUG
-                        print(f"Root path exclude block: {root}")
+                    if any(exclude_dir_path in helper.normalize_paths(root) for exclude_dir_path in exclude_dir_paths):  # If the root directory is in the exclude directories
                         dirs[:] = []  # Skip subdirectories
                         continue
                 
@@ -127,13 +119,9 @@ class Hasher:
                 file_paths = helper.normalize_paths([os.path.join(root, file) for file in files])
 
                 if exclude_file_paths:
-                    # DEBUG
-                    print(f"Second exclude path block")
                     for path in exclude_file_paths:
                         if path in file_paths:
                             file_paths.remove(path)
-                            # DEBUG
-                            print(f"File removed: {path}")
                 
                 results = pool.map(self.create_hash, file_paths)  # Use workers to create hashes
                 batch_data.extend(results)

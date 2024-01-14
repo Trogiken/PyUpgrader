@@ -152,14 +152,10 @@ class Builder:
         print(f'Creating hash database at "{self._hash_db_path}"')
         hasher = hashing.Hasher(project_name=os.path.basename(self.project_path))
 
-        # DEBUG Exclude paths need more testing
         excluded_paths = [self._pyudpdate_folder]
         if self.exclude_paths:
             excluded_paths += self.exclude_paths
         if self.exclude_envs:
             excluded_paths += [os.path.join(self.project_path, path) for path in self.env_names]
-        
-        # DEBUG
-        print(excluded_paths)
-        
+
         hasher.create_hash_db(self.project_path, self._hash_db_path, excluded_paths)

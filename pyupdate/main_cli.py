@@ -17,9 +17,6 @@ def cli():
         print(f'Folder "{args.project}" does not exist')
         sys.exit(1)
     
-    # DEBUG
-    print(args.no_env)
-    
     try:
         builder = util.Builder(project_path=args.project, exclude_envs=args.no_env, exclude_paths=args.exclude)
         builder.build()
