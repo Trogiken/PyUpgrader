@@ -159,12 +159,12 @@ class Builder:
         print(f'Creating hash database at "{self._hash_db_path}"')
         hasher = hashing.Hasher(project_name=os.path.basename(self.project_path))
 
-        excluded_paths = [self._pyudpdate_folder]
+        self.exclude_paths.append(self._pyudpdate_folder)
+        self.exclude_patterns.append(r'.*/__pycache__/.*')
+
         if self.exclude_hidden:
             self.exclude_patterns.append(r'.*/\..*')
-        if self.exclude_paths:
-            excluded_paths += self.exclude_paths
         if self.exclude_envs:
-            excluded_paths += [os.path.join(self.project_path, path) for path in self.env_names]
-            
-        hasher.create_hash_db(self.project_path, self._hash_db_path, excluded_paths, self.exclude_patterns)
+            self.exclude_paths += [os.path.join(self.project_path, path) for path in self.env_names]
+
+        hasher.create_hash_db(self.project_path, self._hash_db_path, self.exclude_paths, self.exclude_patterns)
