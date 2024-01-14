@@ -2,13 +2,13 @@
 
 Python library to keep projects updated on clients machines
 
-**Pip Install Globally:** `pip install git+https://github.com/Trogiken/PyUpdate`
+**Pip Install:** `pip install git+https://github.com/Trogiken/PyUpdate`
 
 ## Getting Started
 
 Build your project using the PyUpdate CLI and upload it.
 
-`pyupdate -f absolute/path/to/project`
+`pyupdate -f absolute/path/to/project -no_env`
 
 Importing PyUpdate and initialize the UpdateManager object.
 

@@ -1,6 +1,27 @@
 import os
 import yaml
 import requests
+from typing import List, Union
+
+
+def normalize_paths(paths: Union[str, List[str]]) -> List[str]:
+    """Replace backslashes with forward slashes in a path or a list of paths"""
+    if isinstance(paths, str):
+        return paths.replace('\\', '/')
+    elif isinstance(paths, list):
+        return [path.replace('\\', '/') for path in paths]
+    else:
+        raise TypeError("Input must be a string or a list of strings")
+
+
+def relative_path(relative_name: str, file_path: str) -> str:
+    """Use relative_name to form a relative file path from file_path"""
+    name_index = file_path.find(relative_name)
+    if name_index != -1:
+        relative_file_path = file_path[name_index:]
+    else:
+        raise ValueError(f"Relative name '{relative_name}' not found in file path '{file_path}'")
+    return relative_file_path
 
 
 class Config:
