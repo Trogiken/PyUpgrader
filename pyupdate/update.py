@@ -127,7 +127,7 @@ class UpdateManager:
                 bad_files = [path for path, _, _ in compare_db.bad_files]
                 files_to_download = compare_db.unique_files_cloud_db + bad_files
             else:
-                files_to_download = [path for path in cloud_db.get_file_paths]
+                files_to_download = [path for path in cloud_db.get_file_paths()]
 
             # Download all files in db and copy structure
             base_url = self._url.split(".pyupdate")[0]
