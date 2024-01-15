@@ -22,6 +22,9 @@ class UpdateManager:
         Compare cloud and local version and return a dict with the results
     db_sum() -> DBSummary
         Return a DBSummary object using the cloud and local hash databases
+    download_files(save_path: str = "", required: bool = False) -> str
+        Download files to save_path, if save_path is empty, create a temp folder, return the save_path
+        If required is True, only download files that have changed or have been added.
     """
     def __init__(self, url: str, project_path: str):
         self._url = url.rstrip('/')  # Remove trailing slash
@@ -97,13 +100,58 @@ class UpdateManager:
         tmp_path = ""
         try:
             tmp_path = tempfile.mkdtemp()
-            hasher = hashing.Hasher(project_name=os.path.basename(self._project_path))
-
             cloud_hash_db_path = self._web_man.download_hash_db(os.path.join(tmp_path, 'cloud_hashes.db'))
 
-            return hasher.compare_databases(self._local_hash_db_path, cloud_hash_db_path)
+            return hashing.compare_databases(self._local_hash_db_path, cloud_hash_db_path)
         except Exception as error:
             raise error
         finally:
             if os.path.exists(tmp_path):
                 shutil.rmtree(tmp_path)
+    
+    def download_files(self, save_path: str = "", required: bool = False) -> str:
+        """
+        Download files to save_path, if save_path is empty, create a temp folder, return the save_path
+        If required is True, only download files that have changed or have been added.
+        """
+        db_temp_path = ""
+        cloud_db = None
+        try:
+            db_temp_path = tempfile.mkdtemp()
+            if not save_path:
+                save_path = tempfile.mkdtemp()
+
+            cloud_hash_db_path = self._web_man.download_hash_db(os.path.join(db_temp_path, 'cloud_hashes.db'))
+            cloud_db = hashing.HashDB(cloud_hash_db_path)
+            compare_db = self.db_sum()
+            
+            files_to_download = None
+            
+            if required:
+                bad_files = [path for path, _, _ in compare_db.bad_files]
+                files_to_download = compare_db.unique_files_cloud_db + bad_files
+            else:
+                files_to_download = [path for path in cloud_db.get_file_paths()]
+
+            # Download all files in db and copy structure
+            base_url = self._url.split(".pyupdate")[0]
+            for file_path in files_to_download:
+                download_url = base_url + file_path
+
+                # Create save path
+                relative_path = os.path.dirname(file_path)
+                save_folder = os.path.join(save_path, relative_path)
+                os.makedirs(save_folder, exist_ok=True)
+                save_file = os.path.join(save_folder, os.path.basename(file_path))
+
+                self._web_man.download(download_url, save_file)
+            
+            return save_path
+
+        except Exception as error:
+            raise error
+        finally:
+            if cloud_db is not None:
+                cloud_db.close()
+            if os.path.exists(db_temp_path):
+                shutil.rmtree(db_temp_path)

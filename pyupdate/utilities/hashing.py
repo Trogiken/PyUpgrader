@@ -41,6 +41,89 @@ class HashingError(Exception):
     pass
 
 
+def compare_databases(local_db_path: str, cloud_db_path: str) -> DBSummary:
+    """Compare two hash databases and return a summary of the differences."""
+    connection1 = sqlite3.connect(local_db_path)
+    cursor1 = connection1.cursor()
+
+    connection2 = sqlite3.connect(cloud_db_path)
+    cursor2 = connection2.cursor()
+
+    cursor1.execute('SELECT file_path, calculated_hash FROM hashes')
+    local_db_files = {row[0]: row[1] for row in cursor1.fetchall()}
+
+    cursor2.execute('SELECT file_path, calculated_hash FROM hashes')
+    cloud_db_files = {row[0]: row[1] for row in cursor2.fetchall()}
+
+    common_files = set(local_db_files.keys()) & set(cloud_db_files.keys())
+    unique_files_local_db = list(set(local_db_files.keys()) - set(cloud_db_files.keys()))
+    unique_files_cloud_db = list(set(cloud_db_files.keys()) - set(local_db_files.keys()))
+
+    ok_files = [
+        (file_path, local_db_files[file_path])
+        for file_path in common_files
+        if local_db_files[file_path] == cloud_db_files[file_path]
+    ]
+
+    bad_files = [
+        (file_path, local_db_files[file_path], cloud_db_files[file_path])
+        for file_path in common_files
+        if local_db_files[file_path] != cloud_db_files[file_path]
+    ]
+    
+    connection1.close()
+    connection2.close()
+
+    return DBSummary(
+        unique_files_local_db=unique_files_local_db,
+        unique_files_cloud_db=unique_files_cloud_db,
+        ok_files=ok_files,
+        bad_files=bad_files
+    )
+
+
+class HashDB:
+    """
+    A class that provides methods to interact with a hash database.
+
+    Attributes:
+        db_path (str): The path to the hash database.
+
+    Methods:
+        get_file_paths() -> str: Generator that yields file paths from the database.
+        get_file_hash(file_path: str) -> str: Returns the hash of a file in the database.
+        open() -> None: Opens the database connection.
+        close() -> None: Closes the database connection.
+    """
+    def __init__(self, db_path: str):
+        self.db_path = db_path
+
+        self.connection = None
+        self.cursor = None
+
+        self.open()
+    
+    def get_file_paths(self) -> str:
+        """Generator that yields file paths from the database."""
+        self.cursor.execute('SELECT file_path FROM hashes')
+        for row in self.cursor.fetchall():
+            yield row[0]
+    
+    def get_file_hash(self, file_path: str) -> str:
+        """Return the hash of a file in the database."""
+        self.cursor.execute('SELECT calculated_hash FROM hashes WHERE file_path = ?', (file_path,))
+        return self.cursor.fetchone()[0]
+    
+    def open(self) -> None:
+        """Open the database connection."""
+        self.connection = sqlite3.connect(self.db_path)
+        self.cursor = self.connection.cursor()
+
+    def close(self) -> None:
+        """Close the database connection."""
+        self.connection.close()
+
+
 class Hasher:
     """
     A class that provides methods for hashing files and creating hash databases.
@@ -52,7 +135,6 @@ class Hasher:
     Methods:
     - create_hash(self, file_path: str) -> (str, str): Creates a hash from file bytes using the chunk method and returns the relative file path and hash as a string.
     - create_hash_db(self, hash_dir_path: str, db_save_path: str, exclude_paths=[], exclude_patterns=[]) -> str: Creates a hash database from a directory path and saves it to a file path. Returns the file path.
-    - compare_databases(self, local_db_path: str, cloud_db_path: str) -> DBSummary: Compares two hash databases and returns a summary of the differences.
     """
     def __init__(self, project_name: str):
         self.project_name = project_name
@@ -75,7 +157,7 @@ class Hasher:
                         break
                     hasher.update(chunk)
 
-            relative_file_path = helper.relative_path(self.project_name, file_path)
+            relative_file_path = file_path.split(self.project_name)[-1].lstrip('/')
             file_hash = hasher.hexdigest()
             
             return relative_file_path, file_hash
@@ -154,43 +236,3 @@ class Hasher:
         connection.close()
 
         return db_save_path
-
-    def compare_databases(self, local_db_path: str, cloud_db_path: str) -> DBSummary:
-        """Compare two hash databases and return a summary of the differences."""
-        connection1 = sqlite3.connect(local_db_path)
-        cursor1 = connection1.cursor()
-
-        connection2 = sqlite3.connect(cloud_db_path)
-        cursor2 = connection2.cursor()
-
-        cursor1.execute('SELECT file_path, calculated_hash FROM hashes')
-        local_db_files = {row[0]: row[1] for row in cursor1.fetchall()}
-
-        cursor2.execute('SELECT file_path, calculated_hash FROM hashes')
-        cloud_db_files = {row[0]: row[1] for row in cursor2.fetchall()}
-
-        common_files = set(local_db_files.keys()) & set(cloud_db_files.keys())
-        unique_files_local_db = list(set(local_db_files.keys()) - set(cloud_db_files.keys()))
-        unique_files_cloud_db = list(set(cloud_db_files.keys()) - set(local_db_files.keys()))
-
-        ok_files = [
-            (file_path, local_db_files[file_path])
-            for file_path in common_files
-            if local_db_files[file_path] == cloud_db_files[file_path]
-        ]
-
-        bad_files = [
-            (file_path, local_db_files[file_path], cloud_db_files[file_path])
-            for file_path in common_files
-            if local_db_files[file_path] != cloud_db_files[file_path]
-        ]
-        
-        connection1.close()
-        connection2.close()
-
-        return DBSummary(
-            unique_files_local_db=unique_files_local_db,
-            unique_files_cloud_db=unique_files_cloud_db,
-            ok_files=ok_files,
-            bad_files=bad_files
-        )

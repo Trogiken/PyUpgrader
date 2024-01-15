@@ -1,6 +1,7 @@
 import os
 import yaml
 import requests
+import re
 from typing import List, Union
 
 
@@ -12,16 +13,6 @@ def normalize_paths(paths: Union[str, List[str]]) -> List[str]:
         return [path.replace('\\', '/') for path in paths]
     else:
         raise TypeError("Input must be a string or a list of strings")
-
-
-def relative_path(relative_name: str, file_path: str) -> str:
-    """Use relative_name to form a relative file path from file_path"""
-    name_index = file_path.find(relative_name)
-    if name_index != -1:
-        relative_file_path = file_path[name_index:]
-    else:
-        raise ValueError(f"Relative name '{relative_name}' not found in file path '{file_path}'")
-    return relative_file_path
 
 
 class Config:
@@ -156,12 +147,16 @@ class Web:
         response = self.get_request(self._config_url)
         return self._config_man.loads_yaml(response.text)
     
-    def download_hash_db(self, save_path: str) -> str:
-        """Download the hash database and save it to save_path. Return the save_path"""
-        config = self.get_config()
-        response = self.get_request(self._url + '/' + config['hash_db'])
+    def download(self, url_path: str, save_path) -> str:
+        """Download a file from the url_path and save it to save_path. Return the save_path"""
+        response = self.get_request(url_path)
 
         with open(save_path, 'wb') as f:
             f.write(response.content)
-
+        
         return save_path
+    
+    def download_hash_db(self, save_path: str) -> str:
+        """Download the hash database and save it to save_path. Return the save_path"""
+        config = self.get_config()
+        return self.download(self._url + '/' + config['hash_db'], save_path)
