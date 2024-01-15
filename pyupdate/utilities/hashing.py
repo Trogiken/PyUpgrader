@@ -135,7 +135,6 @@ class Hasher:
     Methods:
     - create_hash(self, file_path: str) -> (str, str): Creates a hash from file bytes using the chunk method and returns the relative file path and hash as a string.
     - create_hash_db(self, hash_dir_path: str, db_save_path: str, exclude_paths=[], exclude_patterns=[]) -> str: Creates a hash database from a directory path and saves it to a file path. Returns the file path.
-    - compare_databases(self, local_db_path: str, cloud_db_path: str) -> DBSummary: Compares two hash databases and returns a summary of the differences.
     """
     def __init__(self, project_name: str):
         self.project_name = project_name

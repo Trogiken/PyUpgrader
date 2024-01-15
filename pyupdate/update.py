@@ -22,8 +22,9 @@ class UpdateManager:
         Compare cloud and local version and return a dict with the results
     db_sum() -> DBSummary
         Return a DBSummary object using the cloud and local hash databases
-    
-    # TODO Add new methods
+    download_files(save_path: str = "", required: bool = False) -> str
+        Download files to save_path, if save_path is empty, create a temp folder, return the save_path
+        If required is True, only download files that have changed or have been added.
     """
     def __init__(self, url: str, project_path: str):
         self._url = url.rstrip('/')  # Remove trailing slash
@@ -109,7 +110,10 @@ class UpdateManager:
                 shutil.rmtree(tmp_path)
     
     def download_files(self, save_path: str = "", required: bool = False) -> str:
-        """Download all files to save_path, if save_path is empty, create a temp folder, return the save_path"""
+        """
+        Download files to save_path, if save_path is empty, create a temp folder, return the save_path
+        If required is True, only download files that have changed or have been added.
+        """
         db_temp_path = ""
         cloud_db = None
         try:
