@@ -163,7 +163,7 @@ class UpdateManager:
             if os.path.exists(tmp_path):
                 shutil.rmtree(tmp_path)
     
-    def get_files(self, updated_only: bool = False):
+    def get_files(self, updated_only: bool = False) -> list:
         """
         Retrieves a list of files from the cloud database.
         Note that this function does not return files that have been deleted from the cloud.
@@ -253,6 +253,7 @@ class UpdateManager:
     def update(self, file_dir: str) -> None:
         """
         Start the application update process.
+        The closing of the main application should be executed immediately after the call of this function.
 
         Args:
         - file_dir: str
