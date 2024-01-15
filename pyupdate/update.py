@@ -165,8 +165,7 @@ class UpdateManager:
     
     def download_files(self, save_path: str = "", required: bool = False) -> str:
         """
-        Download files to save_path, if save_path is empty, create a temp folder, return the save_path.
-        If required is True, only download files that have changed or have been added.
+        Download cloud files and return the path where the files are saved.
 
         Args:
         - save_path: str, optional
@@ -210,7 +209,6 @@ class UpdateManager:
                 self._web_man.download(download_url, save_file)
             
             return save_path
-
         except Exception as error:
             raise error
         finally:
@@ -218,3 +216,13 @@ class UpdateManager:
                 cloud_db.close()
             if os.path.exists(db_temp_path):
                 shutil.rmtree(db_temp_path)
+    
+    def update(self, file_dir: str) -> None:
+        """
+        Start the application update process.
+
+        Args:
+        - file_dir: str
+            The path to the directory where the files are saved.
+        """
+        raise NotImplementedError("This method has not been implemented yet.")
