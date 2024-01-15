@@ -1,5 +1,15 @@
-"""Builds a project into a pyupdate project"""
+"""
+This module provides the functionality to build a project into a pyupdate project.
+It is intended to be used by the command line tool.
 
+It defines the following classes:
+- BuildError: Raised when there is an error building a project.
+- FolderCreationError: Raised when there is an error creating a folder.
+- ConfigError: Raised when there is an error with the config file.
+- HashDBError: Raised when there is an error with the hash database.
+- PathError: Raised when there is an error with a path.
+- Builder: Builds a project into a pyupdate project.
+"""
 import os
 import shutil
 from pyupdate.utilities import helper, hashing
@@ -35,26 +45,26 @@ class Builder:
     Builds a project into a pyupdate project
 
     Attributes:
-    project_path: str
-        Path to the project folder
-    exclude_envs: bool
-        Whether to exclude common virtual environment folders
-    exclude_hidden: bool
-        Whether to exclude hidden files and folders
-    exclude_paths: list
-        List of absolute paths to exclude from the hash database
-    
+    - project_path: Path to the project folder.
+    - exclude_envs: Whether to exclude common virtual environment folders.
+    - exclude_hidden: Whether to exclude hidden files and folders.
+    - exclude_patterns: List of patterns to exclude from the hash database.
+    - exclude_paths: List of absolute paths to exclude from the hash database.
+
     Methods:
-    build() -> None
-        Builds the project
+    - build(): Builds the project into a pyupdate project.
+    - _validate_paths(): Validates and sets the paths.
+    - _create_pyupdate_folder(): Creates the .pyupdate folder.
+    - _create_config_file(): Creates the config file.
+    - _create_hash_db(): Creates the hash database.
     """
+
     def __init__(self, project_path: str, exclude_envs: bool = False, exclude_hidden: bool = False, exclude_patterns: list = [], exclude_paths: list = []):
         self.project_path = project_path
         self.exclude_envs = exclude_envs
         self.exclude_hidden = exclude_hidden
         self.exclude_patterns = exclude_patterns
         self.exclude_paths = exclude_paths
-
 
         self.env_names = [
             '.venv',

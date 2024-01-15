@@ -1,7 +1,19 @@
 """
 Hasher module for PyUpdate.
 
-This module is a modified version of https://github.com/Trogiken/random-projects/blob/master/python/tools/DataIntegrityChecker/SCRIPT.py
+This module provides classes and functions for hashing files, creating hash databases, and comparing hash databases.
+Modified version of https://github.com/Trogiken/random-projects/blob/master/python/tools/DataIntegrityChecker/SCRIPT.py
+
+Classes:
+- DBSummary: Dataclass for database summary.
+- HashDB: A class that provides methods to interact with a hash database.
+- Hasher: A class that provides methods for hashing files and creating hash databases.
+
+Functions:
+- compare_databases(local_db_path: str, cloud_db_path: str) -> DBSummary: Compare two hash databases and return a summary of the differences.
+
+Exceptions:
+- HashingError: Exception raised for errors in the hashing process.
 """
 
 import hashlib
@@ -42,7 +54,15 @@ class HashingError(Exception):
 
 
 def compare_databases(local_db_path: str, cloud_db_path: str) -> DBSummary:
-    """Compare two hash databases and return a summary of the differences."""
+    """
+    Compare two hash databases and return a summary of the differences.
+
+    - local_db_path (str): The file path of the local hash database.
+    - cloud_db_path (str): The file path of the cloud hash database.
+
+    Returns:
+        DBSummary: An object containing the summary of the differences between the two databases.
+    """
     connection1 = sqlite3.connect(local_db_path)
     cursor1 = connection1.cursor()
 
@@ -95,32 +115,51 @@ class HashDB:
         open() -> None: Opens the database connection.
         close() -> None: Closes the database connection.
     """
-    def __init__(self, db_path: str):
-        self.db_path = db_path
 
+    def __init__(self, db_path: str):
+        """
+        Initializes a new instance of the HashDB class.
+
+        Args:
+        - db_path (str): The path to the hash database.
+        """
+        self.db_path = db_path
         self.connection = None
         self.cursor = None
-
         self.open()
     
     def get_file_paths(self) -> str:
-        """Generator that yields file paths from the database."""
+        """
+        Generator that yields file paths from the database.
+        """
         self.cursor.execute('SELECT file_path FROM hashes')
         for row in self.cursor.fetchall():
             yield row[0]
     
     def get_file_hash(self, file_path: str) -> str:
-        """Return the hash of a file in the database."""
+        """
+        Returns the hash of a file in the database.
+
+        Args:
+        - file_path (str): The path of the file.
+
+        Returns:
+        - str: The hash of the file.
+        """
         self.cursor.execute('SELECT calculated_hash FROM hashes WHERE file_path = ?', (file_path,))
         return self.cursor.fetchone()[0]
     
     def open(self) -> None:
-        """Open the database connection."""
+        """
+        Opens the database connection.
+        """
         self.connection = sqlite3.connect(self.db_path)
         self.cursor = self.connection.cursor()
 
     def close(self) -> None:
-        """Close the database connection."""
+        """
+        Closes the database connection.
+        """
         self.connection.close()
 
 
@@ -136,11 +175,28 @@ class Hasher:
     - create_hash(self, file_path: str) -> (str, str): Creates a hash from file bytes using the chunk method and returns the relative file path and hash as a string.
     - create_hash_db(self, hash_dir_path: str, db_save_path: str, exclude_paths=[], exclude_patterns=[]) -> str: Creates a hash database from a directory path and saves it to a file path. Returns the file path.
     """
+
     def __init__(self, project_name: str):
+        """
+        Initialize the Hasher class.
+
+        Args:
+        - project_name: str
+            The name of the project directory (Not the full path)
+        """
         self.project_name = project_name
 
     def create_hash(self, file_path: str) -> (str, str):
-        """Create hash from file bytes using the chunk method, return relative file path and hash as a string."""
+        """
+        Create a hash from file bytes using the chunk method and return the relative file path and hash as a string.
+
+        Args:
+        - file_path: str
+            The path of the file to be hashed.
+
+        Returns:
+        - Tuple[str, str]: The relative file path and hash as a string.
+        """
         try:
             chunk_size = 4096
             file_size = os.path.getsize(file_path)
@@ -159,16 +215,31 @@ class Hasher:
 
             relative_file_path = file_path.split(self.project_name)[-1].lstrip('/')
             file_hash = hasher.hexdigest()
-            
+
             return relative_file_path, file_hash
         except Exception as error:
             raise HashingError(f"Error hashing file '{file_path}' | {error}")
 
     def create_hash_db(self, hash_dir_path: str, db_save_path: str, exclude_paths=[], exclude_patterns=[]) -> str:
-        """Create a hash database from a directory path and save it to a file path. Return the save file path."""
+        """
+        Create a hash database from a directory path and save it to a file path. Return the save file path.
+
+        Args:
+        - hash_dir_path: str
+            The path of the directory to create the hash database from.
+        - db_save_path: str
+            The path to save the hash database file.
+        - exclude_paths: List[str], optional
+            A list of paths to exclude from the hash database creation. Default is an empty list.
+        - exclude_patterns: List[str], optional
+            A list of patterns to exclude from the hash database creation. Default is an empty list.
+
+        Returns:
+        - str: The file path of the saved hash database.
+        """
         if os.path.exists(db_save_path):
             os.remove(db_save_path)
-        
+
         exclude_paths = helper.normalize_paths(exclude_paths)
 
         # separate files and directories from exclude_paths
@@ -198,20 +269,20 @@ class Hasher:
                     if any(exclude_dir_path in helper.normalize_paths(root) for exclude_dir_path in exclude_dir_paths):
                         dirs[:] = []  # Skip subdirectories
                         continue
-                
+
                 if exclude_patterns:
                     # if any directory in the root matches a pattern, skip it
                     if any(re.search(pattern, helper.normalize_paths(root)) for pattern in exclude_patterns):
                         dirs[:] = []  # Skip subdirectories
                         continue
-                
+
                 file_paths = helper.normalize_paths([os.path.join(root, file) for file in files])  # Get full file paths
 
                 if exclude_file_paths:
                     for path in exclude_file_paths:
                         if path in file_paths:
                             file_paths.remove(path)
-                
+
                 if exclude_patterns:
                     # if any file in the root matches a pattern, skip it
                     file_paths = [
@@ -219,7 +290,7 @@ class Hasher:
                         for path in file_paths
                         if not any(re.search(pattern, path) for pattern in exclude_patterns)
                     ]
-                
+
                 results = pool.map(self.create_hash, file_paths)  # Use workers to create hashes
                 batch_data.extend(results)
 

@@ -1,3 +1,5 @@
+"""This module provides the UpdateManager class for managing updates for a program."""
+
 import os
 import requests
 import tempfile
@@ -12,21 +14,31 @@ class UpdateManager:
     Class for managing updates for a program.
 
     Attributes:
-    url: str
+    - url: str
         URL to the .pyupdate folder
-    project_path: str
+    - project_path: str
         Path to the project folder (Not the .pyupdate folder)
     
     Methods:
-    check_update() -> dict
+    - check_update() -> dict
         Compare cloud and local version and return a dict with the results
-    db_sum() -> DBSummary
+    - db_sum() -> DBSummary
         Return a DBSummary object using the cloud and local hash databases
-    download_files(save_path: str = "", required: bool = False) -> str
+    - download_files(save_path: str = "", required: bool = False) -> str
         Download files to save_path, if save_path is empty, create a temp folder, return the save_path
         If required is True, only download files that have changed or have been added.
     """
+
     def __init__(self, url: str, project_path: str):
+        """
+        Initialize the UpdateManager class.
+
+        Args:
+        - url: str
+            URL to the .pyupdate folder
+        - project_path: str
+            Path to the project folder (Not the .pyupdate folder)
+        """
         self._url = url.rstrip('/')  # Remove trailing slash
         self._project_path = project_path
         self._pyupdate_path = os.path.join(self._project_path, '.pyupdate')
@@ -40,20 +52,46 @@ class UpdateManager:
 
     @property
     def url(self) -> str:
+        """
+        Get the URL to the .pyupdate folder.
+
+        Returns:
+        - str: The URL to the .pyupdate folder.
+        """
         return self._url
 
     @url.setter
     def url(self, value: str) -> None:
+        """
+        Set the URL to the .pyupdate folder.
+
+        Args:
+        - value: str
+            The URL to the .pyupdate folder.
+        """
         self._url = value.rstrip('/')  # Remove trailing slash
         self._web_man = helper.Web(self._url)
         self._validate_attributes()
 
     @property
     def project_path(self) -> str:
+        """
+        Get the path to the project folder (Not the .pyupdate folder).
+
+        Returns:
+        - str: The path to the project folder.
+        """
         return self._project_path
 
     @project_path.setter
     def project_path(self, value) -> None:
+        """
+        Set the path to the project folder (Not the .pyupdate folder).
+
+        Args:
+        - value: str
+            The path to the project folder.
+        """
         self._project_path = value
         self._pyupdate_path = os.path.join(self._project_path, '.pyupdate')
         self._config_path = os.path.join(self._pyupdate_path, 'config.yml')
@@ -61,7 +99,9 @@ class UpdateManager:
         self._validate_attributes()
     
     def _validate_attributes(self) -> None:
-        """Validate and set attributes of the class"""
+        """
+        Validate and set attributes of the class.
+        """
         if not os.path.exists(self._project_path):
             raise FileNotFoundError(self._project_path)
         try:
@@ -81,7 +121,16 @@ class UpdateManager:
             raise FileNotFoundError(self._local_hash_db_path)
 
     def check_update(self) -> dict:
-        """Compare cloud and local version and return a dict with the results"""
+        """
+        Compare cloud and local version and return a dict with the results.
+
+        Returns:
+        - dict: A dictionary with the following keys:
+            - has_update (bool): True if there is an update available, False otherwise.
+            - description (str): The description of the update.
+            - web_version (str): The version number from the cloud.
+            - local_version (str): The version number from the local configuration.
+        """
         web_config = self._web_man.get_config()
         local_config = self._config_man.load_yaml(self._config_path)
 
@@ -96,7 +145,12 @@ class UpdateManager:
         return {'has_update': has_update, 'description': description, 'web_version': str(web_version), 'local_version': str(local_version)}
     
     def db_sum(self) -> hashing.DBSummary:
-        """Return a DBSummary object using the cloud and local hash databases"""
+        """
+        Return a DBSummary object using the cloud and local hash databases.
+
+        Returns:
+        - hashing.DBSummary: A DBSummary object.
+        """
         tmp_path = ""
         try:
             tmp_path = tempfile.mkdtemp()
@@ -111,8 +165,17 @@ class UpdateManager:
     
     def download_files(self, save_path: str = "", required: bool = False) -> str:
         """
-        Download files to save_path, if save_path is empty, create a temp folder, return the save_path
+        Download files to save_path, if save_path is empty, create a temp folder, return the save_path.
         If required is True, only download files that have changed or have been added.
+
+        Args:
+        - save_path: str, optional
+            The path to save the downloaded files. If not provided, a temporary folder will be created.
+        - required: bool, optional
+            If True, only download files that have changed or have been added.
+
+        Returns:
+        - str: The path where the files are saved.
         """
         db_temp_path = ""
         cloud_db = None

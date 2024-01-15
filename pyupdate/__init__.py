@@ -1,5 +1,4 @@
 from pyupdate.update import UpdateManager
-import pyupdate.utilities as util
 
 
 def info():
