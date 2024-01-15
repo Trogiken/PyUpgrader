@@ -163,6 +163,49 @@ class UpdateManager:
             if os.path.exists(tmp_path):
                 shutil.rmtree(tmp_path)
     
+    def get_files(self, updated_only: bool = False):
+        """
+        Retrieves a list of files from the cloud database.
+        Note that this function does not return files that have been deleted from the cloud.
+
+        Args:
+        - updated_only (bool, optional): If True, only returns files that have been updated. 
+            Defaults to False.
+
+        Returns:
+        - list: A list of file paths.
+
+        Raises:
+        - Exception: If an error occurs during the retrieval process.
+        """
+        db_temp_path = ""
+        cloud_db = None
+        try:
+            db_temp_path = tempfile.mkdtemp()
+            if not save_path:
+                save_path = tempfile.mkdtemp()
+
+            cloud_hash_db_path = self._web_man.download_hash_db(os.path.join(db_temp_path, 'cloud_hashes.db'))
+            cloud_db = hashing.HashDB(cloud_hash_db_path)
+            compare_db = self.db_sum()
+
+            files = None
+
+            if updated_only:
+                bad_files = [path for path, _, _ in compare_db.bad_files]
+                files = compare_db.unique_files_cloud_db + bad_files
+            else:
+                files = [path for path in cloud_db.get_file_paths()]
+
+            return files
+        except Exception as error:
+            raise error
+        finally:
+            if cloud_db is not None:
+                cloud_db.close()
+            if db_temp_path:
+                shutil.rmtree(db_temp_path)
+    
     def download_files(self, save_path: str = "", required: bool = False) -> str:
         """
         Download cloud files and return the path where the files are saved.
@@ -175,25 +218,20 @@ class UpdateManager:
 
         Returns:
         - str: The path where the files are saved.
+
+        Raises:
+        - Exception: If an error occurs during the download process.
         """
-        db_temp_path = ""
-        cloud_db = None
         try:
-            db_temp_path = tempfile.mkdtemp()
             if not save_path:
                 save_path = tempfile.mkdtemp()
-
-            cloud_hash_db_path = self._web_man.download_hash_db(os.path.join(db_temp_path, 'cloud_hashes.db'))
-            cloud_db = hashing.HashDB(cloud_hash_db_path)
-            compare_db = self.db_sum()
             
             files_to_download = None
             
             if required:
-                bad_files = [path for path, _, _ in compare_db.bad_files]
-                files_to_download = compare_db.unique_files_cloud_db + bad_files
+                files_to_download = self.get_files(updated_only=True)
             else:
-                files_to_download = [path for path in cloud_db.get_file_paths()]
+                files_to_download = self.get_files()
 
             # Download all files in db and copy structure
             base_url = self._url.split(".pyupdate")[0]
@@ -211,11 +249,6 @@ class UpdateManager:
             return save_path
         except Exception as error:
             raise error
-        finally:
-            if cloud_db is not None:
-                cloud_db.close()
-            if os.path.exists(db_temp_path):
-                shutil.rmtree(db_temp_path)
     
     def update(self, file_dir: str) -> None:
         """
@@ -225,4 +258,9 @@ class UpdateManager:
         - file_dir: str
             The path to the directory where the files are saved.
         """
-        raise NotImplementedError("This method has not been implemented yet.")
+        todo = {
+            'add': [],
+            'delete': [],
+            'overwrite': [],
+        }
+        raise NotImplementedError("This function has not been implemented yet.")
