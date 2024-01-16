@@ -9,6 +9,22 @@ from packaging.version import Version
 from pyupdate.utilities import helper, hashing
 
 
+# create error classes for exceptions
+class DBSumError(Exception):
+    """This exception is raised when there is an error in comparing values from the databases."""
+    pass
+
+
+class GetFilesError(Exception):
+    """This exception is raised when there is an error in retrieving file paths from the cloud."""
+    pass
+
+
+class DownloadFilesError(Exception):
+    """This exception is raised when there is an error in downloading files from the cloud."""
+    pass
+
+
 class UpdateManager:
     """
     Class for managing updates for a program.
@@ -159,7 +175,7 @@ class UpdateManager:
 
             return hashing.compare_databases(self._local_hash_db_path, cloud_hash_db_path)
         except Exception as error:
-            raise error
+            raise DBSumError(error)
         finally:
             if os.path.exists(tmp_path):
                 shutil.rmtree(tmp_path)
@@ -200,7 +216,7 @@ class UpdateManager:
 
             return files
         except Exception as error:
-            raise error
+            raise GetFilesError(error)
         finally:
             if cloud_db is not None:
                 cloud_db.close()
@@ -249,7 +265,7 @@ class UpdateManager:
             
             return save_path
         except Exception as error:
-            raise error
+            raise DownloadFilesError(error)
     
     def update(self, file_dir: str) -> None:
         """
