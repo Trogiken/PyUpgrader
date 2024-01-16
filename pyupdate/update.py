@@ -24,9 +24,10 @@ class UpdateManager:
         Compare cloud and local version and return a dict with the results
     - db_sum() -> DBSummary
         Return a DBSummary object using the cloud and local hash databases
+    - get_files(updated_only: bool = False) -> list
+        Retrieves a list of files from the cloud database.
     - download_files(save_path: str = "", required: bool = False) -> str
         Download files to save_path, if save_path is empty, create a temp folder, return the save_path
-        If required is True, only download files that have changed or have been added.
     """
 
     def __init__(self, url: str, project_path: str):
