@@ -294,7 +294,7 @@ class UpdateManager:
         # TODO Or rehash local files and overwrite the local config file
 
         update_details = {
-            'update': [file_path for file_path in  db_summary.unique_files_cloud_db] + [file_path for file_path, _, _ in db_summary.bad_files],
+            'update': [],
             'delete': [file_path for file_path in db_summary.unique_files_local_db],
             'project_path': self._project_path,
             'startup_file_path': startup_file_path
@@ -302,6 +302,8 @@ class UpdateManager:
 
         if update_all:
             update_details['update'] = self.get_files(updated_only=False)
+        else:
+            update_details['update'] = [file_path for file_path in db_summary.unique_files_cloud_db] + [file_path for file_path, _, _ in db_summary.bad_files]
         
         # save actions to pickle file
         action_pkl = os.path.join(file_dir, 'actions.pkl')
