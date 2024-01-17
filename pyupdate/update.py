@@ -6,6 +6,7 @@ import tempfile
 import shutil
 import pickle
 import subprocess
+import sys
 from packaging.version import Version
 from pyupdate.utilities import helper, hashing
 
@@ -265,13 +266,13 @@ class UpdateManager:
         except Exception as error:
             raise DownloadFilesError(error)
     
-    def update(self, file_dir: str, startup_file_path: str, db_summary: hashing.DBSummary, update_all: bool = False) -> str:
+    def update(self, file_dir: str, startup_file_path: str, db_summary: hashing.DBSummary, update_all: bool = True, cleanup: bool = True) -> str:
         """
         Start the application update process.
         A lock file will be created in the .pyupdate folder.
         This file is used to by file_updater.py to determine when to start updating.
         Remove the lock file to start the update process,
-        main application should be exited immediately after removing the lock file.
+        main application should call sys.exit() immediately after removing the lock file.
 
         Args:
         - file_dir: str
@@ -281,22 +282,26 @@ class UpdateManager:
         - db_summary: hashing.DBSummary
             A DBSummary object.
         - update_all: bool, optional
-            If True, overwrite all files. Defaults to False.
+            If True, overwrite all files. Defaults to True.
             If downloaded all files instead of required, this should be set to True.
+        - cleanup: bool, optional
+            If True, remove the downloaded files after the update process is complete. Defaults to True.
         
         Returns:
         - str: The path to the lock file.
         """
+        # TODO download .pyupdate folder from web and overwrite local .pyupdate folder
+        # TODO Or rehash local files and overwrite the local config file
+
         update_details = {
-            'add': [file_path for file_path in  db_summary.unique_files_cloud_db],
+            'update': [file_path for file_path in  db_summary.unique_files_cloud_db] + [file_path for file_path, _, _ in db_summary.bad_files],
             'delete': [file_path for file_path in db_summary.unique_files_local_db],
-            'overwrite': [file_path for file_path, _, _ in db_summary.bad_files],
             'project_path': self._project_path,
             'startup_file_path': startup_file_path
         }
 
         if update_all:
-            update_details['overwrite'] = [path for path in self.get_files(updated_only=False) if path not in update_details['add']]
+            update_details['update'] = self.get_files(updated_only=False)
         
         # save actions to pickle file
         action_pkl = os.path.join(file_dir, 'actions.pkl')
@@ -309,6 +314,9 @@ class UpdateManager:
             file.write('')
         
         # start file_updater.py using subprocessing
-        subprocess.Popen(['python', os.path.join(os.path.dirname(__file__), 'utilities', 'file_updater.py'), '-p', file_dir, '-a', action_pkl, '-l', lock_file])
+        command = [sys.executable, os.path.join(os.path.dirname(__file__), 'utilities', 'file_updater.py'), '-p', file_dir, '-a', action_pkl, '-l', lock_file]
+        if cleanup:
+            command.append('-c')
+        subprocess.Popen(command)
 
         return lock_file
