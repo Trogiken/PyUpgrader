@@ -32,10 +32,23 @@ def main():
         del_files = update_details['delete']
         project_path = update_details['project_path']
         startup_path = update_details['startup_path']
-
-    # DEBUG
-    with open(os.path.join(os.path.dirname(__file__), 'test.txt'), 'w') as f:
-        f.write(str(update_details))
+        cloud_config_path = update_details['cloud_config_path']
+        cloud_hash_db_path = update_details['cloud_hash_db_path']
+    
+    # Replace config and hash db
+    if os.path.exists(cloud_config_path):
+        source = cloud_config_path
+        destination = os.path.join(project_path, '.pyupdate', os.path.basename(cloud_config_path))
+        os.rename(source, destination)
+    else:
+        raise FileNotFoundError(f"Cloud config not found at '{cloud_config_path}'")
+    
+    if os.path.exists(cloud_hash_db_path):
+        source = cloud_hash_db_path
+        destination = os.path.join(project_path, '.pyupdate', os.path.basename(cloud_hash_db_path))
+        os.rename(source, destination)
+    else:
+        raise FileNotFoundError(f"Cloud hash db not found at '{cloud_hash_db_path}'")
     
     # Update the files
     for file in update_files:

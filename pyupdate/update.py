@@ -266,7 +266,7 @@ class UpdateManager:
         except Exception as error:
             raise DownloadFilesError(error)
     
-    def update(self, file_dir: str, startup_file_path: str, db_summary: hashing.DBSummary, update_all: bool = True, cleanup: bool = True) -> str:
+    def update(self, file_dir: str, startup_path: str, db_summary: hashing.DBSummary, update_all: bool = True, cleanup: bool = True) -> str:
         """
         Start the application update process.
         A lock file will be created in the .pyupdate folder.
@@ -290,14 +290,25 @@ class UpdateManager:
         Returns:
         - str: The path to the lock file.
         """
-        # TODO download .pyupdate folder from web and overwrite local .pyupdate folder
-        # TODO Or rehash local files and overwrite the local config file
+        # Create temp folder in file_dir for holding update settings
+        tmp_dir = tempfile.mkdtemp(dir=file_dir)
+        cloud_config_path = os.path.join(tmp_dir, 'config.yaml')
+        cloud_hash_db_path = os.path.join(tmp_dir, 'hashes.db')
+
+        # download cloud hash db
+        self._web_man.download_hash_db(cloud_hash_db_path)
+
+        # create cloud config file
+        self._config_man.write_yaml(cloud_config_path, self._web_man.get_config())
+
 
         update_details = {
             'update': [],
             'delete': [file_path for file_path in db_summary.unique_files_local_db],
             'project_path': self._project_path,
-            'startup_file_path': startup_file_path
+            'startup_path': startup_path,
+            'cloud_config_path': cloud_config_path,
+            'cloud_hash_db_path': cloud_hash_db_path,
         }
 
         if update_all:
@@ -306,7 +317,7 @@ class UpdateManager:
             update_details['update'] = [file_path for file_path in db_summary.unique_files_cloud_db] + [file_path for file_path, _, _ in db_summary.bad_files]
         
         # save actions to pickle file
-        action_pkl = os.path.join(file_dir, 'actions.pkl')
+        action_pkl = os.path.join(tmp_dir, 'actions.pkl')
         with open(action_pkl, 'wb') as file:
             pickle.dump(update_details, file)
         
