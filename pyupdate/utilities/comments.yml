@@ -6,8 +6,14 @@ version: |
 description: |
   Dynamic - Description of the this version of the project
 
+startup_path: |
+  Dynamic - Path to the file that starts the main application
+
+required_only: |
+  Dynamic - If only the changed/new files should be updated
+
+cleanup: |
+  Dynamic - If the download/update folder should be deleted
+
 hash_db: |
   Static - Name of the database file
-
-update_path: |
-  Static - Path to the updated files

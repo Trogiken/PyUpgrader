@@ -4,6 +4,10 @@ version: 0.0.0
 
 description: "Description of the project"
 
-hash_db: ""
+startup_path: ""
 
-update_path: ""
+required_only: false
+
+cleanup: true
+
+hash_db: ""

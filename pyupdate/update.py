@@ -266,70 +266,71 @@ class UpdateManager:
         except Exception as error:
             raise DownloadFilesError(error)
     
-    def update(self, file_dir: str, startup_path: str, db_summary: hashing.DBSummary, update_all: bool = True, cleanup: bool = True) -> str:
-        """
-        Start the application update process.
-        A lock file will be created in the .pyupdate folder.
-        This file is used to by file_updater.py to determine when to start updating.
-        Remove the lock file to start the update process,
-        main application should call sys.exit() immediately after removing the lock file.
+    def update(self, file_dir: str = "") -> str:
+            """
+            Start the application update process.
+            A lock file will be created in the .pyupdate folder.
+            This file is used by file_updater.py to determine when to start updating.
+            Remove the lock file to start the update process,
+            main application should call sys.exit() immediately after removing the lock file.
 
-        Args:
-        - file_dir: str
-            The path to the directory where the files are saved.
-        - startup_path: str
-            The path to the startup file.
-        - db_summary: hashing.DBSummary
-            A DBSummary object.
-        - update_all: bool, optional
-            If True, overwrite all files. Defaults to True.
-            If downloaded all files instead of required, this should be set to True.
-        - cleanup: bool, optional
-            If True, remove the downloaded files after the update process is complete. Defaults to True.
-        
-        Returns:
-        - str: The path to the lock file.
-        """
-        # Create temp folder in file_dir for holding update settings
-        tmp_dir = tempfile.mkdtemp(dir=file_dir)
-        cloud_config_path = os.path.join(tmp_dir, 'config.yaml')
-        cloud_hash_db_path = os.path.join(tmp_dir, 'hashes.db')
+            Args:
+            - file_dir (str, optional):
+                The directory where temporary files will be stored. If not provided, a temporary directory will be created.
 
-        # download cloud hash db
-        self._web_man.download_hash_db(cloud_hash_db_path)
+            Returns:
+            - str: The path to the lock file.
+            """
+            # init values
+            cloud_config = self._web_man.get_config()
+            db_summary = self.db_sum()
+            download_files = False
+            if not file_dir:
+                file_dir = tempfile.mkdtemp()
+                download_files = True
 
-        # create cloud config file
-        self._config_man.write_yaml(cloud_config_path, self._web_man.get_config())
+            # Create temp folder in file_dir for holding update settings
+            tmp_setting_dir = tempfile.mkdtemp(dir=file_dir)
+            cloud_config_path = os.path.join(tmp_setting_dir, 'config.yaml')
+            cloud_hash_db_path = os.path.join(tmp_setting_dir, 'hashes.db')
 
+            # Populate settings folder
+            self._web_man.download_hash_db(cloud_hash_db_path)
+            self._config_man.write_yaml(cloud_config_path, cloud_config)
 
-        update_details = {
-            'update': [],
-            'delete': [file_path for file_path in db_summary.unique_files_local_db],
-            'project_path': self._project_path,
-            'startup_path': startup_path,
-            'cloud_config_path': cloud_config_path,
-            'cloud_hash_db_path': cloud_hash_db_path,
-        }
+            update_details = {
+                'update': [],
+                'delete': [file_path for file_path in db_summary.unique_files_local_db],
+                'project_path': self._project_path,
+                'startup_path': cloud_config['startup_path'],
+                'cloud_config_path': cloud_config_path,
+                'cloud_hash_db_path': cloud_hash_db_path,
+            }
 
-        if update_all:
-            update_details['update'] = self.get_files(updated_only=False)
-        else:
-            update_details['update'] = [file_path for file_path in db_summary.unique_files_cloud_db] + [file_path for file_path, _, _ in db_summary.bad_files]
-        
-        # save actions to pickle file
-        action_pkl = os.path.join(tmp_dir, 'actions.pkl')
-        with open(action_pkl, 'wb') as file:
-            pickle.dump(update_details, file)
-        
-        # create lock file
-        lock_file = os.path.join(self._pyupdate_path, 'lock')
-        with open(lock_file, 'w') as file:
-            file.write('')
-        
-        # start file_updater.py using subprocessing
-        command = [sys.executable, os.path.join(os.path.dirname(__file__), 'utilities', 'file_updater.py'), '-p', file_dir, '-a', action_pkl, '-l', lock_file]
-        if cleanup:
-            command.append('-c')
-        subprocess.Popen(command)
+            # Set the 'update' value and download files as needed
+            if not cloud_config['required_only']:
+                if download_files:
+                    self.download_files(file_dir, required=False)
+                update_details['update'] = self.get_files(updated_only=False)
+            else:
+                if download_files:
+                    self.download_files(file_dir, required=True)
+                update_details['update'] = [file_path for file_path in db_summary.unique_files_cloud_db] + [file_path for file_path, _, _ in db_summary.bad_files]
+            
+            # save actions to pickle file
+            action_pkl = os.path.join(tmp_setting_dir, 'actions.pkl')
+            with open(action_pkl, 'wb') as file:
+                pickle.dump(update_details, file)
+            
+            # create lock file
+            lock_file = os.path.join(self._pyupdate_path, 'lock')
+            with open(lock_file, 'w') as file:
+                file.write('')
+            
+            # start file_updater.py using subprocessing
+            command = [sys.executable, os.path.join(os.path.dirname(__file__), 'utilities', 'file_updater.py'), '-p', file_dir, '-a', action_pkl, '-l', lock_file]
+            if cloud_config['cleanup']:
+                command.append('-c')
+            subprocess.Popen(command)
 
-        return lock_file
+            return lock_file

@@ -171,8 +171,12 @@ class Config:
             return False, 'Missing "description" attribute'
         if 'hash_db' not in config:
             return False, 'Missing "hash_db" attribute'
-        if 'update_path' not in config:
-            return False, 'Missing "update_path" attribute'
+        if 'startup_path' not in config:
+            return False, 'Missing "startup_path" attribute'
+        if 'required_only' not in config:
+            return False, 'Missing "required_only" attribute'
+        if 'cleanup' not in config:
+            return False, 'Missing "cleanup" attribute'
 
         return True, ""
 
