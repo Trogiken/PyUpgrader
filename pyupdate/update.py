@@ -281,7 +281,7 @@ class UpdateManager:
         - db_summary: hashing.DBSummary
             A DBSummary object.
         - update_all: bool, optional
-            If True, update all files, even if they have not changed.
+            If True, overwrite all files. Defaults to False.
             If downloaded all files instead of required, this should be set to True.
         
         Returns:
@@ -296,7 +296,7 @@ class UpdateManager:
         }
 
         if update_all:
-            update_details['overwrite'] = self.get_files(updated_only=False)
+            update_details['overwrite'] = [path for path in self.get_files(updated_only=False) if path not in update_details['add']]
         
         # save actions to pickle file
         action_pkl = os.path.join(file_dir, 'actions.pkl')
