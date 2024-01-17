@@ -5,11 +5,11 @@ import requests
 import tempfile
 import shutil
 import pickle
+import subprocess
 from packaging.version import Version
 from pyupdate.utilities import helper, hashing
 
 
-# create error classes for exceptions
 class DBSumError(Exception):
     """This exception is raised when there is an error in comparing values from the databases."""
     pass
@@ -199,8 +199,6 @@ class UpdateManager:
         cloud_db = None
         try:
             db_temp_path = tempfile.mkdtemp()
-            if not save_path:
-                save_path = tempfile.mkdtemp()
 
             cloud_hash_db_path = self._web_man.download_hash_db(os.path.join(db_temp_path, 'cloud_hashes.db'))
             cloud_db = hashing.HashDB(cloud_hash_db_path)
@@ -267,18 +265,50 @@ class UpdateManager:
         except Exception as error:
             raise DownloadFilesError(error)
     
-    def update(self, file_dir: str) -> None:
+    def update(self, file_dir: str, startup_file_path: str, db_summary: hashing.DBSummary, update_all: bool = False) -> str:
         """
         Start the application update process.
-        The closing of the main application should be executed immediately after the call of this function.
+        A lock file will be created in the .pyupdate folder.
+        This file is used to by file_updater.py to determine when to start updating.
+        Remove the lock file to start the update process,
+        main application should be exited immediately after removing the lock file.
 
         Args:
         - file_dir: str
             The path to the directory where the files are saved.
+        - startup_path: str
+            The path to the startup file.
+        - db_summary: hashing.DBSummary
+            A DBSummary object.
+        - update_all: bool, optional
+            If True, update all files, even if they have not changed.
+            If downloaded all files instead of required, this should be set to True.
+        
+        Returns:
+        - str: The path to the lock file.
         """
-        todo = {
-            'add': [],
-            'delete': [],
-            'overwrite': [],
+        update_details = {
+            'add': [file_path for file_path in  db_summary.unique_files_cloud_db],
+            'delete': [file_path for file_path in db_summary.unique_files_local_db],
+            'overwrite': [file_path for file_path, _, _ in db_summary.bad_files],
+            'project_path': self._project_path,
+            'startup_file_path': startup_file_path
         }
-        raise NotImplementedError("This function has not been implemented yet.")
+
+        if update_all:
+            update_details['overwrite'] = self.get_files(updated_only=False)
+        
+        # save actions to pickle file
+        action_pkl = os.path.join(file_dir, 'actions.pkl')
+        with open(action_pkl, 'wb') as file:
+            pickle.dump(update_details, file)
+        
+        # create lock file
+        lock_file = os.path.join(self._pyupdate_path, 'lock')
+        with open(lock_file, 'w') as file:
+            file.write('')
+        
+        # start file_updater.py using subprocessing
+        subprocess.Popen(['python', os.path.join(os.path.dirname(__file__), 'utilities', 'file_updater.py'), '-p', file_dir, '-a', action_pkl, '-l', lock_file])
+
+        return lock_file
