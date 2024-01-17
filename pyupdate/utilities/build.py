@@ -155,7 +155,7 @@ class Builder:
         print(f'Creating config file at "{self._config_path}"')
         config = helper.Config()
 
-        default_data = config.load_yaml(config.default_config_path)
+        default_data = config.load_yaml_from_package('pyupdate', 'utilities/default.yaml')
         default_data['hash_db'] = os.path.basename(self._hash_db_path)
         config.write_yaml(self._config_path, default_data)
         

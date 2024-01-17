@@ -58,7 +58,7 @@ class Config:
         Display config values and comments
     """
 
-    def _load_yaml_from_package(self, package_name: str, file_path: str) -> dict:
+    def load_yaml_from_package(self, package_name: str, file_path: str) -> dict:
         """
         Load a YAML file from a package.
 
@@ -123,8 +123,8 @@ class Config:
 
         Prints the config values and their corresponding comments.
         """
-        comments = self._load_yaml_from_package('pyupdate', 'utilities/comments.yaml')
-        config = self._load_yaml_from_package('pyupdate', 'utilities/default.yaml')
+        comments = self.load_yaml_from_package('pyupdate', 'utilities/comments.yaml')
+        config = self.load_yaml_from_package('pyupdate', 'utilities/default.yaml')
 
         header = "Config Information"
         print(f"""\n\t{header}\n\t{'-' * len(header)}\n\tAttributes marked as Dynamic can be changed by the user\n""")
