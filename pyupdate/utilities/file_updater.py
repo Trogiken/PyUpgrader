@@ -39,6 +39,7 @@ def main():
     if os.path.exists(cloud_config_path):
         source = cloud_config_path
         destination = os.path.join(project_path, '.pyupdate', os.path.basename(cloud_config_path))
+        os.remove(destination)
         os.rename(source, destination)
     else:
         raise FileNotFoundError(f"Cloud config not found at '{cloud_config_path}'")
@@ -46,6 +47,7 @@ def main():
     if os.path.exists(cloud_hash_db_path):
         source = cloud_hash_db_path
         destination = os.path.join(project_path, '.pyupdate', os.path.basename(cloud_hash_db_path))
+        os.remove(destination)
         os.rename(source, destination)
     else:
         raise FileNotFoundError(f"Cloud hash db not found at '{cloud_hash_db_path}'")
