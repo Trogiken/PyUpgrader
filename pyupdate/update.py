@@ -45,6 +45,8 @@ class UpdateManager:
         Retrieves a list of files from the cloud database.
     - download_files(save_path: str = "", required: bool = False) -> str
         Download files to save_path, if save_path is empty, create a temp folder, return the save_path
+    - update(file_dir: str = "") -> str
+        Start the application update process.
     """
 
     def __init__(self, url: str, project_path: str):
@@ -57,8 +59,8 @@ class UpdateManager:
         - project_path: str
             Path to the project folder (Not the .pyupdate folder)
         """
-        self._url = url.rstrip('/')  # Remove trailing slash
-        self._project_path = project_path
+        self._url = url.rstrip('/')
+        self._project_path = project_path.rstrip('/')
         self._pyupdate_path = os.path.join(self._project_path, '.pyupdate')
         self._config_path = os.path.join(self._pyupdate_path, 'config.yaml')
         self._local_hash_db_path = None  # Set in _validate_attributes
@@ -112,7 +114,7 @@ class UpdateManager:
         """
         self._project_path = value
         self._pyupdate_path = os.path.join(self._project_path, '.pyupdate')
-        self._config_path = os.path.join(self._pyupdate_path, 'config.yml')
+        self._config_path = os.path.join(self._pyupdate_path, 'config.yaml')
         self._local_hash_db_path = None  # Set in _validate_attributes
         self._validate_attributes()
     
@@ -302,7 +304,7 @@ class UpdateManager:
                 'update': [],
                 'delete': [file_path for file_path in db_summary.unique_files_local_db],
                 'project_path': self._project_path,
-                'startup_path': cloud_config['startup_path'],
+                'startup_path': os.path.join(self._project_path, cloud_config['startup_path']),
                 'cloud_config_path': cloud_config_path,
                 'cloud_hash_db_path': cloud_hash_db_path,
             }
