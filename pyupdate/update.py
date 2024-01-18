@@ -26,6 +26,11 @@ class DownloadFilesError(Exception):
     pass
 
 
+class UpdateError(Exception):
+    """This exception is raised when there is an error in the update process."""
+    pass
+
+
 class UpdateManager:
     """
     Class for managing updates for a program.
@@ -319,6 +324,9 @@ class UpdateManager:
                     self.download_files(file_dir, required=True)
                 update_details['update'] = [file_path for file_path in db_summary.unique_files_cloud_db] + [file_path for file_path, _, _ in db_summary.bad_files]
             
+            if cloud_config['required_only'] and not update_details['update']:
+                raise UpdateError('No files to update. | If you wish to update anyway, set required_only to False in the cloud config.')
+
             # save actions to pickle file
             action_pkl = os.path.join(tmp_setting_dir, 'actions.pkl')
             with open(action_pkl, 'wb') as file:
