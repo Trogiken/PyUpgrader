@@ -40,7 +40,7 @@ def main():
         source = cloud_config_path
         destination = os.path.join(project_path, '.pyupdate', os.path.basename(cloud_config_path))
         os.remove(destination)
-        os.rename(source, destination)
+        shutil.copy(source, destination)
     else:
         raise FileNotFoundError(f"Cloud config not found at '{cloud_config_path}'")
     
@@ -48,7 +48,7 @@ def main():
         source = cloud_hash_db_path
         destination = os.path.join(project_path, '.pyupdate', os.path.basename(cloud_hash_db_path))
         os.remove(destination)
-        os.rename(source, destination)
+        shutil.copy(source, destination)
     else:
         raise FileNotFoundError(f"Cloud hash db not found at '{cloud_hash_db_path}'")
     
@@ -58,7 +58,7 @@ def main():
         destination = os.path.join(project_path, file)
         if os.path.exists(destination):
             os.remove(destination)
-        os.rename(source, destination)
+        shutil.copy(source, destination)
     
     for file in del_files:
         destination = os.path.join(project_path, file)
