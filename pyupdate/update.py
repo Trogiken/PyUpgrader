@@ -325,6 +325,7 @@ class UpdateManager:
                 update_details['update'] = [file_path for file_path in db_summary.unique_files_cloud_db] + [file_path for file_path, _, _ in db_summary.bad_files]
             
             if cloud_config['required_only'] and not update_details['update']:
+                shutil.rmtree(file_dir)
                 raise UpdateError('No files to update. | If you wish to update anyway, set required_only to False in the cloud config.')
 
             # save actions to pickle file
