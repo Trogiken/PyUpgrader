@@ -5,8 +5,30 @@ import requests
 import tempfile
 import shutil
 import pickle
+import subprocess
+import sys
 from packaging.version import Version
 from pyupdate.utilities import helper, hashing
+
+
+class DBSumError(Exception):
+    """This exception is raised when there is an error in comparing values from the databases."""
+    pass
+
+
+class GetFilesError(Exception):
+    """This exception is raised when there is an error in retrieving file paths from the cloud."""
+    pass
+
+
+class DownloadFilesError(Exception):
+    """This exception is raised when there is an error in downloading files from the cloud."""
+    pass
+
+
+class NoUpdateError(Exception):
+    """This exception is raised when there is no files downloaded during an update."""
+    pass
 
 
 class UpdateManager:
@@ -24,9 +46,12 @@ class UpdateManager:
         Compare cloud and local version and return a dict with the results
     - db_sum() -> DBSummary
         Return a DBSummary object using the cloud and local hash databases
+    - get_files(updated_only: bool = False) -> list
+        Retrieves a list of files from the cloud database.
     - download_files(save_path: str = "", required: bool = False) -> str
         Download files to save_path, if save_path is empty, create a temp folder, return the save_path
-        If required is True, only download files that have changed or have been added.
+    - update(file_dir: str = "") -> str
+        Start the application update process.
     """
 
     def __init__(self, url: str, project_path: str):
@@ -39,8 +64,8 @@ class UpdateManager:
         - project_path: str
             Path to the project folder (Not the .pyupdate folder)
         """
-        self._url = url.rstrip('/')  # Remove trailing slash
-        self._project_path = project_path
+        self._url = url.rstrip('/')
+        self._project_path = project_path.rstrip('/')
         self._pyupdate_path = os.path.join(self._project_path, '.pyupdate')
         self._config_path = os.path.join(self._pyupdate_path, 'config.yaml')
         self._local_hash_db_path = None  # Set in _validate_attributes
@@ -94,7 +119,7 @@ class UpdateManager:
         """
         self._project_path = value
         self._pyupdate_path = os.path.join(self._project_path, '.pyupdate')
-        self._config_path = os.path.join(self._pyupdate_path, 'config.yml')
+        self._config_path = os.path.join(self._pyupdate_path, 'config.yaml')
         self._local_hash_db_path = None  # Set in _validate_attributes
         self._validate_attributes()
     
@@ -158,15 +183,55 @@ class UpdateManager:
 
             return hashing.compare_databases(self._local_hash_db_path, cloud_hash_db_path)
         except Exception as error:
-            raise error
+            raise DBSumError(error)
         finally:
             if os.path.exists(tmp_path):
                 shutil.rmtree(tmp_path)
     
+    def get_files(self, updated_only: bool = False) -> list:
+        """
+        Retrieves a list of files from the cloud database.
+        Note that this function does not return files that have been deleted from the cloud.
+
+        Args:
+        - updated_only (bool, optional): If True, only returns files that have been updated. 
+            Defaults to False.
+
+        Returns:
+        - list: A list of file paths.
+
+        Raises:
+        - Exception: If an error occurs during the retrieval process.
+        """
+        db_temp_path = ""
+        cloud_db = None
+        try:
+            db_temp_path = tempfile.mkdtemp()
+
+            cloud_hash_db_path = self._web_man.download_hash_db(os.path.join(db_temp_path, 'cloud_hashes.db'))
+            cloud_db = hashing.HashDB(cloud_hash_db_path)
+            compare_db = self.db_sum()
+
+            files = None
+
+            if updated_only:
+                bad_files = [path for path, _, _ in compare_db.bad_files]
+                files = compare_db.unique_files_cloud_db + bad_files
+            else:
+                files = [path for path in cloud_db.get_file_paths()]
+
+            return files
+        except Exception as error:
+            raise GetFilesError(error)
+        finally:
+            if cloud_db is not None:
+                cloud_db.close()
+            if db_temp_path:
+                shutil.rmtree(db_temp_path)
+    
     def download_files(self, save_path: str = "", required: bool = False) -> str:
         """
-        Download files to save_path, if save_path is empty, create a temp folder, return the save_path.
-        If required is True, only download files that have changed or have been added.
+        Download cloud files and return the path where the files are saved.
 
         Args:
         - save_path: str, optional
@@ -176,25 +241,20 @@ class UpdateManager:
 
         Returns:
         - str: The path where the files are saved.
+
+        Raises:
+        - Exception: If an error occurs during the download process.
         """
-        db_temp_path = ""
-        cloud_db = None
         try:
-            db_temp_path = tempfile.mkdtemp()
             if not save_path:
                 save_path = tempfile.mkdtemp()
-
-            cloud_hash_db_path = self._web_man.download_hash_db(os.path.join(db_temp_path, 'cloud_hashes.db'))
-            cloud_db = hashing.HashDB(cloud_hash_db_path)
-            compare_db = self.db_sum()
             
             files_to_download = None
             
             if required:
-                bad_files = [path for path, _, _ in compare_db.bad_files]
-                files_to_download = compare_db.unique_files_cloud_db + bad_files
+                files_to_download = self.get_files(updated_only=True)
             else:
-                files_to_download = [path for path in cloud_db.get_file_paths()]
+                files_to_download = self.get_files()
 
             # Download all files in db and copy structure
             base_url = self._url.split(".pyupdate")[0]
@@ -210,11 +270,81 @@ class UpdateManager:
                 self._web_man.download(download_url, save_file)
             
             return save_path
-
         except Exception as error:
-            raise error
-        finally:
-            if cloud_db is not None:
-                cloud_db.close()
-            if os.path.exists(db_temp_path):
-                shutil.rmtree(db_temp_path)
+            raise DownloadFilesError(error)
+    
+    def update(self, file_dir: str = "") -> str:
+            """
+            Start the application update process.
+            A lock file will be created in the .pyupdate folder.
+            This file is used by file_updater.py to determine when to start updating.
+            Remove the lock file to start the update process,
+            main application should call sys.exit() immediately after removing the lock file.
+
+            Args:
+            - file_dir (str, optional):
+                The directory where temporary files will be stored. If not provided, a temporary directory will be created.
+
+            Returns:
+            - str: The path to the lock file.
+
+            Raises:
+            - NoUpdateError: If there are no files to update. Set required_only to False in the cloud config to update anyway.
+            """
+            # init values
+            cloud_config = self._web_man.get_config()
+            db_summary = self.db_sum()
+            download_files = False
+            if not file_dir:
+                file_dir = tempfile.mkdtemp()
+                download_files = True
+
+            # Create temp folder in file_dir for holding update settings
+            tmp_setting_dir = tempfile.mkdtemp(dir=file_dir)
+            cloud_config_path = os.path.join(tmp_setting_dir, 'config.yaml')
+            cloud_hash_db_path = os.path.join(tmp_setting_dir, 'hashes.db')
+
+            # Populate settings folder
+            self._web_man.download_hash_db(cloud_hash_db_path)
+            self._config_man.write_yaml(cloud_config_path, cloud_config)
+
+            update_details = {
+                'update': [],
+                'delete': [file_path for file_path in db_summary.unique_files_local_db],
+                'project_path': self._project_path,
+                'startup_path': os.path.join(self._project_path, cloud_config['startup_path']),
+                'cloud_config_path': cloud_config_path,
+                'cloud_hash_db_path': cloud_hash_db_path,
+            }
+
+            # Set the 'update' value and download files as needed
+            if not cloud_config['required_only']:
+                if download_files:
+                    self.download_files(file_dir, required=False)
+                update_details['update'] = self.get_files(updated_only=False)
+            else:
+                if download_files:
+                    self.download_files(file_dir, required=True)
+                update_details['update'] = [file_path for file_path in db_summary.unique_files_cloud_db] + [file_path for file_path, _, _ in db_summary.bad_files]
+            
+            if cloud_config['required_only'] and not update_details['update'] and not update_details['delete']:
+                shutil.rmtree(file_dir)
+                raise NoUpdateError('No files to update. | If you wish to update anyway, set required_only to False in the cloud config.')
+
+            # save actions to pickle file
+            action_pkl = os.path.join(tmp_setting_dir, 'actions.pkl')
+            with open(action_pkl, 'wb') as file:
+                pickle.dump(update_details, file)
+            
+            # create lock file
+            lock_file = os.path.join(self._pyupdate_path, 'lock')
+            with open(lock_file, 'w') as file:
+                file.write('')
+            
+            # start file_updater.py using subprocessing
+            command = [sys.executable, os.path.join(os.path.dirname(__file__), 'utilities', 'file_updater.py'), '-p', file_dir, '-a', action_pkl, '-l', lock_file]
+            if cloud_config['cleanup']:
+                command.append('-c')
+            subprocess.Popen(command)
+
+            return lock_file

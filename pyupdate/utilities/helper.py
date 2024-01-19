@@ -9,9 +9,10 @@ Classes:
 - Web: Class for managing web requests.
 """
 
-import os
 import yaml
 import requests
+import pkg_resources
+import yaml
 from typing import List, Union
 
 
@@ -47,8 +48,6 @@ class Config:
         Path to the comments file
 
     Methods:
-    load_comments() -> dict
-        Load the comments from the comments.yml file
     load_yaml(path: str) -> dict
         Load a yaml file at path
     loads_yaml(yaml_string: str) -> dict
@@ -59,28 +58,20 @@ class Config:
         Display config values and comments
     """
 
-    def __init__(self):
+    def load_yaml_from_package(self, package_name: str, file_path: str) -> dict:
         """
-        Initialize the Config object.
+        Load a YAML file from a package.
 
-        Sets the default_config_path and comments_path attributes.
-        """
-        self.default_config_path = os.path.join(os.path.dirname(__file__), 'default.yml')
-        self.comments_path = os.path.join(os.path.dirname(__file__), 'comments.yml')
-
-    def load_comments(self) -> dict:
-        """
-        Load the comments from the comments.yml file.
+        Args:
+            package_name (str): The name of the package.
+            file_path (str): The path to the YAML file inside the package.
 
         Returns:
-        dict: The comments loaded from the file.
+            dict: The data loaded from the YAML file.
         """
-        with open(self.comments_path, 'r') as comments_file:
-            data = yaml.safe_load(comments_file)
-            is_valid, error = self._valid_config(data)
-            if not is_valid:
-                raise ValueError(error)
-            return data
+        file_content = pkg_resources.resource_string(package_name, file_path)
+        data = yaml.safe_load(file_content)
+        return data
 
     def load_yaml(self, path: str) -> dict:
         """
@@ -132,8 +123,8 @@ class Config:
 
         Prints the config values and their corresponding comments.
         """
-        comments = self.load_comments()
-        config = self.load_yaml(self.default_config_path)
+        comments = self.load_yaml_from_package('pyupdate', 'utilities/comments.yaml')
+        config = self.load_yaml_from_package('pyupdate', 'utilities/default.yaml')
 
         header = "Config Information"
         print(f"""\n\t{header}\n\t{'-' * len(header)}\n\tAttributes marked as Dynamic can be changed by the user\n""")
@@ -171,8 +162,12 @@ class Config:
             return False, 'Missing "description" attribute'
         if 'hash_db' not in config:
             return False, 'Missing "hash_db" attribute'
-        if 'update_path' not in config:
-            return False, 'Missing "update_path" attribute'
+        if 'startup_path' not in config:
+            return False, 'Missing "startup_path" attribute'
+        if 'required_only' not in config:
+            return False, 'Missing "required_only" attribute'
+        if 'cleanup' not in config:
+            return False, 'Missing "cleanup" attribute'
 
         return True, ""
 
