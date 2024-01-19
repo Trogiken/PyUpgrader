@@ -1,0 +1,13 @@
+# Config file for pyupdate
+
+version: 0.0.0
+
+description: "Description of the project"
+
+startup_path: ""
+
+required_only: false
+
+cleanup: true
+
+hash_db: ""

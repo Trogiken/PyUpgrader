@@ -1,0 +1,19 @@
+# Comments related to the default yaml file
+
+version: |
+  Dynamic - The version of the project, uses the packing.version module
+
+description: |
+  Dynamic - Description of the this version of the project
+
+startup_path: |
+  Dynamic - Relative to the project folder, path to the file that starts the main application
+
+required_only: |
+  Dynamic - If only the changed/new files should be updated
+
+cleanup: |
+  Dynamic - If the download/update folder should be deleted
+
+hash_db: |
+  Static - Name of the database file

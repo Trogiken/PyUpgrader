@@ -1,3 +1,6 @@
+from pyupdate.update import UpdateManager
+
+
 def info():
     info =  {
         "name": "PyUpdate",

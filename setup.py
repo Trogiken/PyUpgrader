@@ -6,11 +6,12 @@ with open('requirements.txt') as f:
 
 setup(
     name='pyupdate',
-    version='0.1.0',
+    version='1.0.0b1',
     author='Noah Blaszak',
     author_email='70231827+Trogiken@users.noreply.github.com',
     description='Python library that allows the version of a program to be updated.',
-    packages=['pyupdate'],
+    packages=['pyupdate', 'pyupdate.utilities'],
+    package_data={'pyupdate.utilities': ['default.yaml', 'comments.yaml']},
     install_requires=requirements,
     entry_points={
         'console_scripts': [
