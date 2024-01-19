@@ -6,7 +6,7 @@ with open('README.md') as f:
 
 setup(
     name='pyupgrader',
-    version='1.0.2b1',
+    version='1.0.3b1',
     author='Noah Blaszak',
     author_email='technology.misc@gmail.com',
     description='Keep your Python code up to date on client machines.',
@@ -15,7 +15,7 @@ setup(
     url='https://github.com/Trogiken/PyUpgrader',
     packages=['pyupgrader', 'pyupgrader.utilities'],
     package_data={'pyupgrader.utilities': ['default.yaml', 'comments.yaml']},
-    install_requires=['pyyaml', 'requests', 'packaging'],
+    install_requires=['pyyaml', 'requests', 'packaging', 'setuptools'],
     python_requires='>=3.8',
     entry_points={
         'console_scripts': [
