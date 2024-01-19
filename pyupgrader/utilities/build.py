@@ -1,5 +1,5 @@
 """
-This module provides the functionality to build a project into a pyupdate project.
+This module provides the functionality to build a project into a pyupgrader project.
 It is intended to be used by the command line tool.
 
 It defines the following classes:
@@ -8,11 +8,11 @@ It defines the following classes:
 - ConfigError: Raised when there is an error with the config file.
 - HashDBError: Raised when there is an error with the hash database.
 - PathError: Raised when there is an error with a path.
-- Builder: Builds a project into a pyupdate project.
+- Builder: Builds a project into a pyupgrader project.
 """
 import os
 import shutil
-from pyupdate.utilities import helper, hashing
+from pyupgrader.utilities import helper, hashing
 
 
 class BuildError(Exception):
@@ -42,7 +42,7 @@ class PathError(Exception):
 
 class Builder:
     """
-    Builds a project into a pyupdate project
+    Builds a project into a pyupgrader project
 
     Attributes:
     - project_path: Path to the project folder.
@@ -52,9 +52,9 @@ class Builder:
     - exclude_paths: List of absolute paths to exclude from the hash database.
 
     Methods:
-    - build(): Builds the project into a pyupdate project.
+    - build(): Builds the project into a pyupgrader project.
     - _validate_paths(): Validates and sets the paths.
-    - _create_pyupdate_folder(): Creates the .pyupdate folder.
+    - _create_pyupgrader_folder(): Creates the .pyupgrader folder.
     - _create_config_file(): Creates the config file.
     - _create_hash_db(): Creates the hash database.
     """
@@ -90,15 +90,15 @@ class Builder:
         self._hash_db_path = None
 
     def build(self):
-        """Builds a project into a pyupdate project"""
+        """Builds a project into a pyupgrader project"""
         self._validate_paths()
 
         print('Building project...\n')
 
         try:
-            self._create_pyupdate_folder()
+            self._create_pyupgrader_folder()
         except Exception as error:
-            raise FolderCreationError(f'Failed to create .pyupdate folder | {error}')
+            raise FolderCreationError(f'Failed to create .pyupgrader folder | {error}')
         
         try:
             self._create_config_file()
@@ -136,12 +136,12 @@ class Builder:
             if path.endswith('\\'):
                 self.exclude_paths[i] = path.rstrip('\\')
         
-        self._pyudpdate_folder = os.path.join(self.project_path, '.pyupdate')
+        self._pyudpdate_folder = os.path.join(self.project_path, '.pyupgrader')
         self._config_path = os.path.join(self._pyudpdate_folder, 'config.yaml')
         self._hash_db_path = os.path.join(self._pyudpdate_folder, 'hashes.db')
     
-    def _create_pyupdate_folder(self):
-        """Creates the .pyupdate folder"""
+    def _create_pyupgrader_folder(self):
+        """Creates the .pyupgrader folder"""
         if os.path.exists(self._pyudpdate_folder):
             print(f'Folder "{self._pyudpdate_folder}" already exists')
             print('Deleting folder')
@@ -155,7 +155,7 @@ class Builder:
         print(f'Creating config file at "{self._config_path}"')
         config = helper.Config()
 
-        default_data = config.load_yaml_from_package('pyupdate', 'utilities/default.yaml')
+        default_data = config.load_yaml_from_package('pyupgrader', 'utilities/default.yaml')
         default_data['hash_db'] = os.path.basename(self._hash_db_path)
         config.write_yaml(self._config_path, default_data)
         

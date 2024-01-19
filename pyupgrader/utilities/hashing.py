@@ -1,5 +1,5 @@
 """
-Hasher module for PyUpdate.
+Hasher module for PyUpgrader.
 
 This module provides classes and functions for hashing files, creating hash databases, and comparing hash databases.
 Modified version of https://github.com/Trogiken/random-projects/blob/master/python/tools/DataIntegrityChecker/SCRIPT.py
@@ -23,7 +23,7 @@ import time
 import re
 from multiprocessing import Pool
 from dataclasses import dataclass
-from pyupdate.utilities import helper
+from pyupgrader.utilities import helper
 
 
 @dataclass

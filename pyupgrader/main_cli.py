@@ -1,16 +1,16 @@
-"""PyUpdate CLI"""
+"""PyUpgrader CLI"""
 
 import argparse
 import os
 import sys
-import pyupdate.utilities as util
-from pyupdate.utilities.build import BuildError
+import pyupgrader.utilities as util
+from pyupgrader.utilities.build import BuildError
 
 
 def cli():
-    """PyUpdate CLI
+    """PyUpgrader CLI
 
-    This function is the entry point for the PyUpdate command-line interface (CLI).
+    This function is the entry point for the PyUpgrader command-line interface (CLI).
     It parses the command-line arguments, validates the project folder path,
     and builds the project using the specified options.
 
@@ -24,7 +24,7 @@ def cli():
     Raises:
         BuildError: If an error occurs during the build process.
     """
-    parser = argparse.ArgumentParser(description='PyUpdate CLI')
+    parser = argparse.ArgumentParser(description='PyUpgrader CLI')
     parser.add_argument('-p', '--project', help="Absolute path to project folder", required=True)
     parser.add_argument('-no_env', help="Exclude environment directories", action='store_true')
     parser.add_argument('-no_hidden', help="Exclude hidden files and directories", action='store_true')

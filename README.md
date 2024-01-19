@@ -1,23 +1,23 @@
-# PyUpdate
+# PyUpgrader
 
 Python library to keep projects updated on clients machines
 
-**Pip Install:** `pip install git+https://github.com/Trogiken/PyUpdate`
+**Pip Install:** `pip install git+https://github.com/Trogiken/PyUpgrader`
 
 ## Getting Started
 
-Build your project using the PyUpdate CLI and upload it. Use the _-h_ flag to see a list of options.
+Build your project using the PyUpgrader CLI and upload it. Use the _-h_ flag to see a list of options.
 
-`pyupdate -p absolute/path/to/project -no_hidden`
+`pyupgrader -p absolute/path/to/project -no_hidden`
 
-Importing PyUpdate and initialize the UpdateManager object.
+Importing PyUpgrader and initialize the UpdateManager object.
 
 ``` python
-import pyupdate
+import pyupgrader
 import os
 import sys
 
-man = pyupdate.UpdateManager(r'https://raw.githubusercontent.com/{Owner}/{Repo}/{Branch}/path/to/.pyupdate', r'absolute/path/to/project')
+man = pyupgrader.UpdateManager(r'https://raw.githubusercontent.com/{Owner}/{Repo}/{Branch}/path/to/.pyupgrader', r'absolute/path/to/project')
 
 
 if __name__ == '__main__':
@@ -32,18 +32,3 @@ if __name__ == '__main__':
 ```
 
 Replace the temporary values `{}` with your information.
-
-## Help/Information
-
-PyUpdate has built in help classes that contain information about attributes and functions
-
-### Example
-
-``` python
-from pyupdate.utilities import helper
-
-config_help = helper.Config()
-config_help.display_info()
-```
-
-This example of the Config helper class will show information about config attributes.

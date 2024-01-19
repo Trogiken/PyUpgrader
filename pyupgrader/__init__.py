@@ -1,9 +1,9 @@
-from pyupdate.update import UpdateManager
+from pyupgrader.update import UpdateManager
 
 
 def info():
     info =  {
-        "name": "PyUpdate",
+        "name": "PyUpgrader",
         "author": "Noah Blaszak",
     }
 

@@ -7,7 +7,7 @@ import shutil
 import subprocess
 import sys
 from time import sleep
-from pyupdate.utilities import hashing
+from pyupgrader.utilities import hashing
 
 
 def main():
@@ -38,7 +38,7 @@ def main():
     # Replace config and hash db
     if os.path.exists(cloud_config_path):
         source = cloud_config_path
-        destination = os.path.join(project_path, '.pyupdate', os.path.basename(cloud_config_path))
+        destination = os.path.join(project_path, '.pyupgrader', os.path.basename(cloud_config_path))
         os.remove(destination)
         shutil.copy(source, destination)
     else:
@@ -46,7 +46,7 @@ def main():
     
     if os.path.exists(cloud_hash_db_path):
         source = cloud_hash_db_path
-        destination = os.path.join(project_path, '.pyupdate', os.path.basename(cloud_hash_db_path))
+        destination = os.path.join(project_path, '.pyupgrader', os.path.basename(cloud_hash_db_path))
         os.remove(destination)
         shutil.copy(source, destination)
     else:

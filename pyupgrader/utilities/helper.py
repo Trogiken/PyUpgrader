@@ -1,5 +1,5 @@
 """
-This module contains utility functions and classes for PyUpdate.
+This module contains utility functions and classes for PyUpgrader.
 
 Functions:
 - normalize_paths(paths: Union[str, List[str]]) -> List[str]: Replace backslashes with forward slashes in a path or a list of paths.
@@ -123,8 +123,8 @@ class Config:
 
         Prints the config values and their corresponding comments.
         """
-        comments = self.load_yaml_from_package('pyupdate', 'utilities/comments.yaml')
-        config = self.load_yaml_from_package('pyupdate', 'utilities/default.yaml')
+        comments = self.load_yaml_from_package('pyupgrader', 'utilities/comments.yaml')
+        config = self.load_yaml_from_package('pyupgrader', 'utilities/default.yaml')
 
         header = "Config Information"
         print(f"""\n\t{header}\n\t{'-' * len(header)}\n\tAttributes marked as Dynamic can be changed by the user\n""")
@@ -178,7 +178,7 @@ class Web:
     
     Attributes:
     url: str
-        URL to the .pyupdate folder
+        URL to the .pyupgrader folder
     
     Methods:
     get_request(url: str) -> requests.Response
@@ -195,7 +195,7 @@ class Web:
         Initialize the Web class with the provided URL.
         
         Args:
-        - url (str): URL to the .pyupdate folder
+        - url (str): URL to the .pyupgrader folder
         """
         self._url = url
         self._config_url = self._url + '/config.yaml'

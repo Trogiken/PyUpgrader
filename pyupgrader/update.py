@@ -8,7 +8,7 @@ import pickle
 import subprocess
 import sys
 from packaging.version import Version
-from pyupdate.utilities import helper, hashing
+from pyupgrader.utilities import helper, hashing
 
 
 class DBSumError(Exception):
@@ -37,9 +37,9 @@ class UpdateManager:
 
     Attributes:
     - url: str
-        URL to the .pyupdate folder
+        URL to the .pyupgrader folder
     - project_path: str
-        Path to the project folder (Not the .pyupdate folder)
+        Path to the project folder (Not the .pyupgrader folder)
     
     Methods:
     - check_update() -> dict
@@ -60,14 +60,14 @@ class UpdateManager:
 
         Args:
         - url: str
-            URL to the .pyupdate folder
+            URL to the .pyupgrader folder
         - project_path: str
-            Path to the project folder (Not the .pyupdate folder)
+            Path to the project folder (Not the .pyupgrader folder)
         """
         self._url = url.rstrip('/')
         self._project_path = project_path.rstrip('/')
-        self._pyupdate_path = os.path.join(self._project_path, '.pyupdate')
-        self._config_path = os.path.join(self._pyupdate_path, 'config.yaml')
+        self._pyupgrader_path = os.path.join(self._project_path, '.pyupgrader')
+        self._config_path = os.path.join(self._pyupgrader_path, 'config.yaml')
         self._local_hash_db_path = None  # Set in _validate_attributes
 
         self._config_man = helper.Config()
@@ -78,21 +78,21 @@ class UpdateManager:
     @property
     def url(self) -> str:
         """
-        Get the URL to the .pyupdate folder.
+        Get the URL to the .pyupgrader folder.
 
         Returns:
-        - str: The URL to the .pyupdate folder.
+        - str: The URL to the .pyupgrader folder.
         """
         return self._url
 
     @url.setter
     def url(self, value: str) -> None:
         """
-        Set the URL to the .pyupdate folder.
+        Set the URL to the .pyupgrader folder.
 
         Args:
         - value: str
-            The URL to the .pyupdate folder.
+            The URL to the .pyupgrader folder.
         """
         self._url = value.rstrip('/')  # Remove trailing slash
         self._web_man = helper.Web(self._url)
@@ -101,7 +101,7 @@ class UpdateManager:
     @property
     def project_path(self) -> str:
         """
-        Get the path to the project folder (Not the .pyupdate folder).
+        Get the path to the project folder (Not the .pyupgrader folder).
 
         Returns:
         - str: The path to the project folder.
@@ -111,15 +111,15 @@ class UpdateManager:
     @project_path.setter
     def project_path(self, value) -> None:
         """
-        Set the path to the project folder (Not the .pyupdate folder).
+        Set the path to the project folder (Not the .pyupgrader folder).
 
         Args:
         - value: str
             The path to the project folder.
         """
         self._project_path = value
-        self._pyupdate_path = os.path.join(self._project_path, '.pyupdate')
-        self._config_path = os.path.join(self._pyupdate_path, 'config.yaml')
+        self._pyupgrader_path = os.path.join(self._project_path, '.pyupgrader')
+        self._config_path = os.path.join(self._pyupgrader_path, 'config.yaml')
         self._local_hash_db_path = None  # Set in _validate_attributes
         self._validate_attributes()
     
@@ -133,13 +133,13 @@ class UpdateManager:
             requests.get(self._url)
         except requests.exceptions.ConnectionError:
             raise requests.exceptions.ConnectionError(self._url)
-        if not os.path.exists(self._pyupdate_path):
-            raise FileNotFoundError(self._pyupdate_path)
+        if not os.path.exists(self._pyupgrader_path):
+            raise FileNotFoundError(self._pyupgrader_path)
         if not os.path.exists(self._config_path):
             raise FileNotFoundError(self._config_path)
         
         config_data = self._config_man.load_yaml(self._config_path)
-        self._local_hash_db_path = os.path.join(self._pyupdate_path, config_data['hash_db'])
+        self._local_hash_db_path = os.path.join(self._pyupgrader_path, config_data['hash_db'])
         self._web_man = helper.Web(self._url)
 
         if not os.path.exists(self._local_hash_db_path):
@@ -257,7 +257,7 @@ class UpdateManager:
                 files_to_download = self.get_files()
 
             # Download all files in db and copy structure
-            base_url = self._url.split(".pyupdate")[0]
+            base_url = self._url.split(".pyupgrader")[0]
             for file_path in files_to_download:
                 download_url = base_url + file_path
 
@@ -276,7 +276,7 @@ class UpdateManager:
     def update(self, file_dir: str = "") -> str:
             """
             Start the application update process.
-            A lock file will be created in the .pyupdate folder.
+            A lock file will be created in the .pyupgrader folder.
             This file is used by file_updater.py to determine when to start updating.
             Remove the lock file to start the update process,
             main application should call sys.exit() immediately after removing the lock file.
@@ -337,7 +337,7 @@ class UpdateManager:
                 pickle.dump(update_details, file)
             
             # create lock file
-            lock_file = os.path.join(self._pyupdate_path, 'lock')
+            lock_file = os.path.join(self._pyupgrader_path, 'lock')
             with open(lock_file, 'w') as file:
                 file.write('')
             
