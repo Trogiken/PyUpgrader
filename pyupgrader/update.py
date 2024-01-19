@@ -258,8 +258,9 @@ class UpdateManager:
 
             # Download all files in db and copy structure
             base_url = self._url.split(".pyupgrader")[0]
+            print(base_url)
             for file_path in files_to_download:
-                download_url = base_url + file_path
+                download_url = base_url + '/' + file_path
 
                 # Create save path
                 relative_path = os.path.dirname(file_path)
