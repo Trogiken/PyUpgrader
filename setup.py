@@ -1,8 +1,5 @@
 from setuptools import setup
 
-with open('requirements.txt') as f:
-    requirements = f.read().splitlines()
-
 with open('README.md') as f:
     readme = f.read()
 
@@ -18,7 +15,7 @@ setup(
     url='https://github.com/Trogiken/PyUpgrader',
     packages=['pyupgrader', 'pyupgrader.utilities'],
     package_data={'pyupgrader.utilities': ['default.yaml', 'comments.yaml']},
-    install_requires=requirements,
+    install_requires=['pyyaml', 'requests', 'packaging'],
     python_requires='>=3.8',
     entry_points={
         'console_scripts': [
