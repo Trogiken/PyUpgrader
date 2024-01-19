@@ -26,8 +26,8 @@ class DownloadFilesError(Exception):
     pass
 
 
-class UpdateError(Exception):
-    """This exception is raised when there is an error in the update process."""
+class NoUpdateError(Exception):
+    """This exception is raised when there is no files downloaded during an update."""
     pass
 
 
@@ -287,6 +287,9 @@ class UpdateManager:
 
             Returns:
             - str: The path to the lock file.
+
+            Raises:
+            - NoUpdateError: If there are no files to update. Set required_only to False in the cloud config to update anyway.
             """
             # init values
             cloud_config = self._web_man.get_config()
@@ -326,7 +329,7 @@ class UpdateManager:
             
             if cloud_config['required_only'] and not update_details['update']:
                 shutil.rmtree(file_dir)
-                raise UpdateError('No files to update. | If you wish to update anyway, set required_only to False in the cloud config.')
+                raise NoUpdateError('No files to update. | If you wish to update anyway, set required_only to False in the cloud config.')
 
             # save actions to pickle file
             action_pkl = os.path.join(tmp_setting_dir, 'actions.pkl')
