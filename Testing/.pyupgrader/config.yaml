@@ -2,5 +2,5 @@ cleanup: true
 description: Cloud Version
 hash_db: hashes.db
 required_only: true
-startup_path: 'main.py'
+startup_path: ''
 version: 2.0.0
