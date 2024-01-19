@@ -3,19 +3,35 @@ from setuptools import setup
 with open('requirements.txt') as f:
     requirements = f.read().splitlines()
 
+with open('README.md') as f:
+    readme = f.read()
+
 
 setup(
     name='pyupgrader',
-    version='1.0.0b1',
+    version='1.0.1b1',
     author='Noah Blaszak',
-    author_email='70231827+Trogiken@users.noreply.github.com',
-    description='Python library that allows the version of a program to be updated.',
+    author_email='technology.misc@gmail.com',
+    description='Keep your Python code up to date on client machines.',
+    long_description=readme,
+    long_description_content_type='text/markdown',
+    url='https://github.com/Trogiken/PyUpgrader',
     packages=['pyupgrader', 'pyupgrader.utilities'],
     package_data={'pyupgrader.utilities': ['default.yaml', 'comments.yaml']},
     install_requires=requirements,
+    python_requires='>=3.8',
     entry_points={
         'console_scripts': [
             'pyupgrader=pyupgrader.main_cli:cli'
         ]
     },
+    classifiers=[
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
+        'Development Status :: 4 - Beta'
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: GPL-3.0 License',
+        'Operating System :: OS Independent'
+    ]
 )

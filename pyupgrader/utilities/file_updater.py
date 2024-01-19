@@ -6,12 +6,12 @@ import pickle
 import shutil
 import subprocess
 import sys
+import datetime
 from time import sleep
 from pyupgrader.utilities import hashing
 
 
 def main():
-    # Create the argument parser
     parser = argparse.ArgumentParser(description='Update Utility')
 
     parser.add_argument('-p', '--path', help='Path to downloaded files', required=True)
@@ -77,6 +77,8 @@ if __name__ == '__main__':
     try:
         main()
     except Exception as e:
-        with open(os.path.join(os.path.dirname(__file__), 'update_crash.txt'), 'w') as f:
+        timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+        crash_file = f"update_crash_{timestamp}.txt"
+        with open(os.path.join(os.path.dirname(__file__), crash_file), 'w') as f:
             f.write(str(e))
         raise e

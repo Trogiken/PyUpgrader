@@ -1,8 +1,8 @@
 # PyUpgrader
 
-Python library to keep projects updated on clients machines
+Python library to keep projects updated on client machines
 
-**Pip Install:** `pip install git+https://github.com/Trogiken/PyUpgrader`
+**Pip Install:** `pip install pyupgrader`
 
 ## Getting Started
 
