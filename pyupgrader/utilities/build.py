@@ -125,16 +125,9 @@ class Builder:
         if self.project_path in self.exclude_paths:
             raise PathError(f'Folder path cannot be excluded')
         
-        # Remove trailing slashes
-        if self.project_path.endswith('/'):
-            self.project_path = self.project_path.rstrip('/')
-        if self.project_path.endswith('\\'):
-            self.project_path = self.project_path.rstrip('\\')
-        for i, path in enumerate(self.exclude_paths):
-            if path.endswith('/'):
-                self.exclude_paths[i] = path.rstrip('/')
-            if path.endswith('\\'):
-                self.exclude_paths[i] = path.rstrip('\\')
+
+        self.project_path = helper.normalize_paths(self.project_path)
+        self.exclude_paths = helper.normalize_paths(self.exclude_paths)
         
         self._pyudpdate_folder = os.path.join(self.project_path, '.pyupgrader')
         self._config_path = os.path.join(self._pyudpdate_folder, 'config.yaml')

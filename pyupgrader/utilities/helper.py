@@ -16,7 +16,7 @@ import yaml
 from typing import List, Union
 
 
-def normalize_paths(paths: Union[str, List[str]]) -> List[str]:
+def normalize_paths(paths: Union[str, List[str]]) -> Union[str, List[str]]:
     """
     Replace backslashes with forward slashes and remove trailing slashes in a path or a list of paths.
 
@@ -24,8 +24,8 @@ def normalize_paths(paths: Union[str, List[str]]) -> List[str]:
         paths (Union[str, List[str]]): A path or a list of paths.
 
     Returns:
-        List[str]: A list of paths with backslashes replaced by forward slashes.
-
+        Union[str, List[str]]: The normalized path or list of paths.
+        
     Raises:
         TypeError: If the input is not a string or a list of strings.
     """
