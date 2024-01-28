@@ -12,7 +12,12 @@ setup(
     description='Keep your Python code up to date on client machines.',
     long_description=readme,
     long_description_content_type='text/markdown',
-    url='https://github.com/Trogiken/PyUpgrader',
+    url='https://pypi.org/project/pyupgrader/',
+    project_urls={
+        'Documentation': 'https://github.com/Trogiken/PyUpgrader/wiki',
+        'Source': 'https://github.com/Trogiken/PyUpgrader',
+        'Issues': 'https://github.com/Trogiken/PyUpgrader/issues',
+    },
     packages=['pyupgrader', 'pyupgrader.utilities'],
     package_data={'pyupgrader.utilities': ['default.yaml', 'comments.yaml']},
     install_requires=['pyyaml', 'requests', 'packaging', 'setuptools'],
