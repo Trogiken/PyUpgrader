@@ -41,12 +41,6 @@ class Config:
     """
     Config helper class
 
-    Attributes:
-    default_config_path: str
-        Path to the default config file
-    comments_path: str
-        Path to the comments file
-
     Methods:
     load_yaml(path: str) -> dict
         Load a yaml file at path
@@ -54,8 +48,6 @@ class Config:
         Load a yaml from a string
     write_yaml(path: str, data: dict) -> None
         Dump data to yaml file at path
-    display_info() -> None
-        Display config values and comments
     """
 
     def load_yaml_from_package(self, package_name: str, file_path: str) -> dict:
@@ -116,35 +108,6 @@ class Config:
         """
         with open(path, 'w') as config_file:
             yaml.safe_dump(data, config_file)
-
-    def display_info(self) -> None:
-        """
-        Display config values and comments.
-
-        Prints the config values and their corresponding comments.
-        """
-        comments = self.load_yaml_from_package('pyupgrader', 'utilities/comments.yaml')
-        config = self.load_yaml_from_package('pyupgrader', 'utilities/default.yaml')
-
-        header = "Config Information"
-        print(f"""\n\t{header}\n\t{'-' * len(header)}\n\tAttributes marked as Dynamic can be changed by the user\n""")
-
-        misc_comments = {}
-
-        # Display config values and comments
-        for key, value in config.items():
-            print(f"{key}: {value}")
-            if key in comments:
-                print(f"  Comments: {comments[key]}")
-            else:
-                misc_comments[key] = comments.get(key, "")
-            print()
-
-        # Display misc comments
-        if misc_comments:
-            print("Misc Comments:")
-            for key, value in misc_comments.items():
-                print(f"{key}: {value}\n")
     
     def _valid_config(self, config: dict) -> (bool, str):
         """
