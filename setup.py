@@ -20,7 +20,7 @@ setup(
         'Issues': 'https://github.com/Trogiken/PyUpgrader/issues',
     },
     packages=['pyupgrader', 'pyupgrader.utilities'],
-    package_data={'pyupgrader.utilities': ['default.yaml', 'comments.yaml']},
+    package_data={'pyupgrader.utilities': ['default.yaml']},
     install_requires=['pyyaml', 'requests', 'packaging', 'setuptools'],
     python_requires='>=3.8',
     entry_points={
