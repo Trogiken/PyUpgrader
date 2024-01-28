@@ -15,8 +15,8 @@ setup(
     url='https://pypi.org/project/pyupgrader/',
     project_urls={
         'Documentation': 'https://github.com/Trogiken/PyUpgrader/wiki',
+        'Release Notes': 'https://github.com/Trogiken/PyUpgrader/wiki/Release-Notes',
         'Source': 'https://github.com/Trogiken/PyUpgrader',
-        'Releases': 'https://github.com/Trogiken/PyUpgrader/wiki/Release-Notes',
     },
     packages=['pyupgrader', 'pyupgrader.utilities'],
     package_data={'pyupgrader.utilities': ['default.yaml', 'comments.yaml']},
