@@ -2,6 +2,8 @@
 
 Python library to keep projects updated on client machines
 
+Find the documentation [here](https://github.com/Trogiken/PyUpgrader/wiki/)
+
 **Pip Install:** `pip install pyupgrader`
 
 ## Getting Started
