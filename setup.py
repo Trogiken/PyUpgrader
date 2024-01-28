@@ -16,7 +16,7 @@ setup(
     project_urls={
         'Documentation': 'https://github.com/Trogiken/PyUpgrader/wiki',
         'Source': 'https://github.com/Trogiken/PyUpgrader',
-        'Issues': 'https://github.com/Trogiken/PyUpgrader/issues',
+        'Releases': 'https://github.com/Trogiken/PyUpgrader/wiki/Release-Notes',
     },
     packages=['pyupgrader', 'pyupgrader.utilities'],
     package_data={'pyupgrader.utilities': ['default.yaml', 'comments.yaml']},
