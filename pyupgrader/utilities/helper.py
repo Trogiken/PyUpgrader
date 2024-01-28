@@ -18,7 +18,7 @@ from typing import List, Union
 
 def normalize_paths(paths: Union[str, List[str]]) -> List[str]:
     """
-    Replace backslashes with forward slashes in a path or a list of paths.
+    Replace backslashes with forward slashes and remove trailing slashes in a path or a list of paths.
 
     Args:
         paths (Union[str, List[str]]): A path or a list of paths.
@@ -30,9 +30,9 @@ def normalize_paths(paths: Union[str, List[str]]) -> List[str]:
         TypeError: If the input is not a string or a list of strings.
     """
     if isinstance(paths, str):
-        return paths.replace('\\', '/')
+        return paths.replace('\\', '/').rstrip('/')
     elif isinstance(paths, list):
-        return [path.replace('\\', '/') for path in paths]
+        return [path.replace('\\', '/').rstrip('/') for path in paths]
     else:
         raise TypeError("Input must be a string or a list of strings")
 
