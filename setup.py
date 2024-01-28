@@ -12,8 +12,8 @@ setup(
     description='Keep your Python code up to date on client machines.',
     long_description=readme,
     long_description_content_type='text/markdown',
-    url='https://pypi.org/project/pyupgrader/',
     project_urls={
+        'Homepage': 'https://pypi.org/project/pyupgrader',
         'Documentation': 'https://github.com/Trogiken/PyUpgrader/wiki',
         'Release Notes': 'https://github.com/Trogiken/PyUpgrader/wiki/Release-Notes',
         'Source': 'https://github.com/Trogiken/PyUpgrader',
