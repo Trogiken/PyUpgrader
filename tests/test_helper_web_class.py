@@ -1,9 +1,8 @@
 import pytest
 import requests
 import logging
-from pyupgrader.utilities.helper import Web
+from pyupgrader.utilities.helper import Web, Config
 from unittest.mock import Mock, patch, mock_open
-from tests.misc import mock_config_str, mock_config_dict
 
 LOGGER = logging.getLogger(__name__)
 
@@ -17,6 +16,16 @@ def web():
         Web: The created Web object.
     """
     return Web("https://example.com")
+
+@pytest.fixture
+def config():
+    """
+    This function creates a Config object with the specified config data.
+
+    Returns:
+        Config: The created Config object.
+    """
+    return Config()
 
 def test_get_request(web):
     """
@@ -56,18 +65,18 @@ def test_get_request_connection_error(web):
         with pytest.raises(requests.ConnectionError):
             web.get_request(url)
 
-def test_get_config(web):
+def test_get_config(web, config):
     """
     Test the get_config method of the web class.
     """
     LOGGER.info("Testing test_get_config")
     config_url = "https://example.com/config.yaml"
     response_mock = Mock()
-    response_mock.text = mock_config_str
+    response_mock.text = str(config.default_config_data)
     with patch.object(web, "get_request", return_value=response_mock) as mock_get_request:
-        config = web.get_config()
+        config_data = web.get_config()
         mock_get_request.assert_called_once_with(config_url)
-        assert config == mock_config_dict
+        assert config_data == config.default_config_data
 
 def test_download(web):
     """
@@ -91,16 +100,15 @@ def test_download(web):
             mock_get_request.assert_called_once_with(url_path)
             file_mock.write.assert_called_once_with(response_mock.content)
 
-def test_download_hash_db(web):
+def test_download_hash_db(web, config):
     """
     Test case for the download_hash_db method of the web helper class.
     
     This test verifies that the download_hash_db method correctly calls the get_config and download methods of the web helper class with the expected arguments.
     """
     LOGGER.info("Testing test_download_hash_db")
-    config = mock_config_dict
     save_path = "/path/to/save/hash.db"
-    with patch.object(web, "get_config", return_value=config) as mock_get_config:
+    with patch.object(web, "get_config", return_value=config.default_config_data) as mock_get_config:
         with patch.object(web, "download") as mock_download:
             web.download_hash_db(save_path)
             mock_get_config.assert_called_once()
