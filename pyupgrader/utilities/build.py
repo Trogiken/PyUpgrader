@@ -148,7 +148,7 @@ class Builder:
         print(f'Creating config file at "{self._config_path}"')
         config = helper.Config()
 
-        default_data = config.load_yaml_from_package('pyupgrader', 'utilities/default.yaml')
+        default_data = config.default_config_data
         default_data['hash_db'] = os.path.basename(self._hash_db_path)
         config.write_yaml(self._config_path, default_data)
         

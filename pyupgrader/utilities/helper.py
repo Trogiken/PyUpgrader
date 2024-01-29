@@ -41,6 +41,10 @@ class Config:
     """
     Config helper class
 
+    Attributes:
+    default_config_data: dict
+        Default config data
+
     Methods:
     load_yaml(path: str) -> dict
         Load a yaml file at path
@@ -49,21 +53,15 @@ class Config:
     write_yaml(path: str, data: dict) -> None
         Dump data to yaml file at path
     """
-
-    def load_yaml_from_package(self, package_name: str, file_path: str) -> dict:
-        """
-        Load a YAML file from a package.
-
-        Args:
-            package_name (str): The name of the package.
-            file_path (str): The path to the YAML file inside the package.
-
-        Returns:
-            dict: The data loaded from the YAML file.
-        """
-        file_content = pkg_resources.resource_string(package_name, file_path)
-        data = yaml.safe_load(file_content)
-        return data
+    def __init__(self):
+        self.default_config_data = {
+            'version': '1.0.0',
+            'description': 'Built with PyUpgrader',
+            'startup_path': '',
+            'required_only': False,
+            'cleanup': False,
+            'hash_db': 'hash.db',
+        }
 
     def load_yaml(self, path: str) -> dict:
         """
