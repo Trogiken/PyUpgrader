@@ -161,6 +161,8 @@ class HashDB:
         Closes the database connection.
         """
         self.connection.close()
+        self.connection = None
+        self.cursor = None
 
 
 class Hasher:
