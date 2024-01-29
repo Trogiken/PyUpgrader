@@ -17,28 +17,22 @@ from pyupgrader.utilities import helper, hashing
 
 class BuildError(Exception):
     """Raised when there is an error building a project"""
-    pass
 
 
 class FolderCreationError(Exception):
     """Raised when there is an error creating a folder"""
-    pass
 
 
 class ConfigError(Exception):
     """Raised when there is an error with the config file"""
-    pass
 
 
 class HashDBError(Exception):
     """Raised when there is an error with the hash database"""
-    pass
 
 
 class PathError(Exception):
     """Raised when there is an error with a path"""
-    pass
-
 
 class Builder:
     """
@@ -59,12 +53,17 @@ class Builder:
     - _create_hash_db(): Creates the hash database.
     """
 
-    def __init__(self, project_path: str, exclude_envs: bool = False, exclude_hidden: bool = False, exclude_patterns: list = [], exclude_paths: list = []):
+    def __init__(self, project_path: str,
+                 exclude_envs: bool = False,
+                 exclude_hidden: bool = False,
+                 exclude_patterns: list = None,
+                 exclude_paths: list = None):
+
         self.project_path = project_path
         self.exclude_envs = exclude_envs
         self.exclude_hidden = exclude_hidden
-        self.exclude_patterns = exclude_patterns
-        self.exclude_paths = exclude_paths
+        self.exclude_patterns = [] if exclude_patterns is None else exclude_patterns
+        self.exclude_paths = [] if exclude_paths is None else exclude_paths
 
         self.env_names = [
             '.venv',
@@ -98,21 +97,21 @@ class Builder:
         try:
             self._create_pyupgrader_folder()
         except Exception as error:
-            raise FolderCreationError(f'Failed to create .pyupgrader folder | {error}')
-        
+            raise FolderCreationError("Failed to create .pyupgrader folde") from error
+
         try:
             self._create_config_file()
         except Exception as error:
-            raise ConfigError(f'Failed to create config file | {error}')
-        
+            raise ConfigError("Failed to create config file") from error
+
         try:
             self._create_hash_db()
         except Exception as error:
-            raise HashDBError(f'Failed to create hash database | {error}')
+            raise HashDBError("Failed to create hash database") from error
 
         print('\nDone!')
-        print(f'Project built at "{self._pyudpdate_folder}"')
-    
+        print(f"Project built at '{self._pyudpdate_folder}'")
+
     def _validate_paths(self):
         """Validates and set paths"""
         if self.project_path is None:
@@ -123,16 +122,15 @@ class Builder:
         if not os.path.exists(self.project_path):
             raise FileNotFoundError(f'Folder "{self.project_path}" does not exist')
         if self.project_path in self.exclude_paths:
-            raise PathError(f'Folder path cannot be excluded')
-        
+            raise PathError("Folder path cannot be excluded")
 
         self.project_path = helper.normalize_paths(self.project_path)
         self.exclude_paths = helper.normalize_paths(self.exclude_paths)
-        
+
         self._pyudpdate_folder = os.path.join(self.project_path, '.pyupgrader')
         self._config_path = os.path.join(self._pyudpdate_folder, 'config.yaml')
         self._hash_db_path = os.path.join(self._pyudpdate_folder, 'hashes.db')
-    
+
     def _create_pyupgrader_folder(self):
         """Creates the .pyupgrader folder"""
         if os.path.exists(self._pyudpdate_folder):
@@ -151,12 +149,11 @@ class Builder:
         default_data = config.default_config_data
         default_data['hash_db'] = os.path.basename(self._hash_db_path)
         config.write_yaml(self._config_path, default_data)
-        
         try:
             config.load_yaml(self._config_path)
         except ValueError as error:
-            raise ConfigError(f'Failed to validate config file | {error}')
-    
+            raise ConfigError("Failed to validate config file") from error
+
     def _create_hash_db(self):
         """Creates the hash database"""
         print(f'Creating hash database at "{self._hash_db_path}"')
@@ -170,4 +167,7 @@ class Builder:
         if self.exclude_envs:
             self.exclude_paths += [os.path.join(self.project_path, path) for path in self.env_names]
 
-        hasher.create_hash_db(self.project_path, self._hash_db_path, self.exclude_paths, self.exclude_patterns)
+        hasher.create_hash_db(self.project_path,
+                              self._hash_db_path,
+                              self.exclude_paths,
+                              self.exclude_patterns)

@@ -1,8 +1,11 @@
 """
 Hasher module for PyUpgrader.
 
-This module provides classes and functions for hashing files, creating hash databases, and comparing hash databases.
-Modified version of https://github.com/Trogiken/random-projects/blob/master/python/tools/DataIntegrityChecker/SCRIPT.py
+This module provides classes and functions for hashing files, creating hash databases, 
+and comparing hash databases.
+
+Modified version of:
+https://github.com/Trogiken/random-projects/blob/master/python/tools/DataIntegrityChecker/SCRIPT.py
 
 Classes:
 - DBSummary: Dataclass for database summary.
@@ -10,7 +13,7 @@ Classes:
 - Hasher: A class that provides methods for hashing files and creating hash databases.
 
 Functions:
-- compare_databases(local_db_path: str, cloud_db_path: str) -> DBSummary: Compare two hash databases and return a summary of the differences.
+- compare_databases(local_db_path: str, cloud_db_path: str) -> DBSummary
 
 Exceptions:
 - HashingError: Exception raised for errors in the hashing process.
@@ -90,7 +93,7 @@ def compare_databases(local_db_path: str, cloud_db_path: str) -> DBSummary:
         for file_path in common_files
         if local_db_files[file_path] != cloud_db_files[file_path]
     ]
-    
+
     connection1.close()
     connection2.close()
 
@@ -127,7 +130,7 @@ class HashDB:
         self.connection = None
         self.cursor = None
         self.open()
-    
+
     def get_file_paths(self) -> str:
         """
         Generator that yields file paths from the database.
@@ -135,7 +138,7 @@ class HashDB:
         self.cursor.execute('SELECT file_path FROM hashes')
         for row in self.cursor.fetchall():
             yield row[0]
-    
+
     def get_file_hash(self, file_path: str) -> str:
         """
         Returns the hash of a file in the database.
@@ -148,7 +151,7 @@ class HashDB:
         """
         self.cursor.execute('SELECT calculated_hash FROM hashes WHERE file_path = ?', (file_path,))
         return self.cursor.fetchone()[0]
-    
+
     def open(self) -> None:
         """
         Opens the database connection.
@@ -174,8 +177,12 @@ class Hasher:
         The name of the project directory (Not the full path)
 
     Methods:
-    - create_hash(self, file_path: str) -> (str, str): Creates a hash from file bytes using the chunk method and returns the relative file path and hash as a string.
-    - create_hash_db(self, hash_dir_path: str, db_save_path: str, exclude_paths=[], exclude_patterns=[]) -> str: Creates a hash database from a directory path and saves it to a file path. Returns the file path.
+    - create_hash(self, file_path: str) -> (str, str):
+        Creates a hash from file bytes using the chunk method.
+        Returns the relative file path and hash as a string.
+    - create_hash_db(self, hash_dir_path: str, db_save_path: str, exclude_paths=[], exclude_patterns=[]) -> str:
+        Creates a hash database from a directory path and saves it to a file path.
+        Returns the file path.
     """
 
     def __init__(self, project_name: str):
@@ -190,7 +197,8 @@ class Hasher:
 
     def create_hash(self, file_path: str) -> (str, str):
         """
-        Create a hash from file bytes using the chunk method and return the relative file path and hash as a string.
+        Create a hash from file bytes using the chunk method, 
+        return the relative file path and hash as a string.
 
         Args:
         - file_path: str
@@ -198,6 +206,9 @@ class Hasher:
 
         Returns:
         - Tuple[str, str]: The relative file path and hash as a string.
+        
+        Raises:
+        - HashingError: If there is an error hashing the file.
         """
         try:
             chunk_size = 4096
@@ -220,11 +231,12 @@ class Hasher:
 
             return relative_file_path, file_hash
         except Exception as error:
-            raise HashingError(f"Error hashing file '{file_path}' | {error}")
+            raise HashingError(f"Error hashing file '{file_path}' | {error}") from error
 
-    def create_hash_db(self, hash_dir_path: str, db_save_path: str, exclude_paths=[], exclude_patterns=[]) -> str:
+    def create_hash_db(self, hash_dir_path: str, db_save_path: str, exclude_paths=None, exclude_patterns=None) -> str:
         """
-        Create a hash database from a directory path and save it to a file path. Return the save file path.
+        Create a hash database from a directory path,
+        then save it to a file path. Return the save file path.
 
         Args:
         - hash_dir_path: str
@@ -239,6 +251,12 @@ class Hasher:
         Returns:
         - str: The file path of the saved hash database.
         """
+        if exclude_paths is None:
+            exclude_paths = []
+
+        if exclude_patterns is None:
+            exclude_patterns = []
+
         if os.path.exists(db_save_path):
             os.remove(db_save_path)
 

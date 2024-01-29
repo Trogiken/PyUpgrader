@@ -8,10 +8,10 @@ import subprocess
 import sys
 import datetime
 from time import sleep
-from pyupgrader.utilities import hashing
 
 
 def main():
+    """Main function for the file updater utility."""
     parser = argparse.ArgumentParser(description='Update Utility')
 
     parser.add_argument('-p', '--path', help='Path to downloaded files', required=True)
@@ -34,7 +34,7 @@ def main():
         startup_path = update_details['startup_path']
         cloud_config_path = update_details['cloud_config_path']
         cloud_hash_db_path = update_details['cloud_hash_db_path']
-    
+
     # Replace config and hash db
     if os.path.exists(cloud_config_path):
         source = cloud_config_path
@@ -43,7 +43,7 @@ def main():
         shutil.copy(source, destination)
     else:
         raise FileNotFoundError(f"Cloud config not found at '{cloud_config_path}'")
-    
+
     if os.path.exists(cloud_hash_db_path):
         source = cloud_hash_db_path
         destination = os.path.join(project_path, '.pyupgrader', os.path.basename(cloud_hash_db_path))
@@ -51,7 +51,7 @@ def main():
         shutil.copy(source, destination)
     else:
         raise FileNotFoundError(f"Cloud hash db not found at '{cloud_hash_db_path}'")
-    
+
     # Update the files
     for file in update_files:
         source = os.path.join(args.path, file)
@@ -59,12 +59,12 @@ def main():
         if os.path.exists(destination):
             os.remove(destination)
         shutil.copy(source, destination)
-    
+
     for file in del_files:
         destination = os.path.join(project_path, file)
         if os.path.exists(destination):
             os.remove(destination)
-    
+
     if args.clean:
         shutil.rmtree(args.path)
 
@@ -79,6 +79,6 @@ if __name__ == '__main__':
     except Exception as e:
         timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         crash_file = f"update_crash_{timestamp}.txt"
-        with open(os.path.join(os.path.dirname(__file__), crash_file), 'w') as f:
+        with open(os.path.join(os.path.dirname(__file__), crash_file), 'w', encoding="utf-8") as f:
             f.write(str(e))
         raise e

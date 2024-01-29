@@ -43,7 +43,7 @@ def test_get_request(web):
     response_mock.raise_for_status.return_value = None
     with patch("requests.get", return_value=response_mock) as mock_get:
         response = web.get_request(url)
-        mock_get.assert_called_once_with(url)
+        mock_get.assert_called_once_with(url, timeout=5)
         response_mock.raise_for_status.assert_called_once()
         assert response == response_mock
 

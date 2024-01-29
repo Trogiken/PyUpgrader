@@ -2,7 +2,7 @@
 This module contains utility functions and classes for PyUpgrader.
 
 Functions:
-- normalize_paths(paths: Union[str, List[str]]) -> List[str]: Replace backslashes with forward slashes in a path or a list of paths.
+- normalize_paths(paths: Union[str, List[str]]) -> List[str]
 
 Classes:
 - Config: Helper class for managing configuration files.
