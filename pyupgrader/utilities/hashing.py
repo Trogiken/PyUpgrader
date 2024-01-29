@@ -31,7 +31,6 @@ from pyupgrader.utilities import helper
 
 class HashingError(Exception):
     """Exception raised for errors in the hashing process."""
-    pass
 
 
 @dataclass
@@ -180,7 +179,9 @@ class Hasher:
     - create_hash(self, file_path: str) -> (str, str):
         Creates a hash from file bytes using the chunk method.
         Returns the relative file path and hash as a string.
-    - create_hash_db(self, hash_dir_path: str, db_save_path: str, exclude_paths=[], exclude_patterns=[]) -> str:
+    - create_hash_db(self, hash_dir_path: str, db_save_path: str,
+                    exclude_paths=[], exclude_patterns=[]
+                    ) -> str:
         Creates a hash database from a directory path and saves it to a file path.
         Returns the file path.
     """
@@ -226,14 +227,21 @@ class Hasher:
                         break
                     hasher.update(chunk)
 
-            relative_file_path = helper.normalize_paths(file_path.split(self.project_name)[-1]).lstrip("/")
+            relative_file_path = (
+                helper.normalize_paths(file_path.split(self.project_name)[-1])
+                .lstrip("/")
+            )
             file_hash = hasher.hexdigest()
 
             return relative_file_path, file_hash
         except Exception as error:
             raise HashingError(f"Error hashing file '{file_path}' | {error}") from error
 
-    def create_hash_db(self, hash_dir_path: str, db_save_path: str, exclude_paths=None, exclude_patterns=None) -> str:
+    def create_hash_db(self,
+                       hash_dir_path: str,
+                       db_save_path: str,
+                       exclude_paths=None,
+                       exclude_patterns=None) -> str:
         """
         Create a hash database from a directory path,
         then save it to a file path. Return the save file path.
@@ -286,17 +294,24 @@ class Hasher:
             for root, dirs, files in os.walk(hash_dir_path):
                 if exclude_dir_paths:
                     # If the root directory is in the exclude directories
-                    if any(exclude_dir_path in helper.normalize_paths(root) for exclude_dir_path in exclude_dir_paths):
+                    if any(
+                        exclude_dir_path in helper.normalize_paths(root)
+                        for exclude_dir_path in exclude_dir_paths
+                        ):
                         dirs[:] = []  # Skip subdirectories
                         continue
 
                 if exclude_patterns:
                     # if any directory in the root matches a pattern, skip it
-                    if any(re.search(pattern, helper.normalize_paths(root)) for pattern in exclude_patterns):
+                    if any(
+                        re.search(pattern, helper.normalize_paths(root))
+                        for pattern in exclude_patterns
+                        ):
                         dirs[:] = []  # Skip subdirectories
                         continue
 
-                file_paths = helper.normalize_paths([os.path.join(root, file) for file in files])  # Get full file paths
+                # Get full file paths
+                file_paths = helper.normalize_paths([os.path.join(root, file) for file in files])
 
                 if exclude_file_paths:
                     for path in exclude_file_paths:
@@ -308,7 +323,8 @@ class Hasher:
                     file_paths = [
                         path
                         for path in file_paths
-                        if not any(re.search(pattern, path) for pattern in exclude_patterns)
+                        if not any(re.search(pattern, path)
+                                   for pattern in exclude_patterns)
                     ]
 
                 results = pool.map(self.create_hash, file_paths)  # Use workers to create hashes

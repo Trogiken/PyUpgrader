@@ -25,8 +25,8 @@ def main():
         sleep(.5)
     sleep(1)
 
-    with open(args.action, 'rb') as f:
-        update_details = pickle.load(f)
+    with open(args.action, 'rb') as action_file:
+        update_details = pickle.load(action_file)
 
         update_files = update_details['update']
         del_files = update_details['delete']

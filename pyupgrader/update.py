@@ -167,7 +167,8 @@ class UpdateManager:
         else:
             has_update, description = False, local_config['description']
 
-        return {'has_update': has_update, 'description': description, 'web_version': str(web_version), 'local_version': str(local_version)}
+        return {'has_update': has_update, 'description': description,
+                'web_version': str(web_version), 'local_version': str(local_version)}
 
     def db_sum(self) -> hashing.DBSummary:
         """
@@ -179,11 +180,12 @@ class UpdateManager:
         tmp_path = ""
         try:
             tmp_path = tempfile.mkdtemp()
-            cloud_hash_db_path = self._web_man.download_hash_db(os.path.join(tmp_path, 'cloud_hashes.db'))
+            cloud_hash_db_path = self._web_man.download_hash_db(os.path.join(
+                                                                tmp_path, 'cloud_hashes.db'))
 
             return hashing.compare_databases(self._local_hash_db_path, cloud_hash_db_path)
         except Exception as error:
-            raise DBSumError(error)
+            raise DBSumError from error
         finally:
             if os.path.exists(tmp_path):
                 shutil.rmtree(tmp_path)
@@ -208,7 +210,8 @@ class UpdateManager:
         try:
             db_temp_path = tempfile.mkdtemp()
 
-            cloud_hash_db_path = self._web_man.download_hash_db(os.path.join(db_temp_path, 'cloud_hashes.db'))
+            cloud_hash_db_path = self._web_man.download_hash_db(os.path.join(
+                                                                db_temp_path, 'cloud_hashes.db'))
             cloud_db = hashing.HashDB(cloud_hash_db_path)
             compare_db = self.db_sum()
 
@@ -218,7 +221,7 @@ class UpdateManager:
                 bad_files = [path for path, _, _ in compare_db.bad_files]
                 files = compare_db.unique_files_cloud_db + bad_files
             else:
-                files = [path for path in cloud_db.get_file_paths()]
+                files = list(cloud_db.get_file_paths())
 
             return files
         except Exception as error:
@@ -284,7 +287,8 @@ class UpdateManager:
 
         Args:
         - file_dir (str, optional):
-            The directory where temporary files will be stored. If not provided, a temporary directory will be created.
+            The directory where temporary files will be stored.
+            If not provided, a temporary directory will be created.
 
         Returns:
         - str: The path to the lock file.
@@ -327,11 +331,16 @@ class UpdateManager:
         else:
             if download_files:
                 self.download_files(file_dir, required=True)
-            update_details['update'] = [file_path for file_path in db_summary.unique_files_cloud_db] + [file_path for file_path, _, _ in db_summary.bad_files]
+            bad_files_paths = [file_path for file_path, _, _ in db_summary.bad_files]
+            update_details['update'] = list(db_summary.unique_files_cloud_db) + bad_files_paths
 
-        if cloud_config['required_only'] and not update_details['update'] and not update_details['delete']:
+        if all(cloud_config['required_only'],
+               not update_details['update'],
+               not update_details['delete']
+               ):
             shutil.rmtree(file_dir)
-            raise NoUpdateError("No files to update. | If you wish to update anyway, set required_only to False in the cloud config.")
+            raise NoUpdateError("No files to update. Set 'required_only' "
+                                "to False for forced update.")
 
         # save actions to pickle file
         action_pkl = os.path.join(tmp_setting_dir, 'actions.pkl')
