@@ -46,7 +46,9 @@ def main():
 
     if os.path.exists(cloud_hash_db_path):
         source = cloud_hash_db_path
-        destination = os.path.join(project_path, '.pyupgrader', os.path.basename(cloud_hash_db_path))
+        destination = os.path.join(project_path,
+                                   '.pyupgrader',
+                                   os.path.basename(cloud_hash_db_path))
         os.remove(destination)
         shutil.copy(source, destination)
     else:
