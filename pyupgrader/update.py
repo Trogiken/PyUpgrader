@@ -64,8 +64,8 @@ class UpdateManager:
         - project_path: str
             Path to the project folder (Not the .pyupgrader folder)
         """
-        self._url = url.rstrip('/')
-        self._project_path = project_path.rstrip('/')
+        self._url = helper.normalize_paths(url)
+        self._project_path = helper.normalize_paths(project_path)
         self._pyupgrader_path = os.path.join(self._project_path, '.pyupgrader')
         self._config_path = os.path.join(self._pyupgrader_path, 'config.yaml')
         self._local_hash_db_path = None  # Set in _validate_attributes
@@ -94,7 +94,7 @@ class UpdateManager:
         - value: str
             The URL to the .pyupgrader folder.
         """
-        self._url = value.rstrip('/')  # Remove trailing slash
+        self._url = helper.normalize_paths(value)
         self._web_man = helper.Web(self._url)
         self._validate_attributes()
 
