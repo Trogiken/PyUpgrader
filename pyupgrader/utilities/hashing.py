@@ -26,6 +26,11 @@ from dataclasses import dataclass
 from pyupgrader.utilities import helper
 
 
+class HashingError(Exception):
+    """Exception raised for errors in the hashing process."""
+    pass
+
+
 @dataclass
 class DBSummary:
     """
@@ -46,11 +51,6 @@ class DBSummary:
     unique_files_cloud_db: list
     ok_files: list
     bad_files: list
-
-
-class HashingError(Exception):
-    """Exception raised for errors in the hashing process."""
-    pass
 
 
 def compare_databases(local_db_path: str, cloud_db_path: str) -> DBSummary:
@@ -215,7 +215,7 @@ class Hasher:
                         break
                     hasher.update(chunk)
 
-            relative_file_path = file_path.split(self.project_name)[-1].lstrip('/')
+            relative_file_path = helper.normalize_paths(file_path.split(self.project_name)[-1]).lstrip("/")
             file_hash = hasher.hexdigest()
 
             return relative_file_path, file_hash
