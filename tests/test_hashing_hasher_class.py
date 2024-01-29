@@ -87,16 +87,18 @@ class Hasher(unittest.TestCase):
         rows = cursor.fetchall()
         LOGGER.debug(f"All Rows: {rows}")
         # get file5 from the database using sql
-        cursor.execute("SELECT hash FROM hashes WHERE path='hashing/dir2/file5.txt'")
+        cursor.execute("SELECT * FROM hashes WHERE file_path='hashing/dir2/file5.txt'")
         rows = cursor.fetchall()
         LOGGER.debug(f"file 5: {rows}")
         assert len(rows) == 1
-        assert rows[0][0] == "3445b50a09c46b3dee912cd1b8dc9eaa4e756a82b417d97615b92d5cce04d1dd"
+        assert rows[0][0] == "hashing/dir2/file5.txt"
+        assert rows[0][1] == "3445b50a09c46b3dee912cd1b8dc9eaa4e756a82b417d97615b92d5cce04d1dd"
         # get file6 from the database using sql
-        cursor.execute("SELECT hash FROM hashes WHERE path='hashing/dir2/file6.txt'")
+        cursor.execute("SELECT * FROM hashes WHERE file_path='hashing/dir2/file6.txt'")
         rows = cursor.fetchall()
         LOGGER.debug(f"file 6: {rows}")
         assert len(rows) == 1
-        assert rows[0][0] == "a51c576ed146f5517946f646f8e42d304e08ef2d0b104f442e1d90be8dc34b54"
+        assert rows[0][0] == "hashing/dir2/file6.txt"
+        assert rows[0][1] == "a51c576ed146f5517946f646f8e42d304e08ef2d0b104f442e1d90be8dc34b54"
 
         connection.close()
