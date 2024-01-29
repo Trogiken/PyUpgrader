@@ -4,7 +4,6 @@ import os
 import tempfile
 import shutil
 import pickle
-import subprocess
 import sys
 import requests
 from packaging.version import Version
@@ -232,7 +231,7 @@ class UpdateManager:
             if db_temp_path:
                 shutil.rmtree(db_temp_path)
 
-    def download_files(self, save_path: str = "", required: bool = False) -> str:
+    def download_files(self, save_path: str = "", updated_only: bool = False) -> str:
         """
         Download cloud files and return the path where the files are saved.
 
@@ -240,7 +239,7 @@ class UpdateManager:
         - save_path: str, optional
             The path to save the downloaded files.
             If not provided, a temporary folder will be created.
-        - required: bool, optional
+        - updated_only: bool, optional
             If True, only download files that have changed or have been added.
 
         Returns:
@@ -255,7 +254,7 @@ class UpdateManager:
 
             files_to_download = None
 
-            if required:
+            if updated_only:
                 files_to_download = self.get_files(updated_only=True)
             else:
                 files_to_download = self.get_files()
@@ -277,13 +276,11 @@ class UpdateManager:
         except Exception as error:
             raise DownloadFilesError from error
 
-    def update(self, file_dir: str = "") -> str:
+    def prepare_update(self, file_dir: str = "") -> str:
         """
         Start the application update process.
-        A lock file will be created in the .pyupgrader folder.
-        This file is used by file_updater.py to determine when to start updating.
-        Remove the lock file to start the update process,
-        main application should call sys.exit() immediately after removing the lock file.
+        A 'actions' file will be created.
+        This file is used by file_updater.py.
 
         Args:
         - file_dir (str, optional):
@@ -291,11 +288,11 @@ class UpdateManager:
             If not provided, a temporary directory will be created.
 
         Returns:
-        - str: The path to the lock file.
+        - str: The path to the actions file.
 
         Raises:
         - NoUpdateError: If there are no files to update.
-            Set required_only to False in the cloud config to update anyway.
+            Set 'required_only' to False in the cloud config to update anyway.
         """
         # init values
         cloud_config = self._web_man.get_config()
@@ -307,55 +304,66 @@ class UpdateManager:
 
         # Create temp folder in file_dir for holding update settings
         tmp_setting_dir = tempfile.mkdtemp(dir=file_dir)
-        cloud_config_path = os.path.join(tmp_setting_dir, 'config.yaml')
-        cloud_hash_db_path = os.path.join(tmp_setting_dir, 'hashes.db')
 
         # Populate settings folder
+        cloud_config_path = os.path.join(tmp_setting_dir, 'config.yaml')
+        cloud_hash_db_path = os.path.join(tmp_setting_dir, 'hashes.db')
         self._web_man.download_hash_db(cloud_hash_db_path)
         self._config_man.write_yaml(cloud_config_path, cloud_config)
 
         update_details = {
-            'update': [],
-            'delete': [file_path for file_path in db_summary.unique_files_local_db],
+            'update': None,
+            'delete': list(db_summary.unique_files_local_db),
             'project_path': self._project_path,
+            'downloads_directory': file_dir,
             'startup_path': os.path.join(self._project_path, cloud_config['startup_path']),
             'cloud_config_path': cloud_config_path,
             'cloud_hash_db_path': cloud_hash_db_path,
+            'cleanup': cloud_config['cleanup'],
         }
 
         # Set the 'update' value and download files as needed
         if not cloud_config['required_only']:
             if download_files:
-                self.download_files(file_dir, required=False)
+                self.download_files(file_dir, updated_only=False)
             update_details['update'] = self.get_files(updated_only=False)
         else:
             if download_files:
-                self.download_files(file_dir, required=True)
+                self.download_files(file_dir, updated_only=True)
             bad_files_paths = [file_path for file_path, _, _ in db_summary.bad_files]
             update_details['update'] = list(db_summary.unique_files_cloud_db) + bad_files_paths
 
+        # Check if there are files to update
         if all(cloud_config['required_only'],
                not update_details['update'],
                not update_details['delete']
                ):
             shutil.rmtree(file_dir)
             raise NoUpdateError("No files to update. Set 'required_only' "
-                                "to False for forced update.")
+                                "to 'false' for forced update.")
 
         # save actions to pickle file
         action_pkl = os.path.join(tmp_setting_dir, 'actions.pkl')
         with open(action_pkl, 'wb') as file:
             pickle.dump(update_details, file)
 
-        # create lock file
-        lock_file = os.path.join(self._pyupgrader_path, 'lock')
-        with open(lock_file, 'w', encoding="utf-8") as file:
-            file.write('')
+        return action_pkl
 
-        # start file_updater.py using subprocessing
-        command = [sys.executable, os.path.join(os.path.dirname(__file__), 'utilities', 'file_updater.py'), '-p', file_dir, '-a', action_pkl, '-l', lock_file]
-        if cloud_config['cleanup']:
-            command.append('-c')
-        subprocess.Popen(command)
+    def update(self, actions_path: str) -> None:
+        """
+        Start the application update process. This function will replace the current process.
 
-        return lock_file
+        Args:
+        - actions_path: str
+            The path to the actions file.
+
+        Raises:
+        - FileNotFoundError: If the actions file does not exist.
+        """
+        if not os.path.exists(actions_path):
+            raise FileNotFoundError(actions_path)
+
+        updater_path = os.path.join(os.path.dirname(__file__), 'utilities', 'file_updater.py')
+        args = ['-a', actions_path]
+        # DEBUG Check functionality
+        os.execv(sys.executable, [sys.executable, updater_path] + args)
