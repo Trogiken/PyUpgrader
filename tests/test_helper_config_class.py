@@ -5,26 +5,9 @@ import tempfile
 import shutil
 import os
 import yaml
+from tests.misc import mock_config_str, mock_config_dict
 
 LOGGER = logging.getLogger(__name__)
-
-mock_config_str = """\
-version: 1.0
-description: My config
-hash_db: hash.db
-startup_path: /path/to/startup
-required_only: True
-cleanup: False
-"""
-
-mock_config_dict = {
-    "version": 1.0,
-    "description": "My config",
-    "hash_db": "hash.db",
-    "startup_path": "/path/to/startup",
-    "required_only": True,
-    "cleanup": False
-}
 
 
 class TestConfig(unittest.TestCase):
