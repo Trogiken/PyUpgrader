@@ -12,6 +12,9 @@ LOGGER = logging.getLogger(__name__)
 class TestCompareDatabase(unittest.TestCase):
 
     def setUp(self):
+        """
+        Set up the test environment by creating temporary directories and files.
+        """
         self.temp_dir_path = tempfile.mkdtemp()
         LOGGER.debug("Created temporary directory")
         self.local_db_path = os.path.join(self.temp_dir_path, "db1.db")
@@ -25,11 +28,32 @@ class TestCompareDatabase(unittest.TestCase):
         LOGGER.debug(f"Created temporary file: {self.cloud_db_path}")
     
     def tearDown(self):
-        # Remove the directory after the test
+        """
+        Clean up method that is called after each test case.
+        Removes the temporary directory created for the test.
+        """
         shutil.rmtree(self.temp_dir_path)
         LOGGER.debug(f"Removed temporary directory: {self.temp_dir_path}")
     
     def test_compare_databases(self):
+        """
+        Test case for comparing two databases and checking the summary of differences.
+
+        This test case performs the following steps:
+        1. Connects to the local database and creates a table called 'hashes'.
+        2. Inserts sample data into the 'hashes' table in the local database.
+        3. Connects to the cloud database and creates a table called 'hashes'.
+        4. Inserts sample data into the 'hashes' table in the cloud database.
+        5. Calls the 'compare_databases' function to compare the two databases.
+        6. Asserts the expected results based on the comparison summary.
+        7. Closes the database connections.
+
+        The expected results are as follows:
+        - 'unique_files_local_db' should be ['file2.txt']
+        - 'unique_files_cloud_db' should be ['file3.txt']
+        - 'ok_files' should be [('file1.txt', 'hash1')]
+        - 'bad_files' should be [('file4.txt', 'hash4', 'hash10')]
+        """
         LOGGER.info("Testing test_compare_databases")
         connection1 = sqlite3.connect(self.local_db_path)
         cursor1 = connection1.cursor()

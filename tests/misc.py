@@ -1,3 +1,5 @@
+"""This module hold miscellaneous data used for testing."""
+
 mock_config_str = """\
 version: 1.0
 description: My config

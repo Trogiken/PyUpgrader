@@ -13,6 +13,9 @@ LOGGER = logging.getLogger(__name__)
 class TestConfig(unittest.TestCase):
     
     def setUp(self):
+        """
+        Set up the test environment by creating a temporary directory and a temporary file.
+        """
         # Create a temporary directory
         self.temp_dir_path = tempfile.mkdtemp()
         LOGGER.debug(f"Created temporary directory: {self.temp_dir_path}")
@@ -26,22 +29,34 @@ class TestConfig(unittest.TestCase):
         self.config = Config()
     
     def tearDown(self):
-        # Remove the directory after the test
+        """
+        Clean up method that is called after each test case.
+        Removes the temporary directory and logs the removal.
+        """
         shutil.rmtree(self.temp_dir_path)
         LOGGER.debug(f"Removed temporary directory: {self.temp_dir_path}")
 
-    def test_load_yaml(self):        
+    def test_load_yaml(self):
+        """
+        Test the load_yaml method of the Config class.
+        """
         LOGGER.info("Testing test_load_yaml")
         data = self.config.load_yaml(self.yaml_file_path)
         LOGGER.debug(f"data: {data}")
         self.assertEqual(data, mock_config_dict)
 
     def test_loads_yaml(self):
+        """
+        Test case for loading YAML configuration.
+        """
         LOGGER.info("Testing test_loads_yaml")
         data = self.config.loads_yaml(mock_config_str)
         self.assertEqual(data, mock_config_dict)
 
     def test_write_yaml(self):
+        """
+        Test the write_yaml method of the Config class.
+        """
         LOGGER.info("Testing test_write_yaml")
         temp_file_path = os.path.join(self.temp_dir_path, "temp.yaml")
         self.config.write_yaml(temp_file_path, mock_config_dict)
@@ -50,6 +65,9 @@ class TestConfig(unittest.TestCase):
         self.assertEqual(written_data, mock_config_dict)
 
     def test_valid_config(self):
+        """
+        Test case to verify the validity of the configuration.
+        """
         LOGGER.info("Testing test_valid_config")
         is_valid, error = self.config._valid_config(mock_config_dict)
         self.assertTrue(is_valid)
