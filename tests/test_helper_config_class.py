@@ -1,17 +1,17 @@
 import unittest
-from pyupgrader.utilities.helper import Config
 import logging
 import tempfile
 import shutil
 import os
 import yaml
 from tests.misc import mock_config_str, mock_config_dict
+from pyupgrader.utilities.helper import Config
 
 LOGGER = logging.getLogger(__name__)
 
 
 class TestConfig(unittest.TestCase):
-
+    
     def setUp(self):
         # Create a temporary directory
         self.temp_dir_path = tempfile.mkdtemp()
