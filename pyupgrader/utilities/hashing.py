@@ -120,12 +120,6 @@ class HashDB:
     """
 
     def __init__(self, db_path: str):
-        """
-        Initializes a new instance of the HashDB class.
-
-        Args:
-        - db_path (str): The path to the hash database.
-        """
         self.db_path = db_path
         self.connection = None
         self.cursor = None
@@ -188,13 +182,6 @@ class Hasher:
     """
 
     def __init__(self, project_name: str):
-        """
-        Initialize the Hasher class.
-
-        Args:
-        - project_name: str
-            The name of the project directory (Not the full path)
-        """
         self.project_name = project_name
 
     def _create_hashes_table(self, cursor: sqlite3.Cursor) -> None:

@@ -50,15 +50,6 @@ class UpdateManager:
     """
 
     def __init__(self, url: str, project_path: str):
-        """
-        Initialize the UpdateManager class.
-
-        Args:
-        - url: str
-            URL to the .pyupgrader folder
-        - project_path: str
-            Path to the project folder (Not the .pyupgrader folder)
-        """
         self._url = helper.normalize_paths(url)
         self._project_path = helper.normalize_paths(project_path)
         self._pyupgrader_path = os.path.join(self._project_path, '.pyupgrader')

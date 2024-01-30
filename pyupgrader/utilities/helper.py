@@ -160,16 +160,10 @@ class Web:
         Download the hash database and save it to save_path
     """
     def __init__(self, url: str):
-        """
-        Initialize the Web class with the provided URL.
-        
-        Args:
-        - url (str): URL to the .pyupgrader folder
-        """
         self._url = url
         self._config_url = self._url + '/config.yaml'
         self._config_man = Config()
-    
+
     def get_request(self, url: str, timeout: int = 5) -> requests.Response:
         """
         Get a request from the specified URL.
