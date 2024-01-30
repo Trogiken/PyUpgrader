@@ -65,7 +65,6 @@ def main():
     if cleanup:
         shutil.rmtree(downloads_dir)
 
-    # DEBUG Check functionality
     os.execv(sys.executable, [sys.executable, startup_path])
 
 

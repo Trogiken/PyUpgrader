@@ -356,5 +356,4 @@ class UpdateManager:
 
         updater_path = os.path.join(os.path.dirname(__file__), 'utilities', 'file_updater.py')
         args = ['-a', actions_path]
-        # DEBUG Check functionality
         os.execv(sys.executable, [sys.executable, updater_path] + args)
