@@ -1,10 +1,3 @@
+"""PyUpgrader - A tool for updating applications"""
+
 from pyupgrader.update import UpdateManager
-
-
-def info():
-    info =  {
-        "name": "PyUpgrader",
-        "author": "Noah Blaszak",
-    }
-
-    return info

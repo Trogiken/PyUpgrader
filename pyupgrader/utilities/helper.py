@@ -2,23 +2,21 @@
 This module contains utility functions and classes for PyUpgrader.
 
 Functions:
-- normalize_paths(paths: Union[str, List[str]]) -> List[str]: Replace backslashes with forward slashes in a path or a list of paths.
+- normalize_paths(paths: Union[str, List[str]]) -> List[str]
 
 Classes:
 - Config: Helper class for managing configuration files.
 - Web: Class for managing web requests.
 """
 
+from typing import List, Union
 import yaml
 import requests
-import pkg_resources
-import yaml
-from typing import List, Union
-
 
 def normalize_paths(paths: Union[str, List[str]]) -> Union[str, List[str]]:
     """
-    Replace backslashes with forward slashes and remove trailing slashes in a path or a list of paths.
+    Replace backslashes with forward slashes and remove trailing slashes 
+    in a path or a list of paths.
 
     Args:
         paths (Union[str, List[str]]): A path or a list of paths.
@@ -31,10 +29,10 @@ def normalize_paths(paths: Union[str, List[str]]) -> Union[str, List[str]]:
     """
     if isinstance(paths, str):
         return paths.replace('\\', '/').rstrip('/')
-    elif isinstance(paths, list):
+    if isinstance(paths, list):
         return [path.replace('\\', '/').rstrip('/') for path in paths]
-    else:
-        raise TypeError("Input must be a string or a list of strings")
+
+    raise TypeError("Input must be a string or a list of strings")
 
 
 class Config:
@@ -73,13 +71,13 @@ class Config:
         Returns:
         dict: The data loaded from the yaml file.
         """
-        with open(path, 'r') as config_file:
+        with open(path, 'r', encoding="utf-8") as config_file:
             data = yaml.safe_load(config_file)
             is_valid, error = self._valid_config(data)
             if not is_valid:
                 raise ValueError(error)
             return data
-    
+
     def loads_yaml(self, yaml_string: str) -> dict:
         """
         Load a yaml from a string.
@@ -95,7 +93,7 @@ class Config:
         if not is_valid:
             raise ValueError(error)
         return data
-    
+
     def write_yaml(self, path: str, data: dict) -> None:
         """
         Dump data to yaml file at path.
@@ -104,9 +102,9 @@ class Config:
         - path (str): The path to the yaml file.
         - data (dict): The data to dump to the yaml file.
         """
-        with open(path, 'w') as config_file:
+        with open(path, 'w', encoding="utf-") as config_file:
             yaml.safe_dump(data, config_file)
-    
+
     def _valid_config(self, config: dict) -> (bool, str):
         """
         Validate the config.
@@ -115,22 +113,32 @@ class Config:
         - config (dict): The config to validate.
 
         Returns:
-        tuple: A tuple containing a boolean indicating if the config is valid and a string describing the error if it is not valid.
+        tuple: A tuple containing a boolean indicating if the config is valid 
+        and a string describing the error if it is not valid.
         """
-        if 'version' not in config:
-            return False, 'Missing "version" attribute'
-        if 'description' not in config:
-            return False, 'Missing "description" attribute'
-        if 'hash_db' not in config:
-            return False, 'Missing "hash_db" attribute'
-        if 'startup_path' not in config:
-            return False, 'Missing "startup_path" attribute'
-        if 'required_only' not in config:
-            return False, 'Missing "required_only" attribute'
-        if 'cleanup' not in config:
-            return False, 'Missing "cleanup" attribute'
+        error = ""
+        is_valid = True
 
-        return True, ""
+        if 'version' not in config:
+            error = 'Missing "version" attribute'
+            is_valid = False
+        elif 'description' not in config:
+            error = 'Missing "description" attribute'
+            is_valid = False
+        elif 'hash_db' not in config:
+            error = 'Missing "hash_db" attribute'
+            is_valid = False
+        elif 'startup_path' not in config:
+            error = 'Missing "startup_path" attribute'
+            is_valid = False
+        elif 'required_only' not in config:
+            error = 'Missing "required_only" attribute'
+            is_valid = False
+        elif 'cleanup' not in config:
+            error = 'Missing "cleanup" attribute'
+            is_valid = False
+
+        return is_valid, error
 
 
 class Web:
@@ -152,17 +160,11 @@ class Web:
         Download the hash database and save it to save_path
     """
     def __init__(self, url: str):
-        """
-        Initialize the Web class with the provided URL.
-        
-        Args:
-        - url (str): URL to the .pyupgrader folder
-        """
         self._url = url
         self._config_url = self._url + '/config.yaml'
         self._config_man = Config()
-    
-    def get_request(self, url: str) -> requests.Response:
+
+    def get_request(self, url: str, timeout: int = 5) -> requests.Response:
         """
         Get a request from the specified URL.
         
@@ -173,13 +175,13 @@ class Web:
         - requests.Response: The response object from the request
         """
         try:
-            response = requests.get(url)
+            response = requests.get(url, timeout=timeout)
             response.raise_for_status()
         except Exception as e:
             raise requests.ConnectionError(f'Url: "{url}" | {e}')
-        
+
         return response
-    
+
     def get_config(self) -> dict:
         """
         Get the config file from the URL.
@@ -189,8 +191,8 @@ class Web:
         """
         response = self.get_request(self._config_url)
         return self._config_man.loads_yaml(response.text)
-    
-    def download(self, url_path: str, save_path) -> str:
+
+    def download(self, url_path: str, save_path: str) -> str:
         """
         Download a file from the specified URL path and save it to the specified save path.
         
@@ -205,9 +207,9 @@ class Web:
 
         with open(save_path, 'wb') as f:
             f.write(response.content)
-        
+
         return save_path
-    
+
     def download_hash_db(self, save_path: str) -> str:
         """
         Download the hash database and save it to the specified save path.
