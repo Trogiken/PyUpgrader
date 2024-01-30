@@ -325,10 +325,10 @@ class UpdateManager:
             update_details['update'] = list(db_summary.unique_files_cloud_db) + bad_files_paths
 
         # Check if there are files to update
-        if all(cloud_config['required_only'],
-               not update_details['update'],
-               not update_details['delete']
-               ):
+        if all([cloud_config['required_only'],
+            not update_details['update'],
+            not update_details['delete']
+            ]):
             shutil.rmtree(file_dir)
             raise NoUpdateError("No files to update. Set 'required_only' "
                                 "to 'false' for forced update.")
