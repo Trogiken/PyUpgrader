@@ -47,10 +47,6 @@ class Builder:
 
     Methods:
     - build(): Builds the project into a pyupgrader project.
-    - _validate_paths(): Validates and sets the paths.
-    - _create_pyupgrader_folder(): Creates the .pyupgrader folder.
-    - _create_config_file(): Creates the config file.
-    - _create_hash_db(): Creates the hash database.
     """
 
     def __init__(self, project_path: str,
