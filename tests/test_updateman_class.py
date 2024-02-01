@@ -15,7 +15,7 @@ LOGGER = logging.getLogger(__name__)
 
 class TestUpdateManager(unittest.TestCase):
     def setUp(self):
-        self.url = r"https://raw.githubusercontent.com/Trogiken/PyUpgrader/tests-for-update-module/tests/TestingDirectory/.pyupgrader"
+        self.url = r"https://raw.githubusercontent.com/Trogiken/PyUpgrader/master/tests/TestingDirectory/.pyupgrader"
         self.project_path = normalize_paths(os.path.join(os.path.dirname(__file__), "TestingDirectory"))
         self.update_manager = UpdateManager(self.url, self.project_path)
         self.config = Config()
