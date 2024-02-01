@@ -85,9 +85,6 @@ class TestUpdateManager(unittest.TestCase):
 
     def test_prepare_update(self):
         """Test the prepare_update method of the UpdateManager class."""
-        # Mock the download_files method to do nothing
-        self.update_manager.download_files = Mock()
-
         result = self.update_manager.prepare_update()
         with open(result, "rb") as f:
             data = pickle.load(f)

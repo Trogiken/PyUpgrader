@@ -37,7 +37,6 @@ def test_get_request(web):
     Args:
         web: An instance of the web class.
     """
-    LOGGER.info("Testing test_get_request")
     url = "https://example.com/api"
     response_mock = Mock()
     response_mock.raise_for_status.return_value = None
@@ -59,7 +58,6 @@ def test_get_request_connection_error(web):
     2. Call the web.get_request() method with a sample URL.
     3. Verify that a requests.ConnectionError is raised.
     """
-    LOGGER.info("Testing test_get_request_connection_error")
     url = "https://example.com/api"
     with patch("requests.get", side_effect=requests.ConnectionError):
         with pytest.raises(requests.ConnectionError):
@@ -69,7 +67,6 @@ def test_get_config(web, config):
     """
     Test the get_config method of the web class.
     """
-    LOGGER.info("Testing test_get_config")
     config_url = "https://example.com/config.yaml"
     response_mock = Mock()
     response_mock.text = str(config.default_config_data)
@@ -88,7 +85,6 @@ def test_download(web):
     Args:
         web: An instance of the web class.
     """
-    LOGGER.info("Testing test_download")
     url_path = "https://example.com/file.txt"
     save_path = "/path/to/save/file.txt"
     response_mock = Mock()
@@ -106,7 +102,6 @@ def test_download_hash_db(web, config):
     
     This test verifies that the download_hash_db method correctly calls the get_config and download methods of the web helper class with the expected arguments.
     """
-    LOGGER.info("Testing test_download_hash_db")
     save_path = "/path/to/save/hash.db"
     with patch.object(web, "get_config", return_value=config.default_config_data) as mock_get_config:
         with patch.object(web, "download") as mock_download:

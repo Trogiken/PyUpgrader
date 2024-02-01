@@ -38,7 +38,6 @@ class TestConfig(unittest.TestCase):
         """
         Test the load_yaml method of the Config class.
         """
-        LOGGER.info("Testing test_load_yaml")
         data = self.config.load_yaml(self.yaml_file_path)
         LOGGER.debug(f"data: {data}")
         self.assertEqual(data, self.config.default_config_data)
@@ -47,7 +46,6 @@ class TestConfig(unittest.TestCase):
         """
         Test case for loading YAML configuration.
         """
-        LOGGER.info("Testing test_loads_yaml")
         data = self.config.loads_yaml(str(self.config.default_config_data))
         self.assertEqual(data, self.config.default_config_data)
 
@@ -55,7 +53,6 @@ class TestConfig(unittest.TestCase):
         """
         Test the write_yaml method of the Config class.
         """
-        LOGGER.info("Testing test_write_yaml")
         temp_file_path = os.path.join(self.temp_dir_path, "temp.yaml")
         self.config.write_yaml(temp_file_path, self.config.default_config_data)
         with open(temp_file_path, "r") as file:
@@ -66,13 +63,11 @@ class TestConfig(unittest.TestCase):
         """
         Test case to verify the validity of the configuration.
         """
-        LOGGER.info("Testing test_valid_config")
         is_valid, error = self.config._valid_config(self.config.default_config_data)
         self.assertTrue(is_valid)
         self.assertEqual(error, "")
 
     def test_invalid_config(self):
-        LOGGER.info("Testing test_invalid_config")
         invalid_config = {
             "version": "1.0",
             "description": "My config",

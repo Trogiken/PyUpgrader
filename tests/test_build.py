@@ -13,7 +13,6 @@ def test_build_success(tmpdir):
     and performs the build using the `build.Builder` class. It then asserts the existence
     of certain files in the project directory.
     """
-    LOGGER.info("Testing test_build_success")
     project_path = str(tmpdir.mkdir("project"))
     exclude_paths = [os.path.join(project_path, "exclude")]
     builder = build.Builder(project_path, exclude_paths=exclude_paths)
@@ -28,7 +27,6 @@ def test_build_folder_already_exists(tmpdir):
     """
     Test case to verify the behavior when the .pyupgrader folder already exists.
     """
-    LOGGER.info("Testing test_build_folder_already_exists")
     project_path = str(tmpdir.mkdir("project"))
     exclude_paths = [os.path.join(project_path, "exclude")]
     builder = build.Builder(project_path, exclude_paths=exclude_paths)
@@ -46,7 +44,6 @@ def test_build_folder_path_not_set():
     """
     Test case for when the build folder path is not set.
     """
-    LOGGER.info("Testing test_build_folder_path_not_set")
     builder = build.Builder(None)
 
     try:
@@ -65,7 +62,6 @@ def test_build_folder_not_exist(tmpdir):
     Raises:
         AssertionError: If the FileNotFoundError is not raised during the build process.
     """
-    LOGGER.info("Testing test_build_folder_not_exist")
     project_path = str(tmpdir.join("nonexistent"))
     exclude_paths = [os.path.join(project_path, "exclude")]
     builder = build.Builder(project_path, exclude_paths=exclude_paths)
@@ -83,7 +79,6 @@ def test_build_exclude_folder_path(tmpdir):
     Raises:
         build.PathError: If the build process does not raise a PathError.
     """
-    LOGGER.info("Testing test_build_exclude_folder_path")
     project_path = str(tmpdir.mkdir("project"))
     exclude_paths = [project_path]
     builder = build.Builder(project_path, exclude_paths=exclude_paths)
