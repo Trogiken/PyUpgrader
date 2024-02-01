@@ -1,0 +1,6 @@
+cleanup: true
+description: Built with PyUpgrader
+hash_db: hashes.db
+required_only: false
+startup_path: start_me.py
+version: 1.0.0

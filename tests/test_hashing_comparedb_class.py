@@ -54,7 +54,6 @@ class TestCompareDatabase(unittest.TestCase):
         - 'ok_files' should be [('file1.txt', 'hash1')]
         - 'bad_files' should be [('file4.txt', 'hash4', 'hash10')]
         """
-        LOGGER.info("Testing test_compare_databases")
         connection1 = sqlite3.connect(self.local_db_path)
         cursor1 = connection1.cursor()
         cursor1.execute("CREATE TABLE hashes (file_path TEXT, calculated_hash TEXT)")
@@ -81,3 +80,7 @@ class TestCompareDatabase(unittest.TestCase):
 
         connection1.close()
         connection2.close()
+
+
+if __name__ == "__main__":
+    unittest.main()

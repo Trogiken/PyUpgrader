@@ -66,7 +66,6 @@ class Hasher(unittest.TestCase):
         It verifies that the method correctly creates a hash for a given file path and returns
         the relative file path and the file hash.
         """
-        LOGGER.info("Testing test_create_hash")
         expected_relative_file_path = "file.txt"
         expected_file_hash = "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9"
 
@@ -86,7 +85,6 @@ class Hasher(unittest.TestCase):
         - The database schema is verified to have a 'hashes' table.
         - The database contents are verified by querying specific file paths and their corresponding hashes.
         """
-        LOGGER.info("Testing test_create_hash_db")
         db_save_path = os.path.join(self.temp_dir_path, "hash.db")
         exclude_paths = [self.dir1_path, os.path.join(self.hashing_dir_path, "file1.txt")]
         exclude_patterns = [r".*\.log$"]
@@ -126,3 +124,7 @@ class Hasher(unittest.TestCase):
         assert rows[0][1] == "a51c576ed146f5517946f646f8e42d304e08ef2d0b104f442e1d90be8dc34b54"
 
         connection.close()
+
+
+if __name__ == "__main__":
+    unittest.main()

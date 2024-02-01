@@ -32,7 +32,6 @@ def test_get_file_paths(hash_db):
     Args:
         hash_db (HashDB): An instance of the HashDB class.
     """
-    LOGGER.info("Testing test_get_file_paths")
     # Add some file paths to the database
     hash_db.cursor.execute("CREATE TABLE hashes (file_path TEXT)")
     hash_db.cursor.execute("INSERT INTO hashes (file_path) VALUES ('path/to/file1')")
@@ -54,7 +53,6 @@ def test_get_file_hash(hash_db):
     Args:
         hash_db (HashDB): An instance of the HashDB class.
     """
-    LOGGER.info("Testing test_get_file_hash")
     # Add a file hash to the database
     hash_db.cursor.execute("CREATE TABLE hashes (file_path TEXT, calculated_hash TEXT)")
     hash_db.cursor.execute("INSERT INTO hashes (file_path, calculated_hash) VALUES ('path/to/file', 'hash123')")
@@ -70,7 +68,6 @@ def test_open_close(hash_db):
     This function verifies that the hash_db object correctly opens a connection
     and cursor, and then closes them when requested.
     """
-    LOGGER.info("Testing test_open_close")
     assert hash_db.connection is not None
     assert hash_db.cursor is not None
 
