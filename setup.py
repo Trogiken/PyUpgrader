@@ -6,7 +6,7 @@ with open('README.md', encoding="utf-8") as f:
 
 setup(
     name='pyupgrader',
-    version='2.1.9b1',
+    version='2.1.10b1',
     author='Noah Blaszak',
     author_email='technology.misc@gmail.com',
     description='Keep your Python code up to date on client machines.',
