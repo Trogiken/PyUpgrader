@@ -25,12 +25,8 @@ def cli():
         BuildError: If an error occurs during the build process.
     """
     parser = argparse.ArgumentParser(description="PyUpgrader CLI")
-    parser.add_argument(
-        "-p", "--project", help="Absolute path to project folder", required=True
-    )
-    parser.add_argument(
-        "-no_env", help="Exclude environment directories", action="store_true"
-    )
+    parser.add_argument("-p", "--project", help="Absolute path to project folder", required=True)
+    parser.add_argument("-no_env", help="Exclude environment directories", action="store_true")
     parser.add_argument(
         "-no_hidden", help="Exclude hidden files and directories", action="store_true"
     )

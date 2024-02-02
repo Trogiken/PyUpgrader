@@ -213,9 +213,7 @@ class Hasher:
             batch_data,
         )
 
-    def _map_hashes_creation(
-            self, pool: Pool, file_paths: List[str]
-    ) -> List[tuple]:
+    def _map_hashes_creation(self, pool: Pool, file_paths: List[str]) -> List[tuple]:
         """
         Use multiprocessing to create hashes for a list of file paths.
 
@@ -268,9 +266,7 @@ class Hasher:
             if not any(re.search(pattern, path) for pattern in exclude_patterns)
         ]
 
-    def _should_exclude_directory(
-            self, exclude_dir_paths: List[str], root: str
-    ) -> bool:
+    def _should_exclude_directory(self, exclude_dir_paths: List[str], root: str) -> bool:
         """
         Check if the directory should be excluded
         based on the list of exclude directory paths.
@@ -289,15 +285,11 @@ class Hasher:
             for exclude_dir_path in exclude_dir_paths
         )
 
-    def _should_exclude_directory_by_pattern(
-            self, exclude_patterns: List[str], root: str
-    ) -> bool:
+    def _should_exclude_directory_by_pattern(self, exclude_patterns: List[str], root: str) -> bool:
         """Check if the directory should be excluded based on the list of exclude patterns."""
         return any(re.search(pattern, helper.normalize_paths(root)) for pattern in exclude_patterns)
 
-    def create_hash(
-            self, file_path: str
-    ) -> (str, str):
+    def create_hash(self, file_path: str) -> (str, str):
         """
         Create a hash from file bytes using the chunk method,
         return the relative file path and hash as a string.
