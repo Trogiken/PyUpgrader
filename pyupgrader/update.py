@@ -21,6 +21,7 @@ class GetFilesError(Exception):
 class DownloadFilesError(Exception):
     """This exception is raised when there is an error in downloading files from the cloud."""
 
+
 class NoUpdateError(Exception):
     """This exception is raised when there is no files downloaded during an update."""
 
@@ -34,7 +35,7 @@ class UpdateManager:
         URL to the .pyupgrader folder
     - project_path: str
         Path to the project folder (Not the .pyupgrader folder)
-    
+
     Methods:
     - check_update() -> dict
         Compare cloud and local version and return a dict with the results
@@ -52,8 +53,8 @@ class UpdateManager:
     def __init__(self, url: str, project_path: str):
         self._url = helper.normalize_paths(url)
         self._project_path = helper.normalize_paths(project_path)
-        self._pyupgrader_path = os.path.join(self._project_path, '.pyupgrader')
-        self._config_path = os.path.join(self._pyupgrader_path, 'config.yaml')
+        self._pyupgrader_path = os.path.join(self._project_path, ".pyupgrader")
+        self._config_path = os.path.join(self._pyupgrader_path, "config.yaml")
         self._local_hash_db_path = None  # Set in _validate_attributes
 
         self._config_man = helper.Config()
@@ -108,8 +109,8 @@ class UpdateManager:
         - requests.exceptions.ConnectionError: If the URL is not valid.
         """
         self._project_path = value
-        self._pyupgrader_path = os.path.join(self._project_path, '.pyupgrader')
-        self._config_path = os.path.join(self._pyupgrader_path, 'config.yaml')
+        self._pyupgrader_path = os.path.join(self._project_path, ".pyupgrader")
+        self._config_path = os.path.join(self._pyupgrader_path, "config.yaml")
         self._local_hash_db_path = None  # Set in _validate_attributes
         self._validate_attributes()
 
@@ -129,7 +130,7 @@ class UpdateManager:
             raise FileNotFoundError(self._config_path)
 
         config_data = self._config_man.load_yaml(self._config_path)
-        self._local_hash_db_path = os.path.join(self._pyupgrader_path, config_data['hash_db'])
+        self._local_hash_db_path = os.path.join(self._pyupgrader_path, config_data["hash_db"])
         self._web_man = helper.Web(self._url)
 
         if not os.path.exists(self._local_hash_db_path):
@@ -149,16 +150,20 @@ class UpdateManager:
         web_config = self._web_man.get_config()
         local_config = self._config_man.load_yaml(self._config_path)
 
-        web_version = Version(web_config['version'])
-        local_version = Version(local_config['version'])
+        web_version = Version(web_config["version"])
+        local_version = Version(local_config["version"])
 
         if web_version > local_version:
-            has_update, description = True, web_config['description']
+            has_update, description = True, web_config["description"]
         else:
-            has_update, description = False, local_config['description']
+            has_update, description = False, local_config["description"]
 
-        return {'has_update': has_update, 'description': description,
-                'web_version': str(web_version), 'local_version': str(local_version)}
+        return {
+            "has_update": has_update,
+            "description": description,
+            "web_version": str(web_version),
+            "local_version": str(local_version),
+        }
 
     def db_sum(self) -> hashing.DBSummary:
         """
@@ -170,8 +175,9 @@ class UpdateManager:
         tmp_path = ""
         try:
             tmp_path = tempfile.mkdtemp()
-            cloud_hash_db_path = self._web_man.download_hash_db(os.path.join(
-                                                                tmp_path, 'cloud_hashes.db'))
+            cloud_hash_db_path = self._web_man.download_hash_db(
+                os.path.join(tmp_path, "cloud_hashes.db")
+            )
 
             return hashing.compare_databases(self._local_hash_db_path, cloud_hash_db_path)
         except Exception as error:
@@ -186,7 +192,7 @@ class UpdateManager:
         Note that this function does not return files that have been deleted from the cloud.
 
         Args:
-        - updated_only (bool, optional): If True, only returns files that have been updated. 
+        - updated_only (bool, optional): If True, only returns files that have been updated.
             Defaults to False.
 
         Returns:
@@ -200,8 +206,9 @@ class UpdateManager:
         try:
             db_temp_path = tempfile.mkdtemp()
 
-            cloud_hash_db_path = self._web_man.download_hash_db(os.path.join(
-                                                                db_temp_path, 'cloud_hashes.db'))
+            cloud_hash_db_path = self._web_man.download_hash_db(
+                os.path.join(db_temp_path, "cloud_hashes.db")
+            )
             cloud_db = hashing.HashDB(cloud_hash_db_path)
             compare_db = self.db_sum()
 
@@ -253,7 +260,7 @@ class UpdateManager:
             # Download all files in db and copy structure
             base_url = self._url.split(".pyupgrader")[0]
             for file_path in files_to_download:
-                download_url = base_url + '/' + file_path
+                download_url = base_url + "/" + file_path
 
                 # Create save path
                 relative_path = os.path.dirname(file_path)
@@ -297,44 +304,49 @@ class UpdateManager:
         tmp_setting_dir = tempfile.mkdtemp(dir=file_dir)
 
         # Populate settings folder
-        cloud_config_path = os.path.join(tmp_setting_dir, 'config.yaml')
-        cloud_hash_db_path = os.path.join(tmp_setting_dir, 'hashes.db')
+        cloud_config_path = os.path.join(tmp_setting_dir, "config.yaml")
+        cloud_hash_db_path = os.path.join(tmp_setting_dir, "hashes.db")
         self._web_man.download_hash_db(cloud_hash_db_path)
         self._config_man.write_yaml(cloud_config_path, cloud_config)
 
         update_details = {
-            'update': None,
-            'delete': list(db_summary.unique_files_local_db),
-            'project_path': self._project_path,
-            'downloads_directory': file_dir,
-            'startup_path': os.path.join(self._project_path, cloud_config['startup_path']),
-            'cloud_config_path': cloud_config_path,
-            'cloud_hash_db_path': cloud_hash_db_path,
-            'cleanup': cloud_config['cleanup'],
+            "update": None,
+            "delete": list(db_summary.unique_files_local_db),
+            "project_path": self._project_path,
+            "downloads_directory": file_dir,
+            "startup_path": os.path.join(self._project_path, cloud_config["startup_path"]),
+            "cloud_config_path": cloud_config_path,
+            "cloud_hash_db_path": cloud_hash_db_path,
+            "cleanup": cloud_config["cleanup"],
         }
 
         # Set the 'update' value and download files as needed
-        if not cloud_config['required_only']:
+        if not cloud_config["required_only"]:
             if download_files:
                 self.download_files(file_dir, updated_only=False)
-            update_details['update'] = self.get_files(updated_only=False)
+            update_details["update"] = self.get_files(updated_only=False)
         else:
             if download_files:
                 self.download_files(file_dir, updated_only=True)
             bad_files_paths = [file_path for file_path, _, _ in db_summary.bad_files]
-            update_details['update'] = list(db_summary.unique_files_cloud_db) + bad_files_paths
+            update_details["update"] = list(db_summary.unique_files_cloud_db) + bad_files_paths
 
         # Check if there are files to update
-        if all([cloud_config['required_only'],
-                not update_details['update'],
-                not update_details['delete']]):
+        if all(
+            [
+                cloud_config["required_only"],
+                not update_details["update"],
+                not update_details["delete"],
+            ]
+        ):
             shutil.rmtree(file_dir)
-            raise NoUpdateError("No files to update. Set 'required_only' "
-                                "to 'false' for forced update.")
+            raise NoUpdateError(
+                "No files to update. Set 'required_only' to 'false' for forced update."
+            )
 
         # save actions to pickle file
-        action_pkl = os.path.join(tmp_setting_dir, 'actions.pkl')
-        with open(action_pkl, 'wb') as file:
+        action_pkl = os.path.join(tmp_setting_dir, "actions.pkl")
+        with open(action_pkl, "wb") as file:
             pickle.dump(update_details, file)
 
         return action_pkl
@@ -353,6 +365,6 @@ class UpdateManager:
         if not os.path.exists(actions_path):
             raise FileNotFoundError(actions_path)
 
-        updater_path = os.path.join(os.path.dirname(__file__), 'utilities', 'file_updater.py')
-        args = ['-a', actions_path]
+        updater_path = os.path.join(os.path.dirname(__file__), "utilities", "file_updater.py")
+        args = ["-a", actions_path]
         os.execv(sys.executable, [sys.executable, updater_path] + args)
