@@ -50,6 +50,7 @@ class DBSummary:
     bad_files: list
         List of in-common files that have different hashes
     """
+
     unique_files_local_db: list
     unique_files_cloud_db: list
     ok_files: list
@@ -72,10 +73,10 @@ def compare_databases(local_db_path: str, cloud_db_path: str) -> DBSummary:
     connection2 = sqlite3.connect(cloud_db_path)
     cursor2 = connection2.cursor()
 
-    cursor1.execute('SELECT file_path, calculated_hash FROM hashes')
+    cursor1.execute("SELECT file_path, calculated_hash FROM hashes")
     local_db_files = {row[0]: row[1] for row in cursor1.fetchall()}
 
-    cursor2.execute('SELECT file_path, calculated_hash FROM hashes')
+    cursor2.execute("SELECT file_path, calculated_hash FROM hashes")
     cloud_db_files = {row[0]: row[1] for row in cursor2.fetchall()}
 
     common_files = set(local_db_files.keys()) & set(cloud_db_files.keys())
@@ -101,7 +102,7 @@ def compare_databases(local_db_path: str, cloud_db_path: str) -> DBSummary:
         unique_files_local_db=unique_files_local_db,
         unique_files_cloud_db=unique_files_cloud_db,
         ok_files=ok_files,
-        bad_files=bad_files
+        bad_files=bad_files,
     )
 
 
@@ -129,7 +130,7 @@ class HashDB:
         """
         Generator that yields file paths from the database.
         """
-        self.cursor.execute('SELECT file_path FROM hashes')
+        self.cursor.execute("SELECT file_path FROM hashes")
         for row in self.cursor.fetchall():
             yield row[0]
 
@@ -143,7 +144,7 @@ class HashDB:
         Returns:
         - str: The hash of the file.
         """
-        self.cursor.execute('SELECT calculated_hash FROM hashes WHERE file_path = ?', (file_path,))
+        self.cursor.execute("SELECT calculated_hash FROM hashes WHERE file_path = ?", (file_path,))
         return self.cursor.fetchone()[0]
 
     def open(self) -> None:
@@ -192,8 +193,10 @@ class Hasher:
         - cursor: sqlite3.Cursor
             The database cursor.
         """
-        cursor.execute('CREATE TABLE IF NOT EXISTS hashes '
-                       '(file_path TEXT PRIMARY KEY, calculated_hash TEXT)')
+        cursor.execute(
+            "CREATE TABLE IF NOT EXISTS hashes "
+            "(file_path TEXT PRIMARY KEY, calculated_hash TEXT)"
+        )
 
     def _process_batch_data(self, cursor: sqlite3.Cursor, batch_data: List[tuple]) -> None:
         """
@@ -205,11 +208,14 @@ class Hasher:
         - batch_data: List[tuple]
             A list of tuples containing the relative file path and hash as a string.
         """
-        cursor.executemany('INSERT OR REPLACE INTO hashes '
-                           '(file_path, calculated_hash) VALUES (?, ?)', batch_data
-                        )
+        cursor.executemany(
+            "INSERT OR REPLACE INTO hashes (file_path, calculated_hash) VALUES (?, ?)",
+            batch_data,
+        )
 
-    def _map_hashes_creation(self, pool: Pool, file_paths: List[str]) -> List[tuple]:
+    def _map_hashes_creation(
+            self, pool: Pool, file_paths: List[str]
+    ) -> List[tuple]:
         """
         Use multiprocessing to create hashes for a list of file paths.
 
@@ -218,16 +224,15 @@ class Hasher:
             The multiprocessing pool.
         - file_paths: List[str]
             A list of file paths to create hashes for.
-        
+
         Returns:
         - List[tuple]: A list of tuples containing the relative file path and hash as a string.
         """
         return pool.map(self.create_hash, file_paths)
 
-    def _exclude_files_by_path(self,
-                               file_paths: List[str],
-                               exclude_file_paths: List[str]
-                               ) -> List[str]:
+    def _exclude_files_by_path(
+        self, file_paths: List[str], exclude_file_paths: List[str]
+    ) -> List[str]:
         """
         Exclude specified file paths from the list.
 
@@ -240,16 +245,11 @@ class Hasher:
         Returns:
         - List[str]: A list of file paths that do not match any of the exclude file paths.
         """
-        return [
-            path
-            for path in file_paths
-            if path not in exclude_file_paths
-        ]
+        return [path for path in file_paths if path not in exclude_file_paths]
 
-    def _exclude_files_by_pattern(self,
-                                  file_paths: List[str],
-                                  exclude_patterns: List[str]
-                                  ) -> List[str]:
+    def _exclude_files_by_pattern(
+        self, file_paths: List[str], exclude_patterns: List[str]
+    ) -> List[str]:
         """
         Exclude specified file paths from the list.
 
@@ -265,14 +265,12 @@ class Hasher:
         return [
             path
             for path in file_paths
-            if not any(re.search(pattern, path)
-                       for pattern in exclude_patterns)
+            if not any(re.search(pattern, path) for pattern in exclude_patterns)
         ]
 
-    def _should_exclude_directory(self,
-                                  exclude_dir_paths: List[str],
-                                  root: str
-                                  ) -> bool:
+    def _should_exclude_directory(
+            self, exclude_dir_paths: List[str], root: str
+    ) -> bool:
         """
         Check if the directory should be excluded
         based on the list of exclude directory paths.
@@ -291,19 +289,17 @@ class Hasher:
             for exclude_dir_path in exclude_dir_paths
         )
 
-    def _should_exclude_directory_by_pattern(self,
-                                             exclude_patterns: List[str],
-                                             root: str
-                                             ) -> bool:
+    def _should_exclude_directory_by_pattern(
+            self, exclude_patterns: List[str], root: str
+    ) -> bool:
         """Check if the directory should be excluded based on the list of exclude patterns."""
-        return any(
-            re.search(pattern, helper.normalize_paths(root))
-            for pattern in exclude_patterns
-        )
+        return any(re.search(pattern, helper.normalize_paths(root)) for pattern in exclude_patterns)
 
-    def create_hash(self, file_path: str) -> (str, str):
+    def create_hash(
+            self, file_path: str
+    ) -> (str, str):
         """
-        Create a hash from file bytes using the chunk method, 
+        Create a hash from file bytes using the chunk method,
         return the relative file path and hash as a string.
 
         Args:
@@ -312,7 +308,7 @@ class Hasher:
 
         Returns:
         - Tuple[str, str]: The relative file path and hash as a string.
-        
+
         Raises:
         - HashingError: If there is an error hashing the file.
         """
@@ -325,28 +321,25 @@ class Hasher:
 
             hasher = hashlib.sha256()
 
-            with open(file_path, 'rb') as file:
+            with open(file_path, "rb") as file:
                 while True:
                     chunk = file.read(chunk_size)
                     if not chunk:
                         break
                     hasher.update(chunk)
 
-            relative_file_path = (
-                helper.normalize_paths(file_path.split(self.project_name)[-1])
-                .lstrip("/")
-            )
+            relative_file_path = helper.normalize_paths(
+                file_path.split(self.project_name)[-1]
+            ).lstrip("/")
             file_hash = hasher.hexdigest()
 
             return relative_file_path, file_hash
         except Exception as error:
             raise HashingError(f"Error hashing file '{file_path}'") from error
 
-    def create_hash_db(self,
-                       hash_dir_path: str,
-                       db_save_path: str,
-                       exclude_paths=None,
-                       exclude_patterns=None) -> str:
+    def create_hash_db(
+        self, hash_dir_path: str, db_save_path: str, exclude_paths=None, exclude_patterns=None
+    ) -> str:
         """
         Create a hash database from a directory path,
         then save it to a file path. Return the save file path.

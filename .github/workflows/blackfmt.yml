@@ -21,4 +21,4 @@ jobs:
         pip install black
     - name: Formatting the code with black
       run: |
-        black --check pyupgrader
+        black -l 100 --check pyupgrader
