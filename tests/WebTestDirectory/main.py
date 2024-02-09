@@ -2,17 +2,35 @@ import pyupgrader
 from pyupgrader.utilities.helper import Config
 import os
 
-# DEBUG: Change branch to master when merging into master
+# TODO: Change branch to master when merging into master
 pyupgrader_url = r"https://raw.githubusercontent.com/Trogiken/PyUpgrader/master/tests/WebTestDirectory/.pyupgrader"  # Replace with your info inside the {}
 local_project_path = os.path.dirname(__file__)  # Assuming the entry point module is in the upper most directory
 
 update_manager = pyupgrader.UpdateManager(pyupgrader_url, local_project_path)
 config = Config()
 
-# TODO Add file checks
+def file_checks():
+    base_path = os.path.dirname(__file__)
+
+    # check if required files exist
+    required_files = [
+        os.path.join(base_path, "olo.py"),
+        os.path.join(base_path, "dir", "dd.py"),
+        os.path.join(base_path, "dir", "f.py"),
+    ]
+    for file in required_files:
+        if not os.path.exists(file):
+            raise FileNotFoundError(f"File not found: {file}")
+
+    # check if file content is as expected
+    db_sum = update_manager.db_sum()
+    if db_sum.bad_files:
+        raise ValueError(f"Bad files: {db_sum.bad_files}")
 
 
 def main():
+    file_checks()
+
     local_config = config.load_yaml(update_manager.config_path)
     version = local_config.get('version')
     description = local_config.get('description')

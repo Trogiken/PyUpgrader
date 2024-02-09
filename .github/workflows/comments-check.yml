@@ -12,10 +12,10 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Check for DEBUG and FIXME comments
+    - name: Check for DEBUG, TODO and FIXME comments
       id: check
       run: |
-        OUTPUT=$(grep -r -e "DEBUG:" -e "FIXME:" --include=\*.py .) || true
+        OUTPUT=$(grep -r -e "DEBUG" -e "TODO" -e "FIXME" --include=\*.py .) || true
         echo "RESULT=$OUTPUT" >> $GITHUB_ENV
 
     - name: Create comment
@@ -28,6 +28,6 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `Found DEBUG or FIXME comments:\n\n${output}`
+              body: `Found DEBUG, TODO or FIXME comments:\n\n${output}`
             })
           }
