@@ -114,6 +114,26 @@ class UpdateManager:
         self._local_hash_db_path = None  # Set in _validate_attributes
         self._validate_attributes()
 
+    @property
+    def config_path(self) -> str:
+        """
+        Get the path to the config file.
+
+        Returns:
+        - str: The path to the config file.
+        """
+        return self._config_path
+
+    @property
+    def hash_db_path(self) -> str:
+        """
+        Get the path to the local hash database.
+
+        Returns:
+        - str: The path to the local hash database.
+        """
+        return self._local_hash_db_path
+
     def _validate_attributes(self) -> None:
         """
         Validate and set attributes of the class.
