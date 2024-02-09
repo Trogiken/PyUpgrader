@@ -1,5 +1,5 @@
 cleanup: true
-description: Cloud Version
+description: Built with PyUpgrader
 hash_db: hashes.db
 required_only: true
 startup_path: 'main.py'
