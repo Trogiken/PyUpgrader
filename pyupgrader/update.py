@@ -35,7 +35,11 @@ class UpdateManager:
         URL to the .pyupgrader folder
     - project_path: str
         Path to the project folder (Not the .pyupgrader folder)
-
+    - config_path: str
+        Path to the local config file
+    - hash_db_path: str
+        Path to the local hash database
+        
     Methods:
     - check_update() -> dict
         Compare cloud and local version and return a dict with the results
