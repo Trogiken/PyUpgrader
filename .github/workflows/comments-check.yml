@@ -18,13 +18,13 @@ jobs:
       id: check
       run: |
         OUTPUT=$(grep -r -e "DEBUG:" -e "FIXME:" --include=\*.py .) || true
-        echo "::set-output name=result::$OUTPUT"
+        echo "RESULT=$OUTPUT" >> $GITHUB_ENV
 
     - name: Create comment
       uses: actions/github-script@v7
       with:
         script: |
-          const output = `${{ steps.check.outputs.result }}`
+          const output = process.env.RESULT
           if (output) {
             github.issues.createComment({
               issue_number: context.issue.number,
