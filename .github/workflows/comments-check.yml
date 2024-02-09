@@ -3,8 +3,6 @@ name: Comments-Check
 on:
   pull_request:
     branches: [ "master", "staging" ]
-  push:
-    branches: [ "master", "staging" ]
 
 jobs:
   check-comments:
@@ -26,7 +24,7 @@ jobs:
         script: |
           const output = process.env.RESULT
           if (output) {
-            github.issues.createComment({
+            github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
