@@ -31,6 +31,20 @@ def main():
         cloud_hash_db_path = update_details["cloud_hash_db_path"]
         cleanup = update_details["cleanup"]
 
+    # Update the files
+    for file in update_files:
+        source = os.path.join(downloads_dir, file)
+        destination = os.path.join(project_path, file)
+        os.makedirs(os.path.dirname(destination), exist_ok=True)
+        if os.path.exists(destination):
+            os.remove(destination)
+        shutil.copy(source, destination)
+
+    for file in del_files:
+        destination = os.path.join(project_path, file)
+        if os.path.exists(destination):
+            os.remove(destination)
+
     # Replace config and hash db
     if os.path.exists(cloud_config_path):
         source = cloud_config_path
@@ -49,20 +63,6 @@ def main():
         shutil.copy(source, destination)
     else:
         raise FileNotFoundError(f"Cloud hash db not found at '{cloud_hash_db_path}'")
-
-    # Update the files
-    for file in update_files:
-        source = os.path.join(downloads_dir, file)
-        destination = os.path.join(project_path, file)
-        os.makedirs(os.path.dirname(destination), exist_ok=True)
-        if os.path.exists(destination):
-            os.remove(destination)
-        shutil.copy(source, destination)
-
-    for file in del_files:
-        destination = os.path.join(project_path, file)
-        if os.path.exists(destination):
-            os.remove(destination)
 
     if cleanup:
         shutil.rmtree(downloads_dir)
