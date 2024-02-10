@@ -78,7 +78,7 @@ if __name__ == "__main__":
         dump_dir = os.path.join(os.path.dirname(__file__), "crash_dump")
         os.makedirs(dump_dir, exist_ok=True)
         crash_file = os.path.join(
-            os.path.dirname(__file__), "crash_dump", f"update_crash_{timestamp}.txt"
+            os.path.dirname(__file__), "crash_dump", f"{timestamp}.txt"
         )
         with open(crash_file, "w", encoding="utf-8") as f:
             f.write(traceback.format_exc())
