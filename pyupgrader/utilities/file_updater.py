@@ -6,6 +6,7 @@ import pickle
 import shutil
 import sys
 import datetime
+import traceback
 from time import sleep
 
 
@@ -53,6 +54,7 @@ def main():
     for file in update_files:
         source = os.path.join(downloads_dir, file)
         destination = os.path.join(project_path, file)
+        os.makedirs(os.path.dirname(destination), exist_ok=True)
         if os.path.exists(destination):
             os.remove(destination)
         shutil.copy(source, destination)
@@ -73,7 +75,7 @@ if __name__ == "__main__":
         main()
     except Exception as e:
         timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-        crash_file = f"update_crash_{timestamp}.txt"
-        with open(os.path.join(os.path.dirname(__file__), crash_file), "w", encoding="utf-8") as f:
-            f.write(str(e))
-        raise e
+        crash_file = os.path.join(os.path.dirname(__file__), f"update_crash_{timestamp}.txt")
+        with open(crash_file, "w", encoding="utf-8") as f:
+            f.write(traceback.format_exc())
+        raise Exception(f"Update failed. Crash file created at {crash_file}") from e

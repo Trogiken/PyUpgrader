@@ -3,7 +3,7 @@ from pyupgrader.utilities.helper import Config
 import os
 
 # TODO: Change branch to master when merging into master
-pyupgrader_url = r"https://raw.githubusercontent.com/Trogiken/PyUpgrader/staging/tests/WebTestDirectory/.pyupgrader"  # Replace with your info inside the {}
+pyupgrader_url = r"https://raw.githubusercontent.com/Trogiken/PyUpgrader/bugfix-new-dir-on-update/tests/WebTestDirectory/.pyupgrader"  # Replace with your info inside the {}
 local_project_path = os.path.dirname(__file__)  # Assuming the entry point module is in the upper most directory
 
 update_manager = pyupgrader.UpdateManager(pyupgrader_url, local_project_path)
