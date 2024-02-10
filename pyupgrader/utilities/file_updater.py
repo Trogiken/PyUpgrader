@@ -77,7 +77,9 @@ if __name__ == "__main__":
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d-%H_%M_%S")
         dump_dir = os.path.join(os.path.dirname(__file__), "crash_dump")
         os.makedirs(dump_dir, exist_ok=True)
-        crash_file = os.path.join(os.path.dirname(__file__), "crash_dump", f"update_crash_{timestamp}.txt")
+        crash_file = os.path.join(
+            os.path.dirname(__file__), "crash_dump", f"update_crash_{timestamp}.txt"
+        )
         with open(crash_file, "w", encoding="utf-8") as f:
             f.write(traceback.format_exc())
         raise Exception(f"Update failed. Crash file created at {crash_file}") from e

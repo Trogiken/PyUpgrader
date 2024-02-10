@@ -39,7 +39,7 @@ class UpdateManager:
         Path to the local config file
     - hash_db_path: str
         Path to the local hash database
-        
+
     Methods:
     - check_update() -> dict
         Compare cloud and local version and return a dict with the results
