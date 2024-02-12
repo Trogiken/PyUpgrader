@@ -1,11 +1,12 @@
 """PyUpgrader CLI"""
 
 import argparse
-import os
-import sys
 import logging
 import pyupgrader.utilities as util
 from pyupgrader.utilities.build import BuildError
+
+LOGGER = logging.getLogger(__name__)
+
 
 
 def cli():
@@ -45,6 +46,7 @@ def cli():
         default=[],
     )
     parser.add_argument(
+        "-l"
         "--log",
         help="Set the logging level",
         choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
@@ -52,11 +54,7 @@ def cli():
     )
     args = parser.parse_args()
 
-    logging.basicConfig(level=args.log)
-
-    if not os.path.exists(args.project):
-        print(f'Folder "{args.project}" does not exist')
-        sys.exit(1)
+    logging.basicConfig(level=args.log, format="%(asctime)s - %(message)s")
 
     try:
         builder = util.Builder(

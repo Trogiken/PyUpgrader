@@ -124,7 +124,7 @@ class Builder:
             raise BuildError("Exclude paths not set")
 
         if not os.path.exists(self.project_path):
-            raise FileNotFoundError(f'Folder "{self.project_path}" does not exist')
+            raise PathError(f'Folder "{self.project_path}" does not exist')
         if self.project_path in self.exclude_paths:
             raise PathError("Folder path cannot be excluded")
 
