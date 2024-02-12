@@ -53,7 +53,8 @@ def cli():
     )
     args = parser.parse_args()
 
-    logging.basicConfig(level=args.log, format="%(asctime)s - %(message)s")
+    log_format = "%(asctime)s | %(levelname)s | %(message)s"
+    logging.basicConfig(level=args.log, format=log_format, datefmt="%H:%M:%S")
 
     try:
         builder = util.Builder(
