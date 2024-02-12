@@ -6,6 +6,7 @@ import pickle
 import shutil
 import sys
 import datetime
+import traceback
 from time import sleep
 
 
@@ -30,6 +31,20 @@ def main():
         cloud_hash_db_path = update_details["cloud_hash_db_path"]
         cleanup = update_details["cleanup"]
 
+    # Update the files
+    for file in update_files:
+        source = os.path.join(downloads_dir, file)
+        destination = os.path.join(project_path, file)
+        os.makedirs(os.path.dirname(destination), exist_ok=True)
+        if os.path.exists(destination):
+            os.remove(destination)
+        shutil.copy(source, destination)
+
+    for file in del_files:
+        destination = os.path.join(project_path, file)
+        if os.path.exists(destination):
+            os.remove(destination)
+
     # Replace config and hash db
     if os.path.exists(cloud_config_path):
         source = cloud_config_path
@@ -49,19 +64,6 @@ def main():
     else:
         raise FileNotFoundError(f"Cloud hash db not found at '{cloud_hash_db_path}'")
 
-    # Update the files
-    for file in update_files:
-        source = os.path.join(downloads_dir, file)
-        destination = os.path.join(project_path, file)
-        if os.path.exists(destination):
-            os.remove(destination)
-        shutil.copy(source, destination)
-
-    for file in del_files:
-        destination = os.path.join(project_path, file)
-        if os.path.exists(destination):
-            os.remove(destination)
-
     if cleanup:
         shutil.rmtree(downloads_dir)
 
@@ -72,8 +74,10 @@ if __name__ == "__main__":
     try:
         main()
     except Exception as e:
-        timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-        crash_file = f"update_crash_{timestamp}.txt"
-        with open(os.path.join(os.path.dirname(__file__), crash_file), "w", encoding="utf-8") as f:
-            f.write(str(e))
-        raise e
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d-%H_%M_%S")
+        dump_dir = os.path.join(os.path.dirname(__file__), "crash_dump")
+        os.makedirs(dump_dir, exist_ok=True)
+        crash_file = os.path.join(os.path.dirname(__file__), "crash_dump", f"{timestamp}.txt")
+        with open(crash_file, "w", encoding="utf-8") as f:
+            f.write(traceback.format_exc())
+        raise Exception(f"Update failed. Crash file created at {crash_file}") from e

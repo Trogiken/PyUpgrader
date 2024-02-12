@@ -318,7 +318,7 @@ min-public-methods=1
 [EXCEPTIONS]
 
 # Exceptions that will emit a warning when caught.
-overgeneral-exceptions=builtins.BaseException,builtins.Exception
+overgeneral-exceptions=
 
 
 [FORMAT]
