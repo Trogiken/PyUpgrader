@@ -8,7 +8,6 @@ from pyupgrader.utilities.build import BuildError
 LOGGER = logging.getLogger(__name__)
 
 
-
 def cli():
     """PyUpgrader CLI
 
@@ -46,7 +45,7 @@ def cli():
         default=[],
     )
     parser.add_argument(
-        "-l"
+        "-l",
         "--log",
         help="Set the logging level",
         choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
