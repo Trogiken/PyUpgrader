@@ -5,8 +5,6 @@ import logging
 import pyupgrader.utilities as util
 from pyupgrader.utilities.build import BuildError
 
-LOGGER = logging.getLogger(__name__)
-
 
 def cli():
     """PyUpgrader CLI
