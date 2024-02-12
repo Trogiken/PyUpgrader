@@ -13,7 +13,10 @@ It defines the following classes:
 
 import os
 import shutil
+import logging
 from pyupgrader.utilities import helper, hashing
+
+LOGGER = logging.getLogger(__name__)
 
 
 class BuildError(Exception):
@@ -93,7 +96,7 @@ class Builder:
         """Builds a project into a pyupgrader project"""
         self._validate_paths()
 
-        print("Building project...\n")
+        LOGGER.info("Building Project...")
 
         try:
             self._create_pyupgrader_folder()
@@ -110,8 +113,8 @@ class Builder:
         except Exception as error:
             raise HashDBError("Failed to create hash database") from error
 
-        print("\nDone!")
-        print(f"Project built at '{self._pyudpdate_folder}'")
+        LOGGER.info("Project built at '%s'", self._pyudpdate_folder)
+        LOGGER.info("Don't forget to configure the config file in the .pyupgrader folder.")
 
     def _validate_paths(self):
         """Validates and set paths"""
@@ -121,7 +124,7 @@ class Builder:
             raise BuildError("Exclude paths not set")
 
         if not os.path.exists(self.project_path):
-            raise FileNotFoundError(f'Folder "{self.project_path}" does not exist')
+            raise PathError(f'Folder "{self.project_path}" does not exist')
         if self.project_path in self.exclude_paths:
             raise PathError("Folder path cannot be excluded")
 
@@ -135,16 +138,15 @@ class Builder:
     def _create_pyupgrader_folder(self):
         """Creates the .pyupgrader folder"""
         if os.path.exists(self._pyudpdate_folder):
-            print(f'Folder "{self._pyudpdate_folder}" already exists')
-            print("Deleting folder")
+            LOGGER.warning("Folder '%s' already exists! Deleting it...", self._pyudpdate_folder)
             shutil.rmtree(self._pyudpdate_folder)
 
-        print(f'Creating folder at "{self._pyudpdate_folder}"')
+        LOGGER.info("Creating folder at '%s'", self._pyudpdate_folder)
         os.mkdir(self._pyudpdate_folder)
 
     def _create_config_file(self):
         """Creates the config file"""
-        print(f'Creating config file at "{self._config_path}"')
+        LOGGER.info("Creating config file at '%s'", self._config_path)
         config = helper.Config()
 
         default_data = config.default_config_data
@@ -157,7 +159,7 @@ class Builder:
 
     def _create_hash_db(self):
         """Creates the hash database"""
-        print(f'Creating hash database at "{self._hash_db_path}"')
+        LOGGER.info("Creating hash database at '%s'", self._hash_db_path)
         hasher = hashing.Hasher(project_name=os.path.basename(self.project_path))
 
         self.exclude_paths.append(self._pyudpdate_folder)
