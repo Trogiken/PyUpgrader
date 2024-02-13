@@ -9,6 +9,7 @@ Exceptions:
 - GetFilesError: Raised when there is an error in retrieving file paths from the cloud.
 - DownloadFilesError: Raised when there is an error in downloading files from the cloud.
 - NoUpdateError: Raised when there is no files downloaded during an update.
+- URLNotValidError: Raised when the URL is not valid.
 """
 
 import os
@@ -35,6 +36,10 @@ class DownloadFilesError(Exception):
 
 class NoUpdateError(Exception):
     """This exception is raised when there is no files downloaded during an update."""
+
+
+class URLNotValidError(Exception):
+    """This exception is raised when the URL is not valid."""
 
 
 class UpdateManager:
@@ -158,7 +163,7 @@ class UpdateManager:
         try:
             requests.get(self._url, timeout=5)
         except Exception as error:
-            raise requests.exceptions.ConnectionError(self._url) from error
+            raise URLNotValidError(self._url) from error
         if not os.path.exists(self._pyupgrader_path):
             raise FileNotFoundError(self._pyupgrader_path)
         if not os.path.exists(self._config_path):
