@@ -1,4 +1,15 @@
-"""This module provides the UpdateManager class for managing updates for a program."""
+"""
+This module provides the UpdateManager class for managing updates for a program.
+
+Classes:
+- UpdateManager: Manages updates for a program
+
+Exceptions:
+- DBSumError: Raised when there is an error in comparing values from the databases.
+- GetFilesError: Raised when there is an error in retrieving file paths from the cloud.
+- DownloadFilesError: Raised when there is an error in downloading files from the cloud.
+- NoUpdateError: Raised when there is no files downloaded during an update.
+"""
 
 import os
 import tempfile
