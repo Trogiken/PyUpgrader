@@ -6,7 +6,7 @@ Which versions of the project are currently being supported with security update
 
 | Version | Supported          |
 | ------- | ------------------ |
-| x.x.xb1   | :white_check_mark: |
+| 2.x.xb2   | :white_check_mark: |
 
 ## Reporting a Vulnerability
 
