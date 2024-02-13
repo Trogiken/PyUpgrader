@@ -1,4 +1,16 @@
-"""This module provides the UpdateManager class for managing updates for a program."""
+"""
+This module provides the UpdateManager class for managing updates for a program.
+
+Classes:
+- UpdateManager: Manages updates for a program
+
+Exceptions:
+- DBSumError: Raised when there is an error in comparing values from the databases.
+- GetFilesError: Raised when there is an error in retrieving file paths from the cloud.
+- DownloadFilesError: Raised when there is an error in downloading files from the cloud.
+- NoUpdateError: Raised when there is no files downloaded during an update.
+- URLNotValidError: Raised when the URL is not valid.
+"""
 
 import os
 import tempfile
@@ -24,6 +36,10 @@ class DownloadFilesError(Exception):
 
 class NoUpdateError(Exception):
     """This exception is raised when there is no files downloaded during an update."""
+
+
+class URLNotValidError(Exception):
+    """This exception is raised when the URL is not valid."""
 
 
 class UpdateManager:
@@ -82,8 +98,7 @@ class UpdateManager:
         Set the URL to the .pyupgrader folder.
 
         Args:
-        - value: str
-            The URL to the .pyupgrader folder.
+        - value (str): The URL to the .pyupgrader folder.
         """
         self._url = helper.normalize_paths(value)
         self._web_man = helper.Web(self._url)
@@ -105,12 +120,7 @@ class UpdateManager:
         Set the path to the project folder (Not the .pyupgrader folder).
 
         Args:
-        - value: str
-            The path to the project folder.
-
-        Raises:
-        - FileNotFoundError: If the path does not exist.
-        - requests.exceptions.ConnectionError: If the URL is not valid.
+        - value (str): The path to the project folder.
         """
         self._project_path = value
         self._pyupgrader_path = os.path.join(self._project_path, ".pyupgrader")
@@ -141,13 +151,17 @@ class UpdateManager:
     def _validate_attributes(self) -> None:
         """
         Validate and set attributes of the class.
+
+        Raises:
+        - FileNotFoundError: If the path does not exist.
+        - URLNotValidError: If the URL is not valid.
         """
         if not os.path.exists(self._project_path):
             raise FileNotFoundError(self._project_path)
         try:
             requests.get(self._url, timeout=5)
         except Exception as error:
-            raise requests.exceptions.ConnectionError(self._url) from error
+            raise URLNotValidError(self._url) from error
         if not os.path.exists(self._pyupgrader_path):
             raise FileNotFoundError(self._pyupgrader_path)
         if not os.path.exists(self._config_path):
@@ -258,10 +272,10 @@ class UpdateManager:
         Download cloud files and return the path where the files are saved.
 
         Args:
-        - save_path: str, optional
+        - save_path (str): optional
             The path to save the downloaded files.
             If not provided, a temporary folder will be created.
-        - updated_only: bool, optional
+        - updated_only (bool): optional
             If True, only download files that have changed or have been added.
 
         Returns:
@@ -305,7 +319,7 @@ class UpdateManager:
         This file is used by file_updater.py.
 
         Args:
-        - file_dir (str, optional):
+        - file_dir (str): optional
             The directory where temporary files will be stored.
             If not provided, a temporary directory will be created.
 
@@ -380,8 +394,7 @@ class UpdateManager:
         Start the application update process. This function will replace the current process.
 
         Args:
-        - actions_path: str
-            The path to the actions file.
+        - actions_path (str): The path to the actions file.
 
         Raises:
         - FileNotFoundError: If the actions file does not exist.

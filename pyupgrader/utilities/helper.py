@@ -9,7 +9,7 @@ Classes:
 - Web: Class for managing web requests.
 """
 
-from typing import List, Union
+from typing import List, Tuple, Union
 import yaml
 import requests
 
@@ -20,13 +20,13 @@ def normalize_paths(paths: Union[str, List[str]]) -> Union[str, List[str]]:
     in a path or a list of paths.
 
     Args:
-        paths (Union[str, List[str]]): A path or a list of paths.
+    - paths (Union[str, List[str]]): A path or a list of paths.
 
     Returns:
-        Union[str, List[str]]: The normalized path or list of paths.
+    - Union[str, List[str]]: The normalized path or list of paths.
 
     Raises:
-        TypeError: If the input is not a string or a list of strings.
+    - TypeError: If the input is not a string or a list of strings.
     """
     if isinstance(paths, str):
         return paths.replace("\\", "/").rstrip("/")
@@ -41,15 +41,15 @@ class Config:
     Config helper class
 
     Attributes:
-    default_config_data: dict
+    - default_config_data: dict
         Default config data
 
     Methods:
-    load_yaml(path: str) -> dict
+    - load_yaml(path: str) -> dict
         Load a yaml file at path
-    loads_yaml(yaml_string: str) -> dict
+    - loads_yaml(yaml_string: str) -> dict
         Load a yaml from a string
-    write_yaml(path: str, data: dict) -> None
+    - write_yaml(path: str, data: dict) -> None
         Dump data to yaml file at path
     """
 
@@ -107,7 +107,7 @@ class Config:
         with open(path, "w", encoding="utf-") as config_file:
             yaml.safe_dump(data, config_file)
 
-    def _valid_config(self, config: dict) -> (bool, str):
+    def _valid_config(self, config: dict) -> Tuple[bool, str]:
         """
         Validate the config.
 
@@ -115,8 +115,9 @@ class Config:
         - config (dict): The config to validate.
 
         Returns:
-        - tuple: A tuple containing a boolean indicating if the config is valid
-        and a string describing the error if it is not valid.
+        - tuple (Tuple[bool, str]):
+            Boolean indicating if the config is valid.
+            String describing the error if it is not valid.
         """
         error = ""
         is_valid = True
@@ -148,17 +149,17 @@ class Web:
     Class for managing web requests
 
     Attributes:
-    url: str
+    - url: str
         URL to the .pyupgrader folder
 
     Methods:
-    get_request(url: str) -> requests.Response
+    - get_request(url: str) -> requests.Response
         Get a request from the url
-    get_config() -> dict
+    - get_config() -> dict
         Get the config file from the url
-    download(url_path: str, save_path) -> str
+    - download(url_path: str, save_path) -> str
         Download a file from the url_path and save it to save_path
-    download_hash_db(save_path: str) -> str
+    - download_hash_db(save_path: str) -> str
         Download the hash database and save it to save_path
     """
 
@@ -173,15 +174,19 @@ class Web:
 
         Parameters:
         - url (str): URL to send the request to
+        - timeout (int): The timeout for the request
 
         Returns:
         - requests.Response: The response object from the request
+
+        Raises:
+        - requests.ConnectionError: If the request fails
         """
         try:
             response = requests.get(url, timeout=timeout)
             response.raise_for_status()
         except Exception as e:
-            raise requests.ConnectionError(f'Url: "{url}" | {e}')
+            raise requests.ConnectionError(f"Url: '{url}'") from e
 
         return response
 
@@ -201,7 +206,7 @@ class Web:
 
         Args:
         - url_path (str): URL path of the file to download
-        - save_path: Path to save the downloaded file
+        - save_path (str): Path to save the downloaded file
 
         Returns:
         - str: The save path of the downloaded file

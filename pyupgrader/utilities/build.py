@@ -2,13 +2,15 @@
 This module provides the functionality to build a project into a pyupgrader project.
 It is intended to be used by the command line tool.
 
-It defines the following classes:
-- BuildError: Raised when there is an error building a project.
-- FolderCreationError: Raised when there is an error creating a folder.
-- ConfigError: Raised when there is an error with the config file.
-- HashDBError: Raised when there is an error with the hash database.
-- PathError: Raised when there is an error with a path.
-- Builder: Builds a project into a pyupgrader project.
+Classes:
+- Builder: Builds a project into a pyupgrader project
+
+Exceptions:
+- BuildError: Raised when there is an error building a project
+- FolderCreationError: Raised when there is an error creating a folder
+- ConfigError: Raised when there is an error with the config file
+- HashDBError: Raised when there is an error with the hash database
+- PathError: Raised when there is an error with a path
 """
 
 import os

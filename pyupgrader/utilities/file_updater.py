@@ -1,4 +1,4 @@
-"""This module is a utility for updating files."""
+"""This module is a utility for the update process."""
 
 import argparse
 import os
@@ -11,7 +11,12 @@ from time import sleep
 
 
 def main():
-    """Main function for the file updater utility."""
+    """
+    Main function for the file updater utility.
+
+    Args:
+        -a, --action: Path to the action file
+    """
     parser = argparse.ArgumentParser(description="Update Utility")
 
     parser.add_argument("-a", "--action", help="Path to the action file", required=True)
@@ -67,6 +72,7 @@ def main():
     if cleanup:
         shutil.rmtree(downloads_dir)
 
+    # Start the application
     os.execv(sys.executable, [sys.executable, startup_path])
 
 
@@ -74,10 +80,12 @@ if __name__ == "__main__":
     try:
         main()
     except Exception as e:
+        # Create crash dump and raise exception
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d-%H_%M_%S")
         dump_dir = os.path.join(os.path.dirname(__file__), "crash_dump")
         os.makedirs(dump_dir, exist_ok=True)
         crash_file = os.path.join(os.path.dirname(__file__), "crash_dump", f"{timestamp}.txt")
         with open(crash_file, "w", encoding="utf-8") as f:
             f.write(traceback.format_exc())
+
         raise Exception(f"Update failed. Crash file created at {crash_file}") from e
