@@ -87,4 +87,5 @@ if __name__ == "__main__":
         crash_file = os.path.join(os.path.dirname(__file__), "crash_dump", f"{timestamp}.txt")
         with open(crash_file, "w", encoding="utf-8") as f:
             f.write(traceback.format_exc())
+
         raise Exception(f"Update failed. Crash file created at {crash_file}") from e

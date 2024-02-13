@@ -21,8 +21,8 @@ import os
 import sqlite3
 import time
 import re
-from typing import List
-from multiprocessing import Pool
+import multiprocessing as multiprc
+from typing import List, Tuple, Generator
 from dataclasses import dataclass
 from pyupgrader.utilities import helper
 
@@ -124,7 +124,7 @@ class HashDB:
         self.cursor = None
         self.open()
 
-    def get_file_paths(self) -> str:
+    def get_file_paths(self) -> Generator[str, None, None]:
         """
         Generator that yields file paths from the database.
         """
@@ -211,7 +211,7 @@ class Hasher:
             batch_data,
         )
 
-    def _map_hashes_creation(self, pool: Pool, file_paths: List[str]) -> List[tuple]:
+    def _map_hashes_creation(self, pool: multiprc.Pool, file_paths: List[str]) -> List[tuple]:
         """
         Use multiprocessing to create hashes for a list of file paths.
 
@@ -287,7 +287,7 @@ class Hasher:
         """Check if the directory should be excluded based on the list of exclude patterns."""
         return any(re.search(pattern, helper.normalize_paths(root)) for pattern in exclude_patterns)
 
-    def create_hash(self, file_path: str) -> (str, str):
+    def create_hash(self, file_path: str) -> Tuple[str, str]:
         """
         Create a hash from file bytes using the chunk method,
         return the relative file path and hash as a string.
@@ -376,7 +376,7 @@ class Hasher:
         batch_data = []
 
         # Create a pool, default number of processes is the number of cores on the machine
-        with Pool() as pool:
+        with multiprc.Pool() as pool:
             start_time = time.time()  # Start timer
             for root, dirs, files in os.walk(hash_dir_path):
                 # Skip excluded directories

@@ -9,7 +9,7 @@ Classes:
 - Web: Class for managing web requests.
 """
 
-from typing import List, Union
+from typing import List, Tuple, Union
 import yaml
 import requests
 
@@ -107,7 +107,7 @@ class Config:
         with open(path, "w", encoding="utf-") as config_file:
             yaml.safe_dump(data, config_file)
 
-    def _valid_config(self, config: dict) -> (bool, str):
+    def _valid_config(self, config: dict) -> Tuple[bool, str]:
         """
         Validate the config.
 
@@ -115,8 +115,9 @@ class Config:
         - config (dict): The config to validate.
 
         Returns:
-        - tuple: A tuple containing a boolean indicating if the config is valid
-        and a string describing the error if it is not valid.
+        - tuple (Tuple[bool, str]):
+            Boolean indicating if the config is valid.
+            String describing the error if it is not valid.
         """
         error = ""
         is_valid = True
@@ -177,12 +178,15 @@ class Web:
 
         Returns:
         - requests.Response: The response object from the request
+
+        Raises:
+        - requests.ConnectionError: If the request fails
         """
         try:
             response = requests.get(url, timeout=timeout)
             response.raise_for_status()
         except Exception as e:
-            raise requests.ConnectionError(f'Url: "{url}" | {e}')
+            raise requests.ConnectionError(f"Url: '{url}'") from e
 
         return response
 
@@ -202,7 +206,7 @@ class Web:
 
         Args:
         - url_path (str): URL path of the file to download
-        - save_path: Path to save the downloaded file
+        - save_path (str): Path to save the downloaded file
 
         Returns:
         - str: The save path of the downloaded file
