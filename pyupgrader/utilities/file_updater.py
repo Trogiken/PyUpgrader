@@ -38,6 +38,7 @@ def main():
 
     # Update the files
     for file in update_files:
+        # Copy/Overwrite files
         source = os.path.join(downloads_dir, file)
         destination = os.path.join(project_path, file)
         os.makedirs(os.path.dirname(destination), exist_ok=True)
@@ -46,9 +47,15 @@ def main():
         shutil.copy(source, destination)
 
     for file in del_files:
+        # Delete files
         destination = os.path.join(project_path, file)
         if os.path.exists(destination):
             os.remove(destination)
+
+        # Delete directory if empty
+        dir_path = os.path.dirname(destination)
+        if not os.listdir(dir_path):
+            os.rmdir(dir_path)
 
     # Replace config and hash db
     if os.path.exists(cloud_config_path):
