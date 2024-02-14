@@ -48,7 +48,7 @@ def test_build_folder_path_not_set():
     try:
         builder.build()
         assert False, "Expected BuildError to be raised"
-    except build.BuildError:
+    except build.PathError:
         assert True
 
 def test_build_folder_not_exist(tmpdir):
