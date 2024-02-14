@@ -126,9 +126,9 @@ class Builder:
     def _validate_paths(self):
         """Validates and set paths"""
         if self.project_path is None:
-            raise BuildError("Folder path not set")
+            raise PathError("Folder path not set")
         if self.exclude_paths is None:
-            raise BuildError("Exclude paths not set")
+            raise PathError("Exclude paths not set")
 
         if not os.path.exists(self.project_path):
             raise PathError(f'Folder "{self.project_path}" does not exist')
