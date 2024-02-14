@@ -66,8 +66,11 @@ class UpdateManager:
     - download_files(save_path: str = "", required: bool = False) -> str
         Download files to save_path, if save_path is empty, create a temp folder.
         Return the save_path
-    - update(file_dir: str = "") -> str
-        Start the application update process.
+    - prepare_update(file_dir: str = "") -> str
+        A 'actions' file will be created.
+        This file is used by file_updater.py.
+    - update(actions_path: str) -> None
+        Start the application update process. This function will replace the current process.
     """
 
     def __init__(self, url: str, project_path: str):
@@ -230,7 +233,8 @@ class UpdateManager:
         Note that this function does not return files that have been deleted from the cloud.
 
         Args:
-        - updated_only (bool, optional): If True, only returns files that have been updated.
+        - updated_only (bool): optional
+            If True, only returns files that have been updated.
             Defaults to False.
 
         Returns:

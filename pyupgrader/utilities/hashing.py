@@ -166,7 +166,7 @@ class Hasher:
     A class that provides methods for hashing files and creating hash databases.
 
     Attributes:
-    - project_name: str
+    - project_name (str):
         The name of the project directory (Not the full path)
 
     Methods:
@@ -188,8 +188,7 @@ class Hasher:
         Create the 'hashes' table in the database if it does not exist.
 
         Args:
-        - cursor: sqlite3.Cursor
-            The database cursor.
+        - cursor (sqlite3.Cursor): The database cursor.
         """
         cursor.execute(
             "CREATE TABLE IF NOT EXISTS hashes "
@@ -201,9 +200,9 @@ class Hasher:
         Insert batch data into the 'hashes' table.
 
         Args:
-        - cursor: sqlite3.Cursor
+        - cursor (sqlite3.Cursor):
             The database cursor.
-        - batch_data: List[tuple]
+        - batch_data (List[tuple]): 
             A list of tuples containing the relative file path and hash as a string.
         """
         cursor.executemany(
@@ -216,9 +215,9 @@ class Hasher:
         Use multiprocessing to create hashes for a list of file paths.
 
         Args:
-        - pool: Pool
+        - pool (multiprocessing.Pool):
             The multiprocessing pool.
-        - file_paths: List[str]
+        - file_paths (List[str]):
             A list of file paths to create hashes for.
 
         Returns:
@@ -233,9 +232,9 @@ class Hasher:
         Exclude specified file paths from the list.
 
         Args:
-        - file_paths: List[str]
+        - file_paths (List[str]):
             A list of file paths to filter.
-        - exclude_file_paths: List[str]
+        - exclude_file_paths (List[str]):
             A list of file paths to exclude.
 
         Returns:
@@ -250,9 +249,9 @@ class Hasher:
         Exclude specified file paths from the list.
 
         Args:
-        - file_paths: List[str]
+        - file_paths (List[str]):
             A list of file paths to filter.
-        - exclude_patterns: List[str]
+        - exclude_patterns (List[str]):
             A list of patterns to exclude.
 
         Returns:
@@ -270,9 +269,9 @@ class Hasher:
         based on the list of exclude directory paths.
 
         Args:
-        - exclude_dir_paths: List[str]
+        - exclude_dir_paths (List[str]):
             A list of directory paths to exclude.
-        - root: str
+        - root (str):
             The root directory path.
 
         Returns:
@@ -293,8 +292,7 @@ class Hasher:
         return the relative file path and hash as a string.
 
         Args:
-        - file_path: str
-            The path of the file to be hashed.
+        - file_path (str): The path of the file to be hashed.
 
         Returns:
         - Tuple[str, str]: The relative file path and hash as a string.
@@ -335,14 +333,14 @@ class Hasher:
         then save it to a file path. Return the save file path.
 
         Args:
-        - hash_dir_path: str
+        - hash_dir_path (str):
             The path of the directory to create the hash database from.
-        - db_save_path: str
+        - db_save_path (str):
             The path to save the hash database file.
-        - exclude_paths: List[str], optional
+        - exclude_paths (List[str]): optional
             A list of paths to exclude from the hash database creation. Default is an empty list.
             Defaults to None.
-        - exclude_patterns: List[str], optional
+        - exclude_patterns (List[str]): optional
             A list of patterns to exclude from the hash database creation. Default is an empty list.
             Defaults to None.
 

@@ -46,11 +46,16 @@ class Builder:
     Builds a project into a pyupgrader project
 
     Attributes:
-    - project_path: Path to the project folder.
-    - exclude_envs: Whether to exclude common virtual environment folders.
-    - exclude_hidden: Whether to exclude hidden files and folders.
-    - exclude_patterns: List of patterns to exclude from the hash database.
-    - exclude_paths: List of absolute paths to exclude from the hash database.
+    - project_path: str
+        Path to the project folder.
+    - exclude_envs: bool
+        Whether to exclude common virtual environment folders.
+    - exclude_hidden: bool
+        Whether to exclude hidden files and folders.
+    - exclude_patterns: list
+        List of patterns to exclude from the hash database.
+    - exclude_paths: list
+        List of absolute paths to exclude from the hash database.
 
     Methods:
     - build(): Builds the project into a pyupgrader project.
