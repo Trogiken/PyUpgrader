@@ -202,7 +202,7 @@ class Hasher:
         Args:
         - cursor (sqlite3.Cursor):
             The database cursor.
-        - batch_data (List[tuple]): 
+        - batch_data (List[tuple]):
             A list of tuples containing the relative file path and hash as a string.
         """
         cursor.executemany(
