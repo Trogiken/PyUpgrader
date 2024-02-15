@@ -3,7 +3,10 @@
 import argparse
 import logging
 import pyupgrader.utilities as util
-from pyupgrader.utilities.build import BuildError
+
+
+class BuildError(Exception):
+    """Raised when there is an error building a project"""
 
 
 def cli():

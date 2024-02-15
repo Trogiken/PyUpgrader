@@ -6,7 +6,6 @@ Classes:
 - Builder: Builds a project into a pyupgrader project
 
 Exceptions:
-- BuildError: Raised when there is an error building a project
 - FolderCreationError: Raised when there is an error creating a folder
 - ConfigError: Raised when there is an error with the config file
 - HashDBError: Raised when there is an error with the hash database
@@ -19,10 +18,6 @@ import logging
 from pyupgrader.utilities import helper, hashing
 
 LOGGER = logging.getLogger(__name__)
-
-
-class BuildError(Exception):
-    """Raised when there is an error building a project"""
 
 
 class FolderCreationError(Exception):
