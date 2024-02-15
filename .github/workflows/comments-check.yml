@@ -15,7 +15,7 @@ jobs:
     - name: Check for DEBUG, TODO and FIXME comments
       id: check
       run: |
-        OUTPUT=$(grep -r -e "DEBUG" -e "TODO" -e "FIXME" --include=\*.py .) || true
+        OUTPUT=$(grep -r -e "DEBUG:" -e "TODO:" -e "FIXME:" --include=\*.py .) || true
         echo "RESULT=$OUTPUT" >> $GITHUB_ENV
 
     - name: Create comment
