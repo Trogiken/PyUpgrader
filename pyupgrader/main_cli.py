@@ -1,15 +1,16 @@
-"""PyUpgrader CLI"""
+"""This module contains the CLI for building the project."""
 
 import argparse
-import os
-import sys
+import logging
 import pyupgrader.utilities as util
-from pyupgrader.utilities.build import BuildError
+
+
+class BuildError(Exception):
+    """Raised when there is an error building a project"""
 
 
 def cli():
-    """PyUpgrader CLI
-
+    """
     This function is the entry point for the PyUpgrader command-line interface (CLI).
     It parses the command-line arguments, validates the project folder path,
     and builds the project using the specified options.
@@ -20,11 +21,12 @@ def cli():
         -no_hidden: Exclude hidden files and directories
         -patterns: Exclude files and directories using regex patterns
         -e, --exclude: Absolute paths for excluded files and directories
+        -l, --log: Set the logging level
 
     Raises:
         BuildError: If an error occurs during the build process.
     """
-    parser = argparse.ArgumentParser(description="PyUpgrader CLI")
+    parser = argparse.ArgumentParser(description="PyUpgrader CLI Builder")
     parser.add_argument("-p", "--project", help="Absolute path to project folder", required=True)
     parser.add_argument("-no_env", help="Exclude environment directories", action="store_true")
     parser.add_argument(
@@ -43,11 +45,17 @@ def cli():
         nargs="+",
         default=[],
     )
+    parser.add_argument(
+        "-l",
+        "--log",
+        help="Set the logging level",
+        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+        default="INFO",
+    )
     args = parser.parse_args()
 
-    if not os.path.exists(args.project):
-        print(f'Folder "{args.project}" does not exist')
-        sys.exit(1)
+    log_format = "%(asctime)s | %(levelname)-8s | %(message)s"
+    logging.basicConfig(level=args.log, format=log_format, datefmt="%H:%M:%S")
 
     try:
         builder = util.Builder(

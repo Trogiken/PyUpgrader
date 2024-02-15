@@ -2,22 +2,22 @@
 This module provides the functionality to build a project into a pyupgrader project.
 It is intended to be used by the command line tool.
 
-It defines the following classes:
-- BuildError: Raised when there is an error building a project.
-- FolderCreationError: Raised when there is an error creating a folder.
-- ConfigError: Raised when there is an error with the config file.
-- HashDBError: Raised when there is an error with the hash database.
-- PathError: Raised when there is an error with a path.
-- Builder: Builds a project into a pyupgrader project.
+Classes:
+- Builder: Builds a project into a pyupgrader project
+
+Exceptions:
+- FolderCreationError: Raised when there is an error creating a folder
+- ConfigError: Raised when there is an error with the config file
+- HashDBError: Raised when there is an error with the hash database
+- PathError: Raised when there is an error with a path
 """
 
 import os
 import shutil
+import logging
 from pyupgrader.utilities import helper, hashing
 
-
-class BuildError(Exception):
-    """Raised when there is an error building a project"""
+LOGGER = logging.getLogger(__name__)
 
 
 class FolderCreationError(Exception):
@@ -41,11 +41,16 @@ class Builder:
     Builds a project into a pyupgrader project
 
     Attributes:
-    - project_path: Path to the project folder.
-    - exclude_envs: Whether to exclude common virtual environment folders.
-    - exclude_hidden: Whether to exclude hidden files and folders.
-    - exclude_patterns: List of patterns to exclude from the hash database.
-    - exclude_paths: List of absolute paths to exclude from the hash database.
+    - project_path: str
+        Path to the project folder.
+    - exclude_envs: bool
+        Whether to exclude common virtual environment folders.
+    - exclude_hidden: bool
+        Whether to exclude hidden files and folders.
+    - exclude_patterns: list
+        List of patterns to exclude from the hash database.
+    - exclude_paths: list
+        List of absolute paths to exclude from the hash database.
 
     Methods:
     - build(): Builds the project into a pyupgrader project.
@@ -93,7 +98,7 @@ class Builder:
         """Builds a project into a pyupgrader project"""
         self._validate_paths()
 
-        print("Building project...\n")
+        LOGGER.info("Building Project...")
 
         try:
             self._create_pyupgrader_folder()
@@ -110,18 +115,18 @@ class Builder:
         except Exception as error:
             raise HashDBError("Failed to create hash database") from error
 
-        print("\nDone!")
-        print(f"Project built at '{self._pyudpdate_folder}'")
+        LOGGER.info("Project built at '%s'", self._pyudpdate_folder)
+        LOGGER.info("Don't forget to configure the config file in the .pyupgrader folder.")
 
     def _validate_paths(self):
         """Validates and set paths"""
         if self.project_path is None:
-            raise BuildError("Folder path not set")
+            raise PathError("Folder path not set")
         if self.exclude_paths is None:
-            raise BuildError("Exclude paths not set")
+            raise PathError("Exclude paths not set")
 
         if not os.path.exists(self.project_path):
-            raise FileNotFoundError(f'Folder "{self.project_path}" does not exist')
+            raise PathError(f'Folder "{self.project_path}" does not exist')
         if self.project_path in self.exclude_paths:
             raise PathError("Folder path cannot be excluded")
 
@@ -135,16 +140,15 @@ class Builder:
     def _create_pyupgrader_folder(self):
         """Creates the .pyupgrader folder"""
         if os.path.exists(self._pyudpdate_folder):
-            print(f'Folder "{self._pyudpdate_folder}" already exists')
-            print("Deleting folder")
+            LOGGER.warning("Folder '%s' already exists! Deleting it...", self._pyudpdate_folder)
             shutil.rmtree(self._pyudpdate_folder)
 
-        print(f'Creating folder at "{self._pyudpdate_folder}"')
+        LOGGER.info("Creating folder at '%s'", self._pyudpdate_folder)
         os.mkdir(self._pyudpdate_folder)
 
     def _create_config_file(self):
         """Creates the config file"""
-        print(f'Creating config file at "{self._config_path}"')
+        LOGGER.info("Creating config file at '%s'", self._config_path)
         config = helper.Config()
 
         default_data = config.default_config_data
@@ -157,7 +161,7 @@ class Builder:
 
     def _create_hash_db(self):
         """Creates the hash database"""
-        print(f'Creating hash database at "{self._hash_db_path}"')
+        LOGGER.info("Creating hash database at '%s'", self._hash_db_path)
         hasher = hashing.Hasher(project_name=os.path.basename(self.project_path))
 
         self.exclude_paths.append(self._pyudpdate_folder)

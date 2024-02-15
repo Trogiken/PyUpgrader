@@ -6,7 +6,7 @@ with open('README.md', encoding="utf-8") as f:
 
 setup(
     name='pyupgrader',
-    version='2.1.10b1',
+    version='2.3.11b1',
     author='Noah Blaszak',
     author_email='technology.misc@gmail.com',
     description='Keep your Python code up to date on client machines.',
@@ -33,7 +33,7 @@ setup(
         'Programming Language :: Python :: 3.10',
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
-        'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
+        'License :: OSI Approved :: Apache Software License',
         'Operating System :: OS Independent',
     ]
 )

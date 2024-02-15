@@ -1,6 +1,6 @@
 cleanup: true
-description: Cloud Version
+description: Built with PyUpgrader
 hash_db: hashes.db
 required_only: true
 startup_path: 'main.py'
-version: 2.0.0
+version: 2.0.1

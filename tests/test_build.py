@@ -31,7 +31,6 @@ def test_build_folder_already_exists(tmpdir):
     exclude_paths = [os.path.join(project_path, "exclude")]
     builder = build.Builder(project_path, exclude_paths=exclude_paths)
 
-    # Create .pyupgrader folder manually
     os.mkdir(os.path.join(project_path, ".pyupgrader"))
 
     builder.build()
@@ -49,7 +48,7 @@ def test_build_folder_path_not_set():
     try:
         builder.build()
         assert False, "Expected BuildError to be raised"
-    except build.BuildError:
+    except build.PathError:
         assert True
 
 def test_build_folder_not_exist(tmpdir):
@@ -69,7 +68,7 @@ def test_build_folder_not_exist(tmpdir):
     try:
         builder.build()
         assert False, "Expected FileNotFoundError to be raised"
-    except FileNotFoundError:
+    except build.PathError:
         assert True
 
 def test_build_exclude_folder_path(tmpdir):
