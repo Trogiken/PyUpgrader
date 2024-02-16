@@ -1,5 +1,7 @@
 import unittest
-from pyupgrader.utilities.helper import normalize_paths
+import os
+import yaml
+from pyupgrader.utilities.helper import normalize_paths, Config
 
 class NormalizePathsTestCase(unittest.TestCase):
     def test_normalize_single_path(self):
@@ -34,6 +36,153 @@ class NormalizePathsTestCase(unittest.TestCase):
 
         with self.assertRaises(TypeError):
             normalize_paths(path)
+
+class ConfigTestCase(unittest.TestCase):
+    def setUp(self):
+        self.valid_config_path = os.path.join(os.path.dirname(__file__), "valid_config.yaml")
+        self.invalid_config_path = os.path.join(os.path.dirname(__file__), "invalid_config.yaml")
+
+        # Create a test config file
+        with open(self.valid_config_path, "w", encoding="utf-8") as config_file:
+            config_file.write(
+                "version: 1.0.0\n"
+                "description: Built with PyUpgrader\n"
+                "startup_path: \"\"\n"
+                "required_only: false\n"
+                "cleanup: false\n"
+                "hash_db: hash.db\n"
+            )
+
+        # Create an invalid test config file
+        with open(self.invalid_config_path, "w", encoding="utf-8") as config_file:
+            config_file.write(
+                "version: 1.0.0\n"
+                "description: Built with PyUpgrader\n"
+                "startup_path: \"\"\n"
+                "required_only: false\n"
+                # Missing "cleanup" attribute
+                "hash_db: hash.db\n"
+            )
+        
+    def tearDown(self):
+        os.remove(self.valid_config_path)
+        os.remove(self.invalid_config_path)
+
+    def test_load_yaml_valid_config(self):
+        # Test loading a valid yaml file
+        config = Config()
+        path = self.valid_config_path
+        expected_data = {
+            "version": "1.0.0",
+            "description": "Built with PyUpgrader",
+            "startup_path": "",
+            "required_only": False,
+            "cleanup": False,
+            "hash_db": "hash.db",
+        }
+
+        data = config.load_yaml(path)
+
+        self.assertEqual(data, expected_data)
+
+    def test_load_yaml_invalid_config(self):
+        # Test loading an invalid yaml file
+        config = Config()
+        path = self.invalid_config_path
+
+        with self.assertRaises(ValueError):
+            config.load_yaml(path)
+
+    def test_loads_yaml_valid_config(self):
+        # Test loading a valid yaml string
+        config = Config()
+        yaml_string = """
+        version: 1.0.0
+        description: Built with PyUpgrader
+        startup_path: ""
+        required_only: false
+        cleanup: false
+        hash_db: hash.db
+        """
+        expected_data = {
+            "version": "1.0.0",
+            "description": "Built with PyUpgrader",
+            "startup_path": "",
+            "required_only": False,
+            "cleanup": False,
+            "hash_db": "hash.db",
+        }
+
+        data = config.loads_yaml(yaml_string)
+
+        self.assertEqual(data, expected_data)
+
+    def test_loads_yaml_invalid_config(self):
+        # Test loading an invalid yaml string
+        config = Config()
+        yaml_string = """
+        version: 1.0.0
+        description: Built with PyUpgrader
+        startup_path: ""
+        required_only: false
+        """
+        
+        with self.assertRaises(ValueError):
+            config.loads_yaml(yaml_string)
+
+    def test_write_yaml(self):
+        # Test writing data to a yaml file
+        config = Config()
+        path = "output.yaml"
+        data = {
+            "version": "1.0.0",
+            "description": "Built with PyUpgrader",
+            "startup_path": "",
+            "required_only": False,
+            "cleanup": False,
+            "hash_db": "hash.db",
+        }
+
+        config.write_yaml(path, data)
+
+        # Verify that the file was written correctly
+        with open(path, "r", encoding="utf-8") as output_file:
+            written_data = yaml.safe_load(output_file)
+            self.assertEqual(written_data, data)
+
+    def test_valid_config(self):
+        # Test validating a valid config
+        config = Config()
+        valid_config = {
+            "version": "1.0.0",
+            "description": "Built with PyUpgrader",
+            "startup_path": "",
+            "required_only": False,
+            "cleanup": False,
+            "hash_db": "hash.db",
+        }
+
+        is_valid, error = config._valid_config(valid_config)
+
+        self.assertTrue(is_valid)
+        self.assertEqual(error, "")
+
+    def test_invalid_config(self):
+        # Test validating an invalid config
+        config = Config()
+        invalid_config = {
+            "version": "1.0.0",
+            "description": "Built with PyUpgrader",
+            "startup_path": "",
+            # Missing "required_only" attribute
+            "cleanup": False,
+            "hash_db": "hash.db",
+        }
+
+        is_valid, error = config._valid_config(invalid_config)
+
+        self.assertFalse(is_valid)
+        self.assertEqual(error, 'Missing "required_only" attribute')
 
 if __name__ == "__main__":
     unittest.main()
