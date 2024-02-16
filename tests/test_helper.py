@@ -64,6 +64,15 @@ class ConfigTestCase(unittest.TestCase):
                 "hash_db: hash.db\n"
             )
         
+        self.valid_config_data = {
+            "version": "1.0.0",
+            "description": "Built with PyUpgrader",
+            "startup_path": "",
+            "required_only": False,
+            "cleanup": False,
+            "hash_db": "hash.db",
+        }
+        
     def tearDown(self):
         os.remove(self.valid_config_path)
         os.remove(self.invalid_config_path)
@@ -72,14 +81,7 @@ class ConfigTestCase(unittest.TestCase):
         # Test loading a valid yaml file
         config = Config()
         path = self.valid_config_path
-        expected_data = {
-            "version": "1.0.0",
-            "description": "Built with PyUpgrader",
-            "startup_path": "",
-            "required_only": False,
-            "cleanup": False,
-            "hash_db": "hash.db",
-        }
+        expected_data = self.valid_config_data
 
         data = config.load_yaml(path)
 
@@ -104,14 +106,7 @@ class ConfigTestCase(unittest.TestCase):
         cleanup: false
         hash_db: hash.db
         """
-        expected_data = {
-            "version": "1.0.0",
-            "description": "Built with PyUpgrader",
-            "startup_path": "",
-            "required_only": False,
-            "cleanup": False,
-            "hash_db": "hash.db",
-        }
+        expected_data = self.valid_config_data
 
         data = config.loads_yaml(yaml_string)
 
@@ -134,14 +129,7 @@ class ConfigTestCase(unittest.TestCase):
         # Test writing data to a yaml file
         config = Config()
         path = "output.yaml"
-        data = {
-            "version": "1.0.0",
-            "description": "Built with PyUpgrader",
-            "startup_path": "",
-            "required_only": False,
-            "cleanup": False,
-            "hash_db": "hash.db",
-        }
+        data = self.valid_config_data
 
         config.write_yaml(path, data)
 
@@ -153,14 +141,7 @@ class ConfigTestCase(unittest.TestCase):
     def test_valid_config(self):
         # Test validating a valid config
         config = Config()
-        valid_config = {
-            "version": "1.0.0",
-            "description": "Built with PyUpgrader",
-            "startup_path": "",
-            "required_only": False,
-            "cleanup": False,
-            "hash_db": "hash.db",
-        }
+        valid_config = self.valid_config_data
 
         is_valid, error = config._valid_config(valid_config)
 
@@ -187,14 +168,7 @@ class ConfigTestCase(unittest.TestCase):
     def test_default_config_data(self):
         # Test the default config data
         config = Config()
-        expected_default_config_data = {
-            "version": "1.0.0",
-            "description": "Built with PyUpgrader",
-            "startup_path": "",
-            "required_only": False,
-            "cleanup": False,
-            "hash_db": "hash.db",
-        }
+        expected_default_config_data = self.valid_config_data
 
         self.assertEqual(config.default_config_data, expected_default_config_data)
 
