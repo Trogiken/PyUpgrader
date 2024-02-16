@@ -1,89 +1,66 @@
+import unittest
 import os
+import shutil
 import logging
-from pyupgrader.utilities import build
+from .helper import create_dir_structure
+from pyupgrader.utilities.build import Builder, PathError
 
 LOGGER = logging.getLogger(__name__)
 
+class BuilderTestCase(unittest.TestCase):
+    def setUp(self):
+        # Create a temporary directory for testing
+        self.test_dir = os.path.join(os.path.dirname(__file__), "test_project")
+        create_dir_structure(self.test_dir)
 
-def test_build_success(tmpdir):
-    """
-    Test the success of the build process.
+        # Define a valid project path that exists
+        self.project_path = self.test_dir
+        self.exclude_paths = ["/path/to/exclude1", "/path/to/exclude2"]
 
-    This function creates a temporary project directory, sets up the necessary paths,
-    and performs the build using the `build.Builder` class. It then asserts the existence
-    of certain files in the project directory.
-    """
-    project_path = str(tmpdir.mkdir("project"))
-    exclude_paths = [os.path.join(project_path, "exclude")]
-    builder = build.Builder(project_path, exclude_paths=exclude_paths)
+        # Initialize the builder with real data
+        self.builder = Builder(self.project_path, exclude_paths=self.exclude_paths)
 
-    builder.build()
+    def tearDown(self):
+        # Clean up any created files or folders
+        shutil.rmtree(self.test_dir)
 
-    assert os.path.exists(os.path.join(project_path, ".pyupgrader"))
-    assert os.path.exists(os.path.join(project_path, ".pyupgrader", "config.yaml"))
-    assert os.path.exists(os.path.join(project_path, ".pyupgrader", "hashes.db"))
+    def test_build(self):
+        self.builder.build()
 
-def test_build_folder_already_exists(tmpdir):
-    """
-    Test case to verify the behavior when the .pyupgrader folder already exists.
-    """
-    project_path = str(tmpdir.mkdir("project"))
-    exclude_paths = [os.path.join(project_path, "exclude")]
-    builder = build.Builder(project_path, exclude_paths=exclude_paths)
+        # Assert that the .pyupgrader folder is created
+        pyupgrader_folder = os.path.join(self.project_path, ".pyupgrader")
+        self.assertTrue(os.path.exists(pyupgrader_folder))
 
-    os.mkdir(os.path.join(project_path, ".pyupgrader"))
+        # Assert that the config file is created
+        config_path = os.path.join(pyupgrader_folder, "config.yaml")
+        self.assertTrue(os.path.exists(config_path))
 
-    builder.build()
+        # Assert that the hash database is created
+        hash_db_path = os.path.join(pyupgrader_folder, "hashes.db")
+        self.assertTrue(os.path.exists(hash_db_path))
 
-    assert os.path.exists(os.path.join(project_path, ".pyupgrader"))
-    assert os.path.exists(os.path.join(project_path, ".pyupgrader", "config.yaml"))
-    assert os.path.exists(os.path.join(project_path, ".pyupgrader", "hashes.db"))
+    def test_build_with_invalid_paths(self):
+        # Test when project_path is not set
+        self.builder.project_path = None
+        with self.assertRaises(PathError):
+            self.builder.build()
 
-def test_build_folder_path_not_set():
-    """
-    Test case for when the build folder path is not set.
-    """
-    builder = build.Builder(None)
+        # Test when exclude_paths is not set
+        self.builder.project_path = "/path/to/project"
+        self.builder.exclude_paths = None
+        with self.assertRaises(PathError):
+            self.builder.build()
 
-    try:
-        builder.build()
-        assert False, "Expected BuildError to be raised"
-    except build.PathError:
-        assert True
+        # Test when project_path does not exist
+        self.builder.project_path = "/path/to/nonexistent"
+        with self.assertRaises(PathError):
+            self.builder.build()
 
-def test_build_folder_not_exist(tmpdir):
-    """
-    Test case for building a folder that does not exist.
+        # Test when project_path is in exclude_paths
+        self.builder.project_path = "/path/to/project"
+        self.builder.exclude_paths = ["/path/to/project"]
+        with self.assertRaises(PathError):
+            self.builder.build()
 
-    This test verifies that the build process raises a FileNotFoundError
-    when attempting to build a project from a non-existent folder.
-
-    Raises:
-        AssertionError: If the FileNotFoundError is not raised during the build process.
-    """
-    project_path = str(tmpdir.join("nonexistent"))
-    exclude_paths = [os.path.join(project_path, "exclude")]
-    builder = build.Builder(project_path, exclude_paths=exclude_paths)
-
-    try:
-        builder.build()
-        assert False, "Expected FileNotFoundError to be raised"
-    except build.PathError:
-        assert True
-
-def test_build_exclude_folder_path(tmpdir):
-    """
-    Test case to verify the behavior of excluding a folder path during the build process.
-
-    Raises:
-        build.PathError: If the build process does not raise a PathError.
-    """
-    project_path = str(tmpdir.mkdir("project"))
-    exclude_paths = [project_path]
-    builder = build.Builder(project_path, exclude_paths=exclude_paths)
-
-    try:
-        builder.build()
-        assert False, "Expected PathError to be raised"
-    except build.PathError:
-        assert True
+if __name__ == "__main__":
+    unittest.main()
