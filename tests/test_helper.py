@@ -237,17 +237,20 @@ class WebTestCase(unittest.TestCase):
         
         os.remove(save_path)
 
+    @responses.activate
     def test_download_hash_db(self):
         # Test downloading the hash database
         save_path = os.path.join(os.path.dirname(__file__), "hash.db")
         expected_save_path = save_path
 
         responses.add(responses.GET, "https://example.com/config.yaml", json=self.config_data, status=200)
-        responses.add(responses.GET, "https://example.com/hashes.db", body="Mocked hash.db content", status=200)
+        responses.add(responses.GET, "https://example.com/hash.db", body="Mocked hash.db content", status=200)
         returned_save_path = self.web.download_hash_db(save_path)
 
         self.assertEqual(returned_save_path, expected_save_path)
         self.assertTrue(os.path.exists(save_path))
+
+        os.remove(save_path)
 
 if __name__ == "__main__":
     unittest.main()
