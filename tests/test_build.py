@@ -1,7 +1,6 @@
 import unittest
 import os
 import shutil
-import logging
 from .helper import create_dir_structure
 from pyupgrader.utilities.build import Builder, PathError, FolderCreationError, ConfigError, HashDBError
 
