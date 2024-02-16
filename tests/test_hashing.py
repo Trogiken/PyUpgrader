@@ -4,7 +4,49 @@ import hashlib
 import shutil
 import sqlite3
 from .helper import create_dir_structure
-from pyupgrader.utilities.hashing import Hasher, HashDB
+from pyupgrader.utilities.hashing import Hasher, HashDB, compare_databases, DBSummary
+
+class CompareDBTestCase(unittest.TestCase):
+    def setUp(self):
+        self.local_db_path = os.path.join(os.path.dirname(__file__), "local_hashes.db")
+        self.cloud_db_path = os.path.join(os.path.dirname(__file__), "cloud_hashes.db")
+
+        # Create local hash database
+        connection1 = sqlite3.connect(self.local_db_path)
+        cursor1 = connection1.cursor()
+        cursor1.execute("CREATE TABLE hashes (file_path TEXT, calculated_hash TEXT)")
+        cursor1.execute("INSERT INTO hashes VALUES (?, ?)", ("file1.txt", "hash1"))
+        cursor1.execute("INSERT INTO hashes VALUES (?, ?)", ("file2.txt", "hash2"))
+        connection1.commit()
+        connection1.close()
+
+        # Create cloud hash database
+        connection2 = sqlite3.connect(self.cloud_db_path)
+        cursor2 = connection2.cursor()
+        cursor2.execute("CREATE TABLE hashes (file_path TEXT, calculated_hash TEXT)")
+        cursor2.execute("INSERT INTO hashes VALUES (?, ?)", ("file1.txt", "hash1"))
+        cursor2.execute("INSERT INTO hashes VALUES (?, ?)", ("file3.txt", "hash3"))
+        connection2.commit()
+        connection2.close()
+
+    def tearDown(self):
+        os.remove(self.local_db_path)
+        os.remove(self.cloud_db_path)
+
+    def test_compare_databases(self):
+        expected_summary = DBSummary(
+            unique_files_local_db=["file2.txt"],
+            unique_files_cloud_db=["file3.txt"],
+            ok_files=[("file1.txt", "hash1")],
+            bad_files=[],
+        )
+
+        summary = compare_databases(self.local_db_path, self.cloud_db_path)
+
+        self.assertEqual(summary.unique_files_local_db, expected_summary.unique_files_local_db)
+        self.assertEqual(summary.unique_files_cloud_db, expected_summary.unique_files_cloud_db)
+        self.assertEqual(summary.ok_files, expected_summary.ok_files)
+        self.assertEqual(summary.bad_files, expected_summary.bad_files)
 
 class HashDBTestCase(unittest.TestCase):
     def setUp(self):
