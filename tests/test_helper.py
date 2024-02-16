@@ -183,6 +183,20 @@ class ConfigTestCase(unittest.TestCase):
 
         self.assertFalse(is_valid)
         self.assertEqual(error, 'Missing "required_only" attribute')
+    
+    def test_default_config_data(self):
+        # Test the default config data
+        config = Config()
+        expected_default_config_data = {
+            "version": "1.0.0",
+            "description": "Built with PyUpgrader",
+            "startup_path": "",
+            "required_only": False,
+            "cleanup": False,
+            "hash_db": "hash.db",
+        }
+
+        self.assertEqual(config.default_config_data, expected_default_config_data)
 
 if __name__ == "__main__":
     unittest.main()
