@@ -4,7 +4,46 @@ import hashlib
 import shutil
 import sqlite3
 from .helper import create_dir_structure
-from pyupgrader.utilities.hashing import Hasher
+from pyupgrader.utilities.hashing import Hasher, HashDB
+
+class HashDBTestCase(unittest.TestCase):
+    def setUp(self):
+        self.db_path = os.path.join(os.path.dirname(__file__), "test_hashes.db")
+        self.hash_db = HashDB(self.db_path)
+
+    def tearDown(self):
+        self.hash_db.close()
+        os.remove(self.db_path)
+
+    def test_get_file_paths(self):
+        # Insert test data into the database
+        connection = sqlite3.connect(self.db_path)
+        cursor = connection.cursor()
+        cursor.execute("CREATE TABLE hashes (file_path TEXT, calculated_hash TEXT)")
+        cursor.execute("INSERT INTO hashes VALUES (?, ?)", ("file1.txt", "hash1"))
+        cursor.execute("INSERT INTO hashes VALUES (?, ?)", ("file2.txt", "hash2"))
+        connection.commit()
+        connection.close()
+
+        # Test the get_file_paths method
+        expected_file_paths = ["file1.txt", "file2.txt"]
+        file_paths = list(self.hash_db.get_file_paths())
+        self.assertEqual(file_paths, expected_file_paths)
+
+    def test_get_file_hash(self):
+        # Insert test data into the database
+        connection = sqlite3.connect(self.db_path)
+        cursor = connection.cursor()
+        cursor.execute("CREATE TABLE hashes (file_path TEXT, calculated_hash TEXT)")
+        cursor.execute("INSERT INTO hashes VALUES (?, ?)", ("file1.txt", "hash1"))
+        cursor.execute("INSERT INTO hashes VALUES (?, ?)", ("file2.txt", "hash2"))
+        connection.commit()
+        connection.close()
+
+        # Test the get_file_hash method
+        expected_hash = "hash1"
+        file_hash = self.hash_db.get_file_hash("file1.txt")
+        self.assertEqual(file_hash, expected_hash)
 
 class HasherTestCase(unittest.TestCase):
     def setUp(self):
