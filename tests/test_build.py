@@ -5,8 +5,6 @@ import logging
 from .helper import create_dir_structure
 from pyupgrader.utilities.build import Builder, PathError, FolderCreationError, ConfigError, HashDBError
 
-LOGGER = logging.getLogger(__name__)
-
 class BuilderTestCase(unittest.TestCase):
     def setUp(self):
         # Create a temporary directory for testing
