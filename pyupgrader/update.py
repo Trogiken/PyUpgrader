@@ -74,8 +74,8 @@ class UpdateManager:
     """
 
     def __init__(self, url: str, project_path: str):
-        self._url = helper.normalize_paths(url)
-        self._project_path = helper.normalize_paths(project_path)
+        self._url = url
+        self._project_path = project_path
         self._pyupgrader_path = os.path.join(self._project_path, ".pyupgrader")
         self._config_path = os.path.join(self._pyupgrader_path, "config.yaml")
         self._local_hash_db_path = None  # Set in _validate_attributes
@@ -103,7 +103,7 @@ class UpdateManager:
         Args:
         - value (str): The URL to the .pyupgrader folder.
         """
-        self._url = helper.normalize_paths(value)
+        self._url = value
         self._web_man = helper.Web(self._url)
         self._validate_attributes()
 

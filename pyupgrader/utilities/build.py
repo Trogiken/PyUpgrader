@@ -142,9 +142,6 @@ class Builder:
         if self.project_path in self.exclude_paths:
             raise PathError("Folder path cannot be excluded")
 
-        self.project_path = helper.normalize_paths(self.project_path)
-        self.exclude_paths = helper.normalize_paths(self.exclude_paths)
-
         self._pyudpdate_folder = os.path.join(self.project_path, ".pyupgrader")
         self._config_path = os.path.join(self._pyudpdate_folder, "config.yaml")
         self._hash_db_path = os.path.join(self._pyudpdate_folder, "hashes.db")

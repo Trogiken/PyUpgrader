@@ -318,7 +318,7 @@ class Hasher:
 
             relative_file_path = helper.normalize_paths(
                 file_path.split(self.project_name)[-1]
-            ).lstrip("/")
+            ).lstrip("/")  # Remove leading slash and convert to relative path
             file_hash = hasher.hexdigest()
 
             return relative_file_path, file_hash

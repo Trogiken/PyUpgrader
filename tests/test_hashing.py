@@ -129,23 +129,22 @@ class HasherTestCase(unittest.TestCase):
         self.assertEqual(returned_db_save_path, expected_db_save_path)
         self.assertTrue(os.path.exists(db_save_path))
 
-        # validate db
-
         # hash file
-        file_path = os.path.join(self.test_dir, "file1.txt")  # created by create_dir_structure
+        file_path = os.path.join(self.test_dir, "dir1", "file2.txt")  # created by create_dir_structure
         with open(file_path, "rb") as file:
             file_content = file.read()
             file_hash = hashlib.sha256(file_content).hexdigest()
 
+        # validate the database
         connection = sqlite3.connect(db_save_path)
         cursor = connection.cursor()
         cursor.execute("SELECT * FROM hashes")
         rows = cursor.fetchall()
         self.assertEqual(len(rows), 3)
         # file1.txt
-        self.assertEqual(rows[0][0], "file1.txt")
+        self.assertEqual(rows[1][0], "dir1/file2.txt")
         # hash file
-        self.assertEqual(rows[0][1], file_hash)
+        self.assertEqual(rows[1][1], file_hash)
         connection.close()
 
 if __name__ == "__main__":
