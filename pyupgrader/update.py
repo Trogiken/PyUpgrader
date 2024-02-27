@@ -270,7 +270,7 @@ class UpdateManager:
         except Exception as error:
             raise GetFilesError from error
         finally:
-            if isinstance(cloud_db, hashing.HashDB):
+            if isinstance(cloud_db, type(hashing.HashDB)):
                 cloud_db.close()
             if db_temp_path:
                 shutil.rmtree(db_temp_path)
