@@ -251,6 +251,10 @@ class UpdateManager:
             cloud_hash_db_path = self._web_man.download_hash_db(
                 os.path.join(db_temp_path, "cloud_hashes.db")
             )
+
+            if not os.path.exists(cloud_hash_db_path):
+                raise FileNotFoundError(cloud_hash_db_path)
+
             cloud_db = hashing.HashDB(cloud_hash_db_path)
             compare_db = self.db_sum()
 
@@ -266,7 +270,7 @@ class UpdateManager:
         except Exception as error:
             raise GetFilesError from error
         finally:
-            if cloud_db is not None:
+            if isinstance(cloud_db, hashing.HashDB):
                 cloud_db.close()
             if db_temp_path:
                 shutil.rmtree(db_temp_path)

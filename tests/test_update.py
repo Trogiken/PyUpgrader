@@ -3,7 +3,7 @@ from os import path
 from tempfile import mkdtemp
 from unittest.mock import patch, MagicMock
 from pyupgrader.utilities.hashing import DBSummary
-from pyupgrader.update import UpdateManager, URLNotValidError
+from pyupgrader.update import UpdateManager, URLNotValidError, GetFilesError
 
 class UpdateManagerTestCase(unittest.TestCase):
     @patch('os.path.exists')
@@ -121,7 +121,66 @@ class UpdateManagerTestCase(unittest.TestCase):
         mock_compare_databases.assert_called()
         mock_shutil_rmtree.assert_called()
 
-    # TODO Add more test cases for the other methods...
+    @patch('tempfile.mkdtemp')
+    @patch('os.path.exists')
+    @patch('shutil.rmtree')
+    @patch('pyupgrader.update.helper.Config')
+    @patch('pyupgrader.utilities.hashing.HashDB')
+    @patch('pyupgrader.utilities.helper.Web')
+    def test_get_files(self, mock_web_man, mock_os_path_exists, mock_hashdb, mock_config, mock_rmtree, mock_mkdtemp):
+        # Mock return values and methods
+        mock_os_path_exists.return_value = True
+        mock_config.return_value.load_yaml.return_value = {"hash_db": "hashes.db"}
+        mock_web_man.download_hash_db.return_value = '/mock/cloud_hashes.db'
+        mock_hashdb_instance = MagicMock()
+        mock_hashdb.return_value = mock_hashdb_instance
+        mock_hashdb_instance.get_file_paths.return_value = ['file1.py', 'file2.py']
+        db_sum_mock = MagicMock()
+        db_sum_mock.bad_files = []
+        db_sum_mock.unique_files_cloud_db = ['file1.py', 'file2.py']
+        UpdateManager.db_sum = MagicMock(return_value=db_sum_mock)
+
+        # Create an instance of UpdateManager
+        update_manager = UpdateManager("http://example.com", "/path/to/project")
+
+        # Test case 1: get_files with updated_only=False
+        result = update_manager.get_files(updated_only=False)
+        self.assertEqual(result, ['file1.py', 'file2.py'])
+        mock_web_man.download_hash_db.assert_called_once()
+        mock_hashdb.assert_called_once_with('/mock/cloud_hashes.db')
+        mock_hashdb_instance.get_file_paths.assert_called_once()
+        UpdateManager.db_sum.assert_called_once()
+
+        # Test case 2: get_files with updated_only=True
+        mock_hashdb_instance.reset_mock()  # Reset call counts
+        db_sum_mock.unique_files_cloud_db = ['file1.py', 'file2.py']
+        db_sum_mock.bad_files = ['file2.py']
+        result = update_manager.get_files(updated_only=True)
+        self.assertEqual(result, ['file1.py'])  # 'file2.py' is in bad_files list
+        mock_web_man.download_hash_db.assert_called_once()
+        mock_hashdb.assert_called_once_with('/mock/cloud_hashes.db')
+        mock_hashdb_instance.get_file_paths.assert_not_called()  # Shouldn't call get_file_paths in updated_only mode
+        UpdateManager.db_sum.assert_called_once()
+
+        # Test case 3: Exception handling
+        mock_hashdb_instance.reset_mock()  # Reset call counts
+        mock_hashdb_instance.get_file_paths.side_effect = Exception('Some error')
+        with self.assertRaises(GetFilesError):
+            update_manager.get_files()
+        mock_web_man.download_hash_db.assert_called_once()
+        mock_hashdb.assert_called_once_with('/mock/cloud_hashes.db')
+        mock_hashdb_instance.get_file_paths.assert_called_once()
+        UpdateManager.db_sum.assert_not_called()  # Shouldn't call db_sum if an exception occurs
+
+        # Test case 4: Cleanup
+        mock_hashdb_instance.reset_mock()  # Reset call counts
+        mock_rmtree.side_effect = OSError('Some error')
+        with self.assertRaises(GetFilesError):
+            update_manager.get_files()
+        mock_web_man.download_hash_db.assert_called_once()
+        mock_hashdb.assert_called_once_with('/mock/cloud_hashes.db')
+        mock_hashdb_instance.get_file_paths.assert_called_once()
+        mock_rmtree.assert_called_once_with('/mock/temp_path')  # Verify rmtree called with correct path
 
 if __name__ == '__main__':
     unittest.main()
