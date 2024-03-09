@@ -130,7 +130,7 @@ class ConfigTestCase(unittest.TestCase):
     def test_write_yaml(self):
         # Test writing data to a yaml file
         config = Config()
-        path = "output.yaml"
+        path = os.path.join(os.path.dirname(__file__), "output.yaml")
         data = self.valid_config_data
 
         config.write_yaml(path, data)
@@ -139,6 +139,8 @@ class ConfigTestCase(unittest.TestCase):
         with open(path, "r", encoding="utf-8") as output_file:
             written_data = yaml.safe_load(output_file)
             self.assertEqual(written_data, data)
+        
+        os.remove(path)
 
     def test_valid_config(self):
         # Test validating a valid config

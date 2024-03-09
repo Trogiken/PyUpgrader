@@ -1,6 +1,0 @@
-cleanup: false
-description: Built with PyUpgrader
-hash_db: hash.db
-required_only: false
-startup_path: ''
-version: 1.0.0
