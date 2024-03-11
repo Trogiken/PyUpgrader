@@ -94,6 +94,18 @@ class Builder:
         self._config_path = None
         self._hash_db_path = None
 
+        # Input validation
+        if not isinstance(self.project_path, str):
+            raise TypeError("project_path must be a string")
+        if not isinstance(self.exclude_envs, bool):
+            raise TypeError("exclude_envs must be a boolean")
+        if not isinstance(self.exclude_hidden, bool):
+            raise TypeError("exclude_hidden must be a boolean")
+        if not isinstance(self.exclude_patterns, list):
+            raise TypeError("exclude_patterns must be a list")
+        if not isinstance(self.exclude_paths, list):
+            raise TypeError("exclude_paths must be a list")
+
     def build(self):
         """Builds a project into a pyupgrader project"""
         self._validate_paths()
@@ -129,9 +141,6 @@ class Builder:
             raise PathError(f'Folder "{self.project_path}" does not exist')
         if self.project_path in self.exclude_paths:
             raise PathError("Folder path cannot be excluded")
-
-        self.project_path = helper.normalize_paths(self.project_path)
-        self.exclude_paths = helper.normalize_paths(self.exclude_paths)
 
         self._pyudpdate_folder = os.path.join(self.project_path, ".pyupgrader")
         self._config_path = os.path.join(self._pyudpdate_folder, "config.yaml")

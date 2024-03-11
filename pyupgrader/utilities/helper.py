@@ -168,6 +168,13 @@ class Web:
         self._config_url = self._url + "/config.yaml"
         self._config_man = Config()
 
+    @property
+    def url(self) -> str:
+        """
+        URL to the .pyupgrader folder.
+        """
+        return self._url
+
     def get_request(self, url: str, timeout: int = 5) -> requests.Response:
         """
         Get a request from the specified URL.

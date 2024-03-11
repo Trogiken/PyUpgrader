@@ -74,8 +74,8 @@ class UpdateManager:
     """
 
     def __init__(self, url: str, project_path: str):
-        self._url = helper.normalize_paths(url)
-        self._project_path = helper.normalize_paths(project_path)
+        self._url = url
+        self._project_path = project_path
         self._pyupgrader_path = os.path.join(self._project_path, ".pyupgrader")
         self._config_path = os.path.join(self._pyupgrader_path, "config.yaml")
         self._local_hash_db_path = None  # Set in _validate_attributes
@@ -103,7 +103,7 @@ class UpdateManager:
         Args:
         - value (str): The URL to the .pyupgrader folder.
         """
-        self._url = helper.normalize_paths(value)
+        self._url = value
         self._web_man = helper.Web(self._url)
         self._validate_attributes()
 
@@ -251,6 +251,10 @@ class UpdateManager:
             cloud_hash_db_path = self._web_man.download_hash_db(
                 os.path.join(db_temp_path, "cloud_hashes.db")
             )
+
+            if not os.path.exists(cloud_hash_db_path):
+                raise FileNotFoundError(cloud_hash_db_path)
+
             cloud_db = hashing.HashDB(cloud_hash_db_path)
             compare_db = self.db_sum()
 
@@ -266,7 +270,7 @@ class UpdateManager:
         except Exception as error:
             raise GetFilesError from error
         finally:
-            if cloud_db is not None:
+            if isinstance(cloud_db, type(hashing.HashDB)):
                 cloud_db.close()
             if db_temp_path:
                 shutil.rmtree(db_temp_path)
