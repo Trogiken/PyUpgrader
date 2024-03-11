@@ -9,6 +9,8 @@ import datetime
 import traceback
 from time import sleep
 
+# TODO: Make log files for the update process
+
 
 def main():
     """

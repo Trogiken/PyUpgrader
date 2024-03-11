@@ -10,8 +10,12 @@ Classes:
 """
 
 from typing import List, Tuple, Union
+import logging
 import yaml
 import requests
+
+LOGGER = logging.getLogger(__name__)
+LOGGER.addHandler(logging.NullHandler())
 
 
 def normalize_paths(paths: Union[str, List[str]]) -> Union[str, List[str]]:

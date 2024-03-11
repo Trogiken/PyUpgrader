@@ -18,6 +18,7 @@ import logging
 from pyupgrader.utilities import helper, hashing
 
 LOGGER = logging.getLogger(__name__)
+LOGGER.addHandler(logging.NullHandler())
 
 
 class FolderCreationError(Exception):
