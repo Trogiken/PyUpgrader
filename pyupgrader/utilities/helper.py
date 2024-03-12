@@ -67,6 +67,12 @@ class Config:
             "hash_db": "hash.db",
         }
 
+    def __str__(self) -> str:
+        return "Config Helper"
+
+    def __repr__(self) -> str:
+        return "Config()"
+
     def load_yaml(self, path: str) -> dict:
         """
         Load a yaml file at path.
@@ -171,6 +177,12 @@ class Web:
         self._url = url
         self._config_url = self._url + "/config.yaml"
         self._config_man = Config()
+
+    def __str__(self) -> str:
+        return f"Web Manager for {self._url}"
+
+    def __repr__(self) -> str:
+        return f"Web(url={self._url})"
 
     @property
     def url(self) -> str:

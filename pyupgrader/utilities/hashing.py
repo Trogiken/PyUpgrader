@@ -57,6 +57,22 @@ class DBSummary:
     ok_files: list
     bad_files: list
 
+    def __str__(self) -> str:
+        return (
+            f"Unique files in local database: {len(self.unique_files_local_db)}\n"
+            f"Unique files in cloud database: {len(self.unique_files_cloud_db)}\n"
+            f"Files with matching hashes: {len(self.ok_files)}\n"
+            f"Files with different hashes: {len(self.bad_files)}"
+        )
+
+    def __repr__(self) -> str:
+        return (
+            f"DBSummary(unique_files_local_db={self.unique_files_local_db}, "
+            f"unique_files_cloud_db={self.unique_files_cloud_db}, "
+            f"ok_files={self.ok_files}, "
+            f"bad_files={self.bad_files})"
+        )
+
 
 def compare_databases(local_db_path: str, cloud_db_path: str) -> DBSummary:
     """
@@ -128,6 +144,12 @@ class HashDB:
         self.cursor = None
         self.open()
 
+    def __str__(self) -> str:
+        return f"HashDB object for '{self.db_path}'"
+
+    def __repr__(self) -> str:
+        return f"HashDB(db_path={self.db_path})"
+
     def get_file_paths(self) -> Generator[str, None, None]:
         """
         Generator that yields file paths from the database.
@@ -186,6 +208,12 @@ class Hasher:
 
     def __init__(self, project_name: str):
         self.project_name = project_name
+
+    def __str__(self) -> str:
+        return f"Hasher object for '{self.project_name}'"
+
+    def __repr__(self) -> str:
+        return f"Hasher(project_name={self.project_name})"
 
     def _create_hashes_table(self, cursor: sqlite3.Cursor) -> None:
         """
