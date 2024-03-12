@@ -345,7 +345,7 @@ class UpdateManager:
                     shutil.rmtree(db_tmp_path)
                     LOGGER.debug("Deleted '%s'", db_tmp_path)
                 else:
-                    LOGGER.warning("Tried deleting '%s' but did not exist", db_tmp_path) 
+                    LOGGER.warning("Tried deleting '%s' but did not exist", db_tmp_path)
         except Exception as e:
             LOGGER.exception("Error occurred while retrieving files from cloud database")
             raise e
@@ -487,7 +487,7 @@ class UpdateManager:
 
             # save actions to pickle file
             action_pkl = os.path.join(tmp_setting_dir, "actions.pkl")
-            
+
             LOGGER.debug("Action File Path: '%s'", action_pkl)
 
             with open(action_pkl, "wb") as file:
