@@ -160,8 +160,12 @@ class HashDB:
         """
         LOGGER.debug("Retrieving file paths from '%s'", self.db_path)
         self.cursor.execute("SELECT file_path FROM hashes")
-        for row in self.cursor.fetchall():
-            yield row[0]
+        try:
+            for row in self.cursor.fetchall():
+                yield row[0]
+        except Exception as e:
+            LOGGER.exception("Error retrieving file paths from '%s'", self.db_path)
+            raise e
 
     def get_file_hash(self, file_path: str) -> str:
         """
@@ -175,24 +179,38 @@ class HashDB:
         """
         LOGGER.debug("Retrieving hash for '%s'", file_path)
         self.cursor.execute("SELECT calculated_hash FROM hashes WHERE file_path = ?", (file_path,))
-        return self.cursor.fetchone()[0]
+        try:
+            return self.cursor.fetchone()[0]
+        except Exception as e:
+            LOGGER.exception("Error retrieving hash for '%s'", file_path)
+            raise e
 
     def open(self) -> None:
         """
         Opens the database connection.
         """
-        self.connection = sqlite3.connect(self.db_path)
-        self.cursor = self.connection.cursor()
-        LOGGER.debug("Opened database connection to '%s'", self.db_path)
+        LOGGER.debug("Opening database connection to '%s'", self.db_path)
+        try:
+            self.connection = sqlite3.connect(self.db_path)
+            self.cursor = self.connection.cursor()
+            LOGGER.debug("Database connection opened")
+        except Exception as e:
+            LOGGER.exception("Error opening database connection")
+            raise e
 
     def close(self) -> None:
         """
         Closes the database connection.
         """
-        self.connection.close()
-        self.connection = None
-        self.cursor = None
-        LOGGER.debug("Closed database connection to '%s'", self.db_path)
+        LOGGER.debug("Closing database connection to '%s'", self.db_path)
+        try:
+            self.connection.close()
+            self.connection = None
+            self.cursor = None
+            LOGGER.debug("Database connection closed")
+        except Exception as e:
+            LOGGER.exception("Error closing database connection")
+            raise e
 
 
 class Hasher:
@@ -229,11 +247,20 @@ class Hasher:
 
         Args:
         - cursor (sqlite3.Cursor): The database cursor.
+
+        Raises:
+        - Exception: If there is an error creating the table.
         """
-        cursor.execute(
-            "CREATE TABLE IF NOT EXISTS hashes "
-            "(file_path TEXT PRIMARY KEY, calculated_hash TEXT)"
-        )
+        LOGGER.debug("Starting to create 'hashes' table if it does not exist")
+        try:
+            cursor.execute(
+                "CREATE TABLE IF NOT EXISTS hashes "
+                "(file_path TEXT PRIMARY KEY, calculated_hash TEXT)"
+            )
+            LOGGER.debug("'hashes' table created successfully")
+        except Exception as e:
+            LOGGER.exception("Error creating 'hashes' table")
+            raise e
 
     def _process_batch_data(self, cursor: sqlite3.Cursor, batch_data: List[tuple]) -> None:
         """
@@ -244,15 +271,24 @@ class Hasher:
             The database cursor.
         - batch_data (List[tuple]):
             A list of tuples containing the relative file path and hash as a string.
+
+        Raises:
+        - Exception: If there is an error inserting the batch data.
         """
-        cursor.executemany(
-            "INSERT OR REPLACE INTO hashes (file_path, calculated_hash) VALUES (?, ?)",
-            batch_data,
-        )
+        LOGGER.debug("Processing batch data")
+        try:
+            cursor.executemany(
+                "INSERT OR REPLACE INTO hashes (file_path, calculated_hash) VALUES (?, ?)",
+                batch_data,
+            )
+            LOGGER.debug("Batch data inserted successfully.")
+        except Exception as e:
+            LOGGER.exception("Error inserting batch data")
+            raise e
 
     def _map_hashes_creation(self, pool: multiprc.Pool, file_paths: List[str]) -> List[tuple]:
         """
-        Use multiprocessing to create hashes for a list of file paths.
+        Create a map of hashes for a list of file paths.
 
         Args:
         - pool (multiprocessing.Pool):
@@ -263,7 +299,12 @@ class Hasher:
         Returns:
         - List[tuple]: A list of tuples containing the relative file path and hash as a string.
         """
-        return pool.map(self.create_hash, file_paths)
+        LOGGER.debug("Mapping hashes for %d files", len(file_paths) if file_paths else 0)
+        try:
+            return pool.map(self.create_hash, file_paths)
+        except Exception as e:
+            LOGGER.exception("Error mapping hashes creation")
+            raise e
 
     def _exclude_files_by_path(
         self, file_paths: List[str], exclude_file_paths: List[str]
@@ -280,7 +321,14 @@ class Hasher:
         Returns:
         - List[str]: A list of file paths that do not match any of the exclude file paths.
         """
-        return [path for path in file_paths if path not in exclude_file_paths]
+        LOGGER.debug(
+            "Excluding %d files by path", len(exclude_file_paths) if exclude_file_paths else 0
+        )
+        try:
+            return [path for path in file_paths if path not in exclude_file_paths]
+        except Exception as e:
+            LOGGER.exception("Error excluding files by path")
+            raise e
 
     def _exclude_files_by_pattern(
         self, file_paths: List[str], exclude_patterns: List[str]
@@ -297,11 +345,18 @@ class Hasher:
         Returns:
         - List[str]: A list of file paths that do not match any of the exclude patterns.
         """
-        return [
-            path
-            for path in file_paths
-            if not any(re.search(pattern, path) for pattern in exclude_patterns)
-        ]
+        LOGGER.debug(
+            "Excluding %d files by pattern", len(exclude_patterns) if exclude_patterns else 0
+        )
+        try:
+            return [
+                path
+                for path in file_paths
+                if not any(re.search(pattern, path) for pattern in exclude_patterns)
+            ]
+        except Exception as e:
+            LOGGER.exception("Error excluding files by pattern")
+            raise e
 
     def _should_exclude_directory(self, exclude_dir_paths: List[str], root: str) -> bool:
         """
@@ -317,14 +372,26 @@ class Hasher:
         Returns:
         - bool: True if the directory should be excluded, otherwise False.
         """
-        return any(
-            exclude_dir_path in helper.normalize_paths(root)
-            for exclude_dir_path in exclude_dir_paths
-        )
+        LOGGER.debug("Checking if '%s' should be excluded", root)
+        try:
+            return any(
+                exclude_dir_path in helper.normalize_paths(root)
+                for exclude_dir_path in exclude_dir_paths
+            )
+        except Exception as e:
+            LOGGER.exception("Error checking if directory should be excluded")
+            raise e
 
     def _should_exclude_directory_by_pattern(self, exclude_patterns: List[str], root: str) -> bool:
         """Check if the directory should be excluded based on the list of exclude patterns."""
-        return any(re.search(pattern, helper.normalize_paths(root)) for pattern in exclude_patterns)
+        LOGGER.debug("Check if '%s' should be excluded by pattern", root)
+        try:
+            return any(
+                re.search(pattern, helper.normalize_paths(root)) for pattern in exclude_patterns
+            )
+        except Exception as e:
+            LOGGER.exception("Error checking if directory should be excluded by pattern")
+            raise e
 
     def create_hash(self, file_path: str) -> Tuple[str, str]:
         """
@@ -340,12 +407,16 @@ class Hasher:
         Raises:
         - HashingError: If there is an error hashing the file.
         """
+        LOGGER.debug("Creating hash for '%s'", file_path)
         try:
             chunk_size = 4096
             file_size = os.path.getsize(file_path)
 
             if file_size > 1_000_000_000:  # If file size around 1 Gb or larger
                 chunk_size = 8192
+
+            LOGGER.debug("Chunk size: %d", chunk_size)
+            LOGGER.debug("File size: %d", file_size)
 
             hasher = hashlib.sha256()
 
@@ -363,8 +434,11 @@ class Hasher:
             )  # Remove leading slash and convert to relative path
             file_hash = hasher.hexdigest()
 
+            LOGGER.debug("Hash created for '%s'", file_path)
+
             return relative_file_path, file_hash
         except Exception as error:
+            LOGGER.exception("Error hashing '%s'", file_path)
             raise HashingError(f"Error hashing file '{file_path}'") from error
 
     def create_hash_db(
@@ -389,16 +463,23 @@ class Hasher:
         Returns:
         - str: The file path of the saved hash database.
         """
+        LOGGER.info("Creating hash database from directory: %s", hash_dir_path)
+
         if exclude_paths is None:
             exclude_paths = []
 
         if exclude_patterns is None:
             exclude_patterns = []
 
+        LOGGER.debug("Excluding paths: %s", exclude_paths)
+        LOGGER.debug("Excluding patterns: %s", exclude_patterns)
+
         if os.path.exists(db_save_path):
             try:
                 os.remove(db_save_path)
+                LOGGER.debug("Removed existing file '%s'", db_save_path)
             except Exception as error:
+                LOGGER.exception("Error removing existing file '%s'", db_save_path)
                 raise HashingError(f"Error removing existing file '{db_save_path}'") from error
 
         # separate files and directories from exclude_paths
@@ -407,8 +488,10 @@ class Hasher:
         exclude_dir_paths = [path for path in exclude_paths if os.path.isdir(path)]
 
         # Configure database
-        connection = sqlite3.connect(db_save_path)
-        cursor = connection.cursor()
+        hash_db = HashDB(db_save_path)
+        connection = hash_db.connection
+        cursor = hash_db.cursor
+
         self._create_hashes_table(cursor)
 
         # Batch size for parameterized queries
@@ -420,10 +503,10 @@ class Hasher:
             start_time = time.time()  # Start timer
             for root, dirs, files in os.walk(hash_dir_path):
                 # Skip excluded directories
-                if self._should_exclude_directory(exclude_dir_paths, root):
-                    dirs[:] = []  # Skip subdirectories
-                    continue
-                if self._should_exclude_directory_by_pattern(exclude_patterns, root):
+                if self._should_exclude_directory(
+                    exclude_dir_paths, root
+                ) or self._should_exclude_directory_by_pattern(exclude_patterns, root):
+                    LOGGER.debug("Skipping %s", root)
                     dirs[:] = []  # Skip subdirectories
                     continue
 
@@ -447,6 +530,7 @@ class Hasher:
                 self._process_batch_data(cursor, batch_data)
 
         connection.commit()
-        connection.close()
+        hash_db.close()
+        LOGGER.info("Hash database created and saved to '%s'", db_save_path)
 
         return db_save_path

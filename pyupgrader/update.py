@@ -397,6 +397,8 @@ class UpdateManager:
 
                 self._web_man.download(download_url, save_file)
 
+            LOGGER.info("Files downloaded to %s", save_path)
+
             return save_path
         except Exception as e:
             LOGGER.exception("Error occurred while downloading files from cloud")
@@ -492,6 +494,8 @@ class UpdateManager:
 
             with open(action_pkl, "wb") as file:
                 pickle.dump(update_details, file)
+
+            LOGGER.info("Update prepared at %s", file_dir)
 
             return action_pkl
         except Exception as e:

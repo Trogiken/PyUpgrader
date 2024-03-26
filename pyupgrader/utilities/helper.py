@@ -157,6 +157,8 @@ class Config:
 
         if not is_valid:
             LOGGER.warning("Invalid config: '%s'", error)
+        else:
+            LOGGER.debug("Config is valid")
 
         return is_valid, error
 
@@ -229,7 +231,6 @@ class Web:
         - dict: The parsed config file as a dictionary
         """
         LOGGER.debug("Getting config from '%s'", self._config_url)
-
         response = self.get_request(self._config_url)
         return self._config_man.loads_yaml(response.text)
 
