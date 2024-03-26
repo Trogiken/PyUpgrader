@@ -6,10 +6,25 @@ import pickle
 import shutil
 import sys
 import datetime
-import traceback
+import logging
 from time import sleep
 
-# TODO: Make log files for the update process
+# TODO only store up to 10 log files or only if a crash occurs
+
+dump_dir = os.path.join(os.path.dirname(__file__), "Update_Logs")
+os.makedirs(dump_dir, exist_ok=True)
+
+timestamp = datetime.datetime.now().strftime("%Y-%m-%d-%H_%M_%S")
+log_filename = f"update_{timestamp}.log"
+log_filepath = os.path.join(dump_dir, log_filename)
+
+handler = logging.FileHandler(f"update_{timestamp}.log")
+formatter = logging.Formatter("%(asctime)s | %(levelname)-8s | %(message)s")
+handler.setFormatter(formatter)
+
+LOGGER = logging.getLogger(__name__)
+LOGGER.addHandler(handler)
+LOGGER.setLevel(logging.debug)
 
 
 def main():
@@ -19,6 +34,8 @@ def main():
     Args:
         -a, --action: Path to the action file
     """
+    LOGGER.info("Update Utility Started")
+
     parser = argparse.ArgumentParser(description="Update Utility")
 
     parser.add_argument("-a", "--action", help="Path to the action file", required=True)
@@ -26,45 +43,61 @@ def main():
 
     sleep(1)
 
-    with open(args.action, "rb") as action_file:
-        update_details = pickle.load(action_file)
+    LOGGER.info("Loading action file at %s", args.action)
+    try:
+        with open(args.action, "rb") as action_file:
+            update_details = pickle.load(action_file)
 
-        update_files = update_details["update"]
-        del_files = update_details["delete"]
-        project_path = update_details["project_path"]
-        downloads_dir = update_details["downloads_directory"]
-        startup_path = update_details["startup_path"]
-        cloud_config_path = update_details["cloud_config_path"]
-        cloud_hash_db_path = update_details["cloud_hash_db_path"]
-        cleanup = update_details["cleanup"]
+            update_files = update_details["update"]
+            del_files = update_details["delete"]
+            project_path = update_details["project_path"]
+            downloads_dir = update_details["downloads_directory"]
+            startup_path = update_details["startup_path"]
+            cloud_config_path = update_details["cloud_config_path"]
+            cloud_hash_db_path = update_details["cloud_hash_db_path"]
+            cleanup = update_details["cleanup"]
+        LOGGER.debug("Update Details: %s", update_details)
+    except Exception as file_error:
+        LOGGER.exception("Failed to load action file")
+        raise Exception("Failed to load action file") from file_error
+    LOGGER.info("Action file loaded successfully")
 
-    # Update the files
+    LOGGER.info("Updating %d files...", len(update_files))
+    # Copy/Overwrite files
     for file in update_files:
-        # Copy/Overwrite files
         source = os.path.join(downloads_dir, file)
         destination = os.path.join(project_path, file)
         os.makedirs(os.path.dirname(destination), exist_ok=True)
         if os.path.exists(destination):
             os.remove(destination)
+            LOGGER.debug("Removed existing file at %s", destination)
         shutil.copy(source, destination)
+        LOGGER.debug("Copied file from %s to %s", source, destination)
+    LOGGER.info("Updated %d files successfully", len(update_files))
 
+    LOGGER.info("Deleting %d files...", len(del_files))
+    # Delete files
     for file in del_files:
-        # Delete files
         destination = os.path.join(project_path, file)
         if os.path.exists(destination):
             os.remove(destination)
+            LOGGER.debug("Removed %s", destination)
 
         # Delete directory if empty
         dir_path = os.path.dirname(destination)
         if not os.listdir(dir_path):
             os.rmdir(dir_path)
+            LOGGER.debug("Removed empty directory at %s", dir_path)
+    LOGGER.info("Deleted %d files successfully", len(del_files))
 
+    LOGGER.info("Updating config and hash db...")
     # Replace config and hash db
     if os.path.exists(cloud_config_path):
         source = cloud_config_path
         destination = os.path.join(project_path, ".pyupgrader", os.path.basename(cloud_config_path))
         os.remove(destination)
         shutil.copy(source, destination)
+        LOGGER.debug("Copied cloud config from %s to %s", source, destination)
     else:
         raise FileNotFoundError(f"Cloud config not found at '{cloud_config_path}'")
 
@@ -75,11 +108,16 @@ def main():
         )
         os.remove(destination)
         shutil.copy(source, destination)
+        LOGGER.debug("Copied cloud hash db from %s to %s", source, destination)
     else:
         raise FileNotFoundError(f"Cloud hash db not found at '{cloud_hash_db_path}'")
+    LOGGER.info("Updated config and hash db successfully")
 
     if cleanup:
         shutil.rmtree(downloads_dir)
+        LOGGER.info("Cleaned up downloads directory at %s", downloads_dir)
+
+    LOGGER.info("Update completed successfully. Restarting application...")
 
     # Start the application
     os.execv(sys.executable, [sys.executable, startup_path])
@@ -89,12 +127,5 @@ if __name__ == "__main__":
     try:
         main()
     except Exception as e:
-        # Create crash dump and raise exception
-        timestamp = datetime.datetime.now().strftime("%Y-%m-%d-%H_%M_%S")
-        dump_dir = os.path.join(os.path.dirname(__file__), "crash_dump")
-        os.makedirs(dump_dir, exist_ok=True)
-        crash_file = os.path.join(os.path.dirname(__file__), "crash_dump", f"{timestamp}.txt")
-        with open(crash_file, "w", encoding="utf-8") as f:
-            f.write(traceback.format_exc())
-
-        raise Exception(f"Update failed. Crash file created at {crash_file}") from e
+        LOGGER.exception("Update failed")
+        raise Exception(f"Update failed. Crash file created at {log_filepath}") from e
