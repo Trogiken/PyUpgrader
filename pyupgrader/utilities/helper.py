@@ -156,7 +156,7 @@ class Config:
             is_valid = False
 
         if not is_valid:
-            LOGGER.warning("Invalid config: %s", error)
+            LOGGER.warning("Invalid config: '%s'", error)
 
         return is_valid, error
 

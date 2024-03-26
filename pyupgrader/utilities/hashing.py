@@ -10,7 +10,7 @@ Classes:
 - Hasher: A class that provides methods for hashing files and creating hash databases.
 
 Functions:
-- compare_databases(local_db_path: str, cloud_db_path: str) -> DBSummary
+- compare_databases(db1: str, db2: str) -> DBSummary
 
 Exceptions:
 - HashingError: Exception raised for errors in the hashing process.
@@ -74,21 +74,25 @@ class DBSummary:
         )
 
 
-def compare_databases(local_db_path: str, cloud_db_path: str) -> DBSummary:
+def compare_databases(db1_path: str, db2_path: str) -> DBSummary:
     """
     Compare two hash databases and return a summary of the differences.
 
     Args:
-    - local_db_path (str): The file path of the local hash database.
-    - cloud_db_path (str): The file path of the cloud hash database.
+    - db1_path (str): The file path of the first hash database.
+    - db2_path (str): The file path of the second hash database.
 
     Returns:
     - DBSummary: An object containing the summary of the differences between the two databases.
     """
-    connection1 = sqlite3.connect(local_db_path)
+    LOGGER.info("Comparing hash databases")
+    LOGGER.debug("DB 1 Path: '%s'", db1_path)
+    LOGGER.debug("DB 2 Path: '%s'", db2_path)
+
+    connection1 = sqlite3.connect(db1_path)
     cursor1 = connection1.cursor()
 
-    connection2 = sqlite3.connect(cloud_db_path)
+    connection2 = sqlite3.connect(db2_path)
     cursor2 = connection2.cursor()
 
     cursor1.execute("SELECT file_path, calculated_hash FROM hashes")
@@ -154,6 +158,7 @@ class HashDB:
         """
         Generator that yields file paths from the database.
         """
+        LOGGER.debug("Retrieving file paths from '%s'", self.db_path)
         self.cursor.execute("SELECT file_path FROM hashes")
         for row in self.cursor.fetchall():
             yield row[0]
@@ -168,6 +173,7 @@ class HashDB:
         Returns:
         - str: The hash of the file.
         """
+        LOGGER.debug("Retrieving hash for '%s'", file_path)
         self.cursor.execute("SELECT calculated_hash FROM hashes WHERE file_path = ?", (file_path,))
         return self.cursor.fetchone()[0]
 
@@ -177,6 +183,7 @@ class HashDB:
         """
         self.connection = sqlite3.connect(self.db_path)
         self.cursor = self.connection.cursor()
+        LOGGER.debug("Opened database connection to '%s'", self.db_path)
 
     def close(self) -> None:
         """
@@ -185,6 +192,7 @@ class HashDB:
         self.connection.close()
         self.connection = None
         self.cursor = None
+        LOGGER.debug("Closed database connection to '%s'", self.db_path)
 
 
 class Hasher:
