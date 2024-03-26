@@ -18,16 +18,42 @@ timestamp = datetime.datetime.now().strftime("%Y-%m-%d-%H_%M_%S")
 log_filename = f"update_{timestamp}.log"
 log_filepath = os.path.join(dump_dir, log_filename)
 
-handler = logging.FileHandler(f"update_{timestamp}.log")
+handler = logging.FileHandler(log_filepath)
 formatter = logging.Formatter("%(asctime)s | %(levelname)-8s | %(message)s")
 handler.setFormatter(formatter)
 
 LOGGER = logging.getLogger(__name__)
 LOGGER.addHandler(handler)
-LOGGER.setLevel(logging.debug)
+LOGGER.setLevel(logging.DEBUG)
 
 
 # TODO Create exception classes for errors in update process
+class LoadActionError(Exception):
+    """Error occured while loading action file."""
+
+
+class MergeError(Exception):
+    """Error occurred while merging files."""
+
+
+class DeleteError(Exception):
+    """Error occurred while deleting files."""
+
+
+class ConfigOverwriteError(Exception):
+    """Error occurred while overwritting the config."""
+
+
+class DBOverwriteError(Exception):
+    """Error occurred while overwritting the hash database."""
+
+
+class GatherDetailsError(Exception):
+    """Error occurred while gathering update details."""
+
+
+class UpdateError(Exception):
+    """Error occurred while updating"""
 
 
 def load_action_file(action_file_path: str):
@@ -39,6 +65,9 @@ def load_action_file(action_file_path: str):
 
     Returns:
         dict: Update details
+    
+    Raises:
+        LoadActionError: Error occurred while loading action file
     """
     LOGGER.info("Loading action file at %s", action_file_path)
     try:
@@ -47,20 +76,23 @@ def load_action_file(action_file_path: str):
         LOGGER.info("Action file loaded successfully")
         return update_details
     except Exception as file_error:
-        LOGGER.exception("Failed to load action file")
-        raise Exception("Failed to load action file") from file_error
+        LOGGER.error("Failed to load action file")
+        raise LoadActionError("Failed to load action file") from file_error
 
 
-def update_files(changed_files: list, project_path: str, downloads_dir: str):
+def merge_files(changed_files: list, project_path: str, downloads_dir: str):
     """
-    Update the files in the project directory.
+    Overwrite the files in the project directory.
 
     Args:
-        update_files (list): List of files to update
+        changed_files (list): List of files to overwrite or add
         project_path (str): Path to the project directory
         downloads_dir (str): Path to the downloads directory
+    
+    Raises:
+        MergeError: Error occurred while merging files
     """
-    LOGGER.info("Updating %d files...", len(changed_files))
+    LOGGER.info("Merging %d files...", len(changed_files))
     try:
         for file in changed_files:
             source = os.path.join(downloads_dir, file)
@@ -72,9 +104,9 @@ def update_files(changed_files: list, project_path: str, downloads_dir: str):
             shutil.copy(source, destination)
             LOGGER.debug("Copied file from %s to %s", source, destination)
     except Exception as update_error:
-        LOGGER.exception("Error occurred while updating files")
-        raise Exception("Error occurred while updating files") from update_error
-    LOGGER.info("Updated %d files successfully", len(changed_files))
+        LOGGER.error("Error occurred while merging files")
+        raise MergeError("Error occurred while merging files") from update_error
+    LOGGER.info("Merged %d files successfully", len(changed_files))
 
 
 def delete_files(del_files: list, project_path: str):
@@ -84,6 +116,9 @@ def delete_files(del_files: list, project_path: str):
     Args:
         del_files (list): List of files to delete
         project_path (str): Path to the project directory
+    
+    Raises:
+        DeleteError: Error occurred while deleting files
     """
     LOGGER.info("Deleting %d files...", len(del_files))
     try:
@@ -99,37 +134,52 @@ def delete_files(del_files: list, project_path: str):
                 os.rmdir(dir_path)
                 LOGGER.debug("Removed empty directory at %s", dir_path)
     except Exception as delete_error:
-        LOGGER.exception("Error occurred while deleting files")
-        raise Exception("Error occurred while deleting files") from delete_error
+        LOGGER.error("Error occurred while deleting files")
+        raise DeleteError("Error occurred while deleting files") from delete_error
     LOGGER.info("Deleted %d files successfully", len(del_files))
 
 
-def update_config_and_hash_db(cloud_config_path: str, cloud_hash_db_path: str, project_path: str):
+def overwrite_config(cloud_config_path: str, project_path: str):
     """
-    Update the cloud config and hash db in the project directory.
+    Update the cloud config in the project directory.
 
     Args:
         cloud_config_path (str): Path to the cloud config file
-        cloud_hash_db_path (str): Path to the cloud hash db file
         project_path (str): Path to the project directory
+    
+    Raises:
+        ConfigOverwriteError: Error occurred while overwriting config
     """
-    LOGGER.info("Updating config and hash db...")
+    LOGGER.info("Overwriting config...")
     try:
         if os.path.exists(cloud_config_path):
             source = cloud_config_path
-            destination = os.path.join(project_path,
-                                       ".pyupgrader",
-                                       os.path.basename(cloud_config_path)
-                                    )
+            destination = os.path.join(
+                project_path, ".pyupgrader", os.path.basename(cloud_config_path)
+            )
             os.remove(destination)
             shutil.copy(source, destination)
             LOGGER.debug("Copied cloud config from %s to %s", source, destination)
         else:
             raise FileNotFoundError(f"Cloud config not found at '{cloud_config_path}'")
-    except Exception as config_update_error:
-        LOGGER.exception("Error occurred while updating config and hash db")
-        raise Exception("Error occurred while updating config and hash db") from config_update_error
+    except Exception as config_error:
+        LOGGER.error("Error occurred while overwriting config")
+        raise ConfigOverwriteError("Error occurred while overwriting config") from config_error
+    LOGGER.info("Overwritten config successfully")
 
+
+def overwrite_hash_db(cloud_hash_db_path: str, project_path: str):
+    """
+    Update the cloud hash database in the project directory.
+
+    Args:
+        cloud_hash_db_path (str): Path to the cloud hash database file
+        project_path (str): Path to the project directory
+    
+    Raises:
+        DBOverwriteError: Error occurred while overwriting hash database
+    """
+    LOGGER.info("Overwriting hash database...")
     try:
         if os.path.exists(cloud_hash_db_path):
             source = cloud_hash_db_path
@@ -141,11 +191,11 @@ def update_config_and_hash_db(cloud_config_path: str, cloud_hash_db_path: str, p
             LOGGER.debug("Copied cloud hash db from %s to %s", source, destination)
         else:
             raise FileNotFoundError(f"Cloud hash db not found at '{cloud_hash_db_path}'")
-    except Exception as db_update_error:
-        LOGGER.exception("Error occurred while updating config and hash db")
-        raise Exception("Error occurred while updating config and hash db") from db_update_error
+    except Exception as db_error:
+        LOGGER.error("Error occurred while overwriting the hash database")
+        raise DBOverwriteError("Error occurred while overwriting the hash database") from db_error
+    LOGGER.info("Overwritten hash database successfully")
 
-    LOGGER.info("Updated config and hash db successfully")
 
 def main():
     """
@@ -177,14 +227,15 @@ def main():
         cleanup = update_details["cleanup"]
         LOGGER.debug("Update Details: %s", update_details)
     except Exception as details_error:
-        LOGGER.exception("Error occurred while gathering update details")
-        raise Exception("Error occurred while gathering update details") from details_error
+        LOGGER.error("Error occurred while gathering update details")
+        raise GatherDetailsError("Error occurred while gathering update details") from details_error
     LOGGER.info("Update details gathered successfully")
 
     # Call update functions
-    update_files(changed_files, project_path, downloads_dir)
+    merge_files(changed_files, project_path, downloads_dir)
     delete_files(del_files, project_path)
-    update_config_and_hash_db(cloud_config_path, cloud_hash_db_path, project_path)
+    overwrite_config(cloud_config_path, project_path)
+    overwrite_hash_db(cloud_hash_db_path, project_path)
 
     if cleanup:
         shutil.rmtree(downloads_dir)
@@ -201,4 +252,4 @@ if __name__ == "__main__":
         main()
     except Exception as e:
         LOGGER.exception("Update failed")
-        raise Exception(f"Update failed. Crash file created at {log_filepath}") from e
+        raise UpdateError(f"Update failed. Crash file created at {log_filepath}") from e
