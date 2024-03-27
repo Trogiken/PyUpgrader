@@ -206,7 +206,7 @@ class WebTestCase(unittest.TestCase):
         url = "https://example.com/nonexistent"
         responses.add(responses.GET, url, status=404)
 
-        with self.assertRaises(requests.ConnectionError):
+        with self.assertRaises(Exception):
             self.web.get_request(url)
 
     @responses.activate

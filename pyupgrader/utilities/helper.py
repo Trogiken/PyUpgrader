@@ -10,8 +10,12 @@ Classes:
 """
 
 from typing import List, Tuple, Union
+import logging
 import yaml
 import requests
+
+LOGGER = logging.getLogger(__name__)
+LOGGER.addHandler(logging.NullHandler())
 
 
 def normalize_paths(paths: Union[str, List[str]]) -> Union[str, List[str]]:
@@ -63,6 +67,12 @@ class Config:
             "hash_db": "hash.db",
         }
 
+    def __str__(self) -> str:
+        return "Config Helper"
+
+    def __repr__(self) -> str:
+        return "Config()"
+
     def load_yaml(self, path: str) -> dict:
         """
         Load a yaml file at path.
@@ -73,6 +83,7 @@ class Config:
         Returns:
         - dict: The data loaded from the yaml file.
         """
+        LOGGER.debug("Loading yaml file at '%s'", path)
         with open(path, "r", encoding="utf-8") as config_file:
             data = yaml.safe_load(config_file)
             is_valid, error = self._valid_config(data)
@@ -90,6 +101,7 @@ class Config:
         Returns:
         - dict: The data loaded from the yaml string.
         """
+        LOGGER.debug("Loading yaml from string")
         data = yaml.safe_load(yaml_string)
         is_valid, error = self._valid_config(data)
         if not is_valid:
@@ -104,6 +116,7 @@ class Config:
         - path (str): The path to the yaml file.
         - data (dict): The data to dump to the yaml file.
         """
+        LOGGER.debug("Writing yaml file at '%s'", path)
         with open(path, "w", encoding="utf-") as config_file:
             yaml.safe_dump(data, config_file)
 
@@ -119,6 +132,7 @@ class Config:
             Boolean indicating if the config is valid.
             String describing the error if it is not valid.
         """
+        LOGGER.debug("Validating config")
         error = ""
         is_valid = True
 
@@ -140,6 +154,11 @@ class Config:
         elif "cleanup" not in config:
             error = 'Missing "cleanup" attribute'
             is_valid = False
+
+        if not is_valid:
+            LOGGER.warning("Invalid config: '%s'", error)
+        else:
+            LOGGER.debug("Config is valid")
 
         return is_valid, error
 
@@ -168,6 +187,12 @@ class Web:
         self._config_url = self._url + "/config.yaml"
         self._config_man = Config()
 
+    def __str__(self) -> str:
+        return f"Web Manager for {self._url}"
+
+    def __repr__(self) -> str:
+        return f"Web(url={self._url})"
+
     @property
     def url(self) -> str:
         """
@@ -193,7 +218,8 @@ class Web:
             response = requests.get(url, timeout=timeout)
             response.raise_for_status()
         except Exception as e:
-            raise requests.ConnectionError(f"Url: '{url}'") from e
+            LOGGER.exception("Failed to get request from '%s'", url)
+            raise e
 
         return response
 
@@ -204,6 +230,7 @@ class Web:
         Returns:
         - dict: The parsed config file as a dictionary
         """
+        LOGGER.debug("Getting config from '%s'", self._config_url)
         response = self.get_request(self._config_url)
         return self._config_man.loads_yaml(response.text)
 
@@ -218,8 +245,9 @@ class Web:
         Returns:
         - str: The save path of the downloaded file
         """
-        response = self.get_request(url_path)
+        LOGGER.debug("Downloading '%s' to '%s'", url_path, save_path)
 
+        response = self.get_request(url_path)
         with open(save_path, "wb") as f:
             f.write(response.content)
 
@@ -236,4 +264,7 @@ class Web:
         - str: The save path of the downloaded hash database file
         """
         config = self.get_config()
-        return self.download(self._url + "/" + config["hash_db"], save_path)
+        db_name = config["hash_db"]
+        LOGGER.debug("DB Name: '%s'", db_name)
+
+        return self.download(self._url + "/" + db_name, save_path)
