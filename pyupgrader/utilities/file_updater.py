@@ -27,7 +27,6 @@ LOGGER.addHandler(handler)
 LOGGER.setLevel(logging.DEBUG)
 
 
-# TODO Create exception classes for errors in update process
 class LoadActionError(Exception):
     """Error occured while loading action file."""
 
@@ -65,7 +64,7 @@ def load_action_file(action_file_path: str):
 
     Returns:
         dict: Update details
-    
+
     Raises:
         LoadActionError: Error occurred while loading action file
     """
@@ -88,7 +87,7 @@ def merge_files(changed_files: list, project_path: str, downloads_dir: str):
         changed_files (list): List of files to overwrite or add
         project_path (str): Path to the project directory
         downloads_dir (str): Path to the downloads directory
-    
+
     Raises:
         MergeError: Error occurred while merging files
     """
@@ -116,7 +115,7 @@ def delete_files(del_files: list, project_path: str):
     Args:
         del_files (list): List of files to delete
         project_path (str): Path to the project directory
-    
+
     Raises:
         DeleteError: Error occurred while deleting files
     """
@@ -146,7 +145,7 @@ def overwrite_config(cloud_config_path: str, project_path: str):
     Args:
         cloud_config_path (str): Path to the cloud config file
         project_path (str): Path to the project directory
-    
+
     Raises:
         ConfigOverwriteError: Error occurred while overwriting config
     """
@@ -175,7 +174,7 @@ def overwrite_hash_db(cloud_hash_db_path: str, project_path: str):
     Args:
         cloud_hash_db_path (str): Path to the cloud hash database file
         project_path (str): Path to the project directory
-    
+
     Raises:
         DBOverwriteError: Error occurred while overwriting hash database
     """
