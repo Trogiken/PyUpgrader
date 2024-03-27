@@ -9,10 +9,17 @@ import datetime
 import logging
 from time import sleep
 
-# TODO only store up to 10 log files or only if a crash occurs
-
 dump_dir = os.path.join(os.path.dirname(__file__), "Update_Logs")
 os.makedirs(dump_dir, exist_ok=True)
+
+# Check if log file limit is exceeded
+FILE_LIMIT = 10
+log_files = os.listdir(dump_dir)
+if len(log_files) >= FILE_LIMIT:
+    log_files.sort()  # Sort by creation time
+    # Remove oldest logs until the limit is satisfied
+    for _ in range((len(log_files) - FILE_LIMIT) + 1):  # +1 to account for the latest log
+        os.remove(os.path.join(dump_dir, log_files.pop(0)))  # Remove the oldest log
 
 timestamp = datetime.datetime.now().strftime("%Y-%m-%d-%H_%M_%S")
 log_filename = f"update_{timestamp}.log"
@@ -75,7 +82,6 @@ def load_action_file(action_file_path: str):
         LOGGER.info("Action file loaded successfully")
         return update_details
     except Exception as file_error:
-        LOGGER.error("Failed to load action file")
         raise LoadActionError("Failed to load action file") from file_error
 
 
@@ -103,7 +109,6 @@ def merge_files(changed_files: list, project_path: str, downloads_dir: str):
             shutil.copy(source, destination)
             LOGGER.debug("Copied file from %s to %s", source, destination)
     except Exception as update_error:
-        LOGGER.error("Error occurred while merging files")
         raise MergeError("Error occurred while merging files") from update_error
     LOGGER.info("Merged %d files successfully", len(changed_files))
 
@@ -133,7 +138,6 @@ def delete_files(del_files: list, project_path: str):
                 os.rmdir(dir_path)
                 LOGGER.debug("Removed empty directory at %s", dir_path)
     except Exception as delete_error:
-        LOGGER.error("Error occurred while deleting files")
         raise DeleteError("Error occurred while deleting files") from delete_error
     LOGGER.info("Deleted %d files successfully", len(del_files))
 
@@ -156,13 +160,15 @@ def overwrite_config(cloud_config_path: str, project_path: str):
             destination = os.path.join(
                 project_path, ".pyupgrader", os.path.basename(cloud_config_path)
             )
-            os.remove(destination)
+            if not os.path.exists(destination):
+                LOGGER.warning("Local config file not found")
+            else:
+                os.remove(destination)
             shutil.copy(source, destination)
             LOGGER.debug("Copied cloud config from %s to %s", source, destination)
         else:
             raise FileNotFoundError(f"Cloud config not found at '{cloud_config_path}'")
     except Exception as config_error:
-        LOGGER.error("Error occurred while overwriting config")
         raise ConfigOverwriteError("Error occurred while overwriting config") from config_error
     LOGGER.info("Overwritten config successfully")
 
@@ -185,13 +191,15 @@ def overwrite_hash_db(cloud_hash_db_path: str, project_path: str):
             destination = os.path.join(
                 project_path, ".pyupgrader", os.path.basename(cloud_hash_db_path)
             )
-            os.remove(destination)
+            if not os.path.exists(destination):
+                LOGGER.warning("Local hash database not found")
+            else:
+                os.remove(destination)
             shutil.copy(source, destination)
             LOGGER.debug("Copied cloud hash db from %s to %s", source, destination)
         else:
             raise FileNotFoundError(f"Cloud hash db not found at '{cloud_hash_db_path}'")
     except Exception as db_error:
-        LOGGER.error("Error occurred while overwriting the hash database")
         raise DBOverwriteError("Error occurred while overwriting the hash database") from db_error
     LOGGER.info("Overwritten hash database successfully")
 
@@ -212,7 +220,7 @@ def main():
 
     sleep(1)
 
-    LOGGER.info("Gathering update details")
+    LOGGER.info("Gathering update details...")
     try:
         update_details = load_action_file(args.action)
 
@@ -226,7 +234,6 @@ def main():
         cleanup = update_details["cleanup"]
         LOGGER.debug("Update Details: %s", update_details)
     except Exception as details_error:
-        LOGGER.error("Error occurred while gathering update details")
         raise GatherDetailsError("Error occurred while gathering update details") from details_error
     LOGGER.info("Update details gathered successfully")
 
@@ -239,6 +246,8 @@ def main():
     if cleanup:
         shutil.rmtree(downloads_dir)
         LOGGER.info("Cleaned up downloads directory at %s", downloads_dir)
+    else:
+        LOGGER.info("Downloads directory left at %s", downloads_dir)
 
     LOGGER.info("Update completed successfully. Restarting application...")
 
