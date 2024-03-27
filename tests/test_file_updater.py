@@ -105,12 +105,9 @@ class FileUpdaterTestCase(unittest.TestCase):
 
     # def test_load_action_file_error(self):
     #     # Test if LoadActionError is raised when loading action file fails
-    #     with mock.patch.object(sys, "executable", "python"):
-    #         with mock.patch.object(os, "execv"):
-    #             with mock.patch("argparse.ArgumentParser.parse_args", return_value=argparse.Namespace(action=self.action_file_path)):
-    #                 with mock.patch("builtins.open", side_effect=Exception("Failed to load file")):
-    #                     with self.assertRaises(LoadActionError):
-    #                         main()
+    #     with mock.patch("builtins.open", side_effect=Exception("Failed to load file")):
+    #         with self.assertRaises(LoadActionError):
+    #             main()
 
     # def test_merge_files_error(self):
     #     # Test if MergeError is raised when merging files fails
