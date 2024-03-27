@@ -56,6 +56,10 @@ def cli():
 
     log_format = "%(asctime)s | %(levelname)-8s | %(message)s"
     logging.basicConfig(level=args.log, format=log_format, datefmt="%H:%M:%S")
+    # Set the log level of the root logger to CRITICAL
+    logging.getLogger().setLevel(logging.CRITICAL)
+    # Set the log level of the 'build' logger
+    logging.getLogger('build').setLevel(args.log)
 
     try:
         builder = util.Builder(
