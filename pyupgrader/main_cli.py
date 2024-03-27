@@ -59,11 +59,11 @@ def cli():
 
     # Set the log level of the 'hashing' logger
     if args.log == "DEBUG":
-        logging.getLogger('pyupgrader.utilities.hashing').setLevel(logging.DEBUG)
+        logging.getLogger("pyupgrader.utilities.hashing").setLevel(logging.DEBUG)
     else:
-        logging.getLogger('pyupgrader.utilities.hashing').setLevel(logging.ERROR)
+        logging.getLogger("pyupgrader.utilities.hashing").setLevel(logging.ERROR)
     # Set the log level of the 'build' logger
-    logging.getLogger('pyupgrader.utilities.build').setLevel(args.log)
+    logging.getLogger("pyupgrader.utilities.build").setLevel(args.log)
 
     try:
         builder = util.Builder(

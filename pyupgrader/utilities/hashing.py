@@ -157,6 +157,12 @@ class HashDB:
     def get_file_paths(self) -> Generator[str, None, None]:
         """
         Generator that yields file paths from the database.
+
+        Yields:
+        - str: The file path.
+
+        Raises:
+        - Exception: If there is an error retrieving file paths from the database.
         """
         LOGGER.debug("Retrieving file paths from '%s'", self.db_path)
         self.cursor.execute("SELECT file_path FROM hashes")
@@ -176,6 +182,9 @@ class HashDB:
 
         Returns:
         - str: The hash of the file.
+
+        Raises:
+        - Exception: If there is an error retrieving the hash.
         """
         LOGGER.debug("Retrieving hash for '%s'", file_path)
         self.cursor.execute("SELECT calculated_hash FROM hashes WHERE file_path = ?", (file_path,))
@@ -188,6 +197,9 @@ class HashDB:
     def open(self) -> None:
         """
         Opens the database connection.
+
+        Raises:
+        - Exception: If there is an error opening the database connection.
         """
         LOGGER.debug("Opening database connection to '%s'", self.db_path)
         try:
@@ -201,6 +213,9 @@ class HashDB:
     def close(self) -> None:
         """
         Closes the database connection.
+
+        Raises:
+        - Exception: If there is an error closing the database connection.
         """
         LOGGER.debug("Closing database connection to '%s'", self.db_path)
         try:
@@ -298,6 +313,9 @@ class Hasher:
 
         Returns:
         - List[tuple]: A list of tuples containing the relative file path and hash as a string.
+
+        Raises:
+        - Exception: If there is an error mapping hashes creation.
         """
         LOGGER.debug("Mapping hashes for %d files", len(file_paths) if file_paths else 0)
         try:
@@ -320,6 +338,9 @@ class Hasher:
 
         Returns:
         - List[str]: A list of file paths that do not match any of the exclude file paths.
+
+        Raises:
+        - Exception: If there is an error excluding files by path.
         """
         LOGGER.debug(
             "Excluding %d files by path", len(exclude_file_paths) if exclude_file_paths else 0
@@ -344,6 +365,9 @@ class Hasher:
 
         Returns:
         - List[str]: A list of file paths that do not match any of the exclude patterns.
+
+        Raises:
+        - Exception: If there is an error excluding files by pattern.
         """
         LOGGER.debug(
             "Excluding %d files by pattern", len(exclude_patterns) if exclude_patterns else 0
@@ -371,6 +395,9 @@ class Hasher:
 
         Returns:
         - bool: True if the directory should be excluded, otherwise False.
+
+        Raises:
+        - Exception: If there is an error checking if the directory should be excluded.
         """
         LOGGER.debug("Checking if '%s' should be excluded", root)
         try:
@@ -392,6 +419,65 @@ class Hasher:
         except Exception as e:
             LOGGER.exception("Error checking if directory should be excluded by pattern")
             raise e
+
+    def _recursive_hash(
+        self,
+        cursor: sqlite3.Cursor,
+        hash_dir_path: str,
+        exclude_dir_paths: List[str],
+        exclude_file_paths: List[str],
+        exclude_patterns: List[str],
+    ) -> None:
+        """
+        Recursively create hashes for files in a directory,
+        then insert them into the database.
+
+        Args:
+        - cursor (sqlite3.Cursor):
+            The database cursor.
+        - hash_dir_path (str):
+            The path of the directory to create the hash database from.
+        - exclude_dir_paths (List[str]):
+            A list of directory paths to exclude.
+        - exclude_file_paths (List[str]):
+            A list of file paths to exclude.
+        - exclude_patterns (List[str]):
+            A list of patterns to exclude.
+        """
+        # Batch size for parameterized queries
+        max_time_per_batch = 3  # seconds
+        batch_data = []
+
+        # Create a pool, default number of processes is the number of cores on the machine
+        with multiprc.Pool() as pool:
+            start_time = time.time()  # Start timer
+            for root, dirs, files in os.walk(hash_dir_path):
+                # Skip excluded directories
+                if self._should_exclude_directory(
+                    exclude_dir_paths, root
+                ) or self._should_exclude_directory_by_pattern(exclude_patterns, root):
+                    LOGGER.debug("Skipping %s", root)
+                    dirs[:] = []  # Skip subdirectories
+                    continue
+
+                # Get full file paths and filter out excluded files
+                file_paths = helper.normalize_paths([os.path.join(root, file) for file in files])
+                file_paths = self._exclude_files_by_path(file_paths, exclude_file_paths)
+                file_paths = self._exclude_files_by_pattern(file_paths, exclude_patterns)
+
+                results = self._map_hashes_creation(pool, file_paths)
+                batch_data.extend(results)
+
+                elapsed_time = time.time() - start_time
+
+                # If the max time per batch has been reached and there are files to be inserted
+                if elapsed_time >= max_time_per_batch and batch_data:
+                    self._process_batch_data(cursor, batch_data)
+                    batch_data = []
+                    start_time = time.time()
+
+            if batch_data:  # If there are any remaining files to be inserted
+                self._process_batch_data(cursor, batch_data)
 
     def create_hash(self, file_path: str) -> Tuple[str, str]:
         """
@@ -462,6 +548,9 @@ class Hasher:
 
         Returns:
         - str: The file path of the saved hash database.
+
+        Raises:
+        - Exception: If there is an error creating the hash database.
         """
         LOGGER.info("Creating hash database from directory: %s", hash_dir_path)
 
@@ -480,7 +569,7 @@ class Hasher:
                 LOGGER.debug("Removed existing file '%s'", db_save_path)
             except Exception as error:
                 LOGGER.exception("Error removing existing file '%s'", db_save_path)
-                raise HashingError(f"Error removing existing file '{db_save_path}'") from error
+                raise Exception(f"Error removing existing file '{db_save_path}'") from error
 
         # separate files and directories from exclude_paths
         exclude_paths = helper.normalize_paths(exclude_paths)
@@ -493,41 +582,9 @@ class Hasher:
         cursor = hash_db.cursor
 
         self._create_hashes_table(cursor)
-
-        # Batch size for parameterized queries
-        max_time_per_batch = 3  # seconds
-        batch_data = []
-
-        # Create a pool, default number of processes is the number of cores on the machine
-        with multiprc.Pool() as pool:
-            start_time = time.time()  # Start timer
-            for root, dirs, files in os.walk(hash_dir_path):
-                # Skip excluded directories
-                if self._should_exclude_directory(
-                    exclude_dir_paths, root
-                ) or self._should_exclude_directory_by_pattern(exclude_patterns, root):
-                    LOGGER.debug("Skipping %s", root)
-                    dirs[:] = []  # Skip subdirectories
-                    continue
-
-                # Get full file paths and filter out excluded files
-                file_paths = helper.normalize_paths([os.path.join(root, file) for file in files])
-                file_paths = self._exclude_files_by_path(file_paths, exclude_file_paths)
-                file_paths = self._exclude_files_by_pattern(file_paths, exclude_patterns)
-
-                results = self._map_hashes_creation(pool, file_paths)
-                batch_data.extend(results)
-
-                elapsed_time = time.time() - start_time
-
-                # If the max time per batch has been reached and there are files to be inserted
-                if elapsed_time >= max_time_per_batch and batch_data:
-                    self._process_batch_data(cursor, batch_data)
-                    batch_data = []
-                    start_time = time.time()
-
-            if batch_data:  # If there are any remaining files to be inserted
-                self._process_batch_data(cursor, batch_data)
+        self._recursive_hash(
+            cursor, hash_dir_path, exclude_dir_paths, exclude_file_paths, exclude_patterns
+        )
 
         connection.commit()
         hash_db.close()
