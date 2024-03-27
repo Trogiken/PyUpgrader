@@ -57,11 +57,11 @@ def cli():
     log_format = "%(asctime)s | %(levelname)-8s | %(message)s"
     logging.basicConfig(format=log_format, datefmt="%H:%M:%S")
 
-    # Set the log level of the root logger
+    # Set the log level of the 'hashing' logger
     if args.log == "DEBUG":
-        logging.getLogger().setLevel(logging.DEBUG)
+        logging.getLogger('pyupgrader.utilities.hashing').setLevel(logging.DEBUG)
     else:
-        logging.getLogger().setLevel(logging.ERROR)
+        logging.getLogger('pyupgrader.utilities.hashing').setLevel(logging.ERROR)
     # Set the log level of the 'build' logger
     logging.getLogger('pyupgrader.utilities.build').setLevel(args.log)
 
