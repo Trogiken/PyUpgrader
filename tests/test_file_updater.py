@@ -101,7 +101,7 @@ class FileUpdaterTestCase(unittest.TestCase):
 
         # Can't test to see if the application is restarted
     
-    # TODO Test for the following errors
+    # TODO: Test for the following errors
 
     # def test_load_action_file_error(self):
     #     # Test if LoadActionError is raised when loading action file fails
