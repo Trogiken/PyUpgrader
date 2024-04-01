@@ -15,6 +15,7 @@ Exceptions:
 import os
 import shutil
 import logging
+from typing import List
 from pyupgrader.utilities import helper, hashing
 
 LOGGER = logging.getLogger(__name__)
@@ -72,23 +73,15 @@ class Builder:
         self.exclude_patterns = [] if exclude_patterns is None else exclude_patterns
         self.exclude_paths = [] if exclude_paths is None else exclude_paths
 
-        self.env_names = [
-            ".venv",
+        self._env_names = [
             "venv",
             "env",
-            ".env",
-            ".virtualenv",
             "virtualenv",
             "conda",
-            ".conda",
             "condaenv",
-            ".condaenv",
             "pipenv",
-            ".pipenv",
             "poetry",
-            ".poetry",
             "pyenv",
-            ".pyenv",
         ]
 
         self._pyudpdate_folder = None
@@ -130,6 +123,15 @@ class Builder:
 
         LOGGER.info("Project built at '%s'", self._pyudpdate_folder)
         LOGGER.info("Don't forget to configure the config file in the .pyupgrader folder.")
+
+    @property
+    def env_names(self) -> List[str]:
+        """Returns a list of common virtual environment folder names"""
+        hidden_env_names = [f".{env_name}" for env_name in self._env_names]
+        LOGGER.debug("Common virtual environment folder names: %s",
+                     self._env_names + hidden_env_names)
+        return self._env_names + hidden_env_names
+
 
     def _validate_paths(self):
         """Validates and set paths"""
