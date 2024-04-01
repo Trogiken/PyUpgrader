@@ -101,20 +101,15 @@ class HasherTestCase(unittest.TestCase):
         shutil.rmtree(self.save_dir)
 
     def test_create_hash(self):
-        # TODO: Shouldnt have to set this at all
-        self.hasher.path_basename = os.path.basename(self.test_dir)  # set path_basename manually
         file_path = os.path.join(self.test_dir, "file1.txt")  # created by create_dir_structure
         # hash file
         with open(file_path, "rb") as file:
             file_content = file.read()
             file_hash = hashlib.sha256(file_content).hexdigest()
         
-        expected_relative_file_path = "file1.txt"
         expected_file_hash = file_hash
+        file_hash = self.hasher.create_hash(file_path)
 
-        relative_file_path, file_hash = self.hasher.create_hash(file_path)
-
-        self.assertEqual(relative_file_path, expected_relative_file_path)
         self.assertEqual(file_hash, expected_file_hash)
 
     def test_create_hash_db(self):
