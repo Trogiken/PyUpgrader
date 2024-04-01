@@ -100,50 +100,6 @@ class FileUpdaterTestCase(unittest.TestCase):
         self.assertFalse(os.path.exists(self.downloads_dir))
 
         # Can't test to see if the application is restarted
-    
-    # TODO: Test for the following errors
-
-    # def test_load_action_file_error(self):
-    #     # Test if LoadActionError is raised when loading action file fails
-    #     with mock.patch("builtins.open", side_effect=Exception("Failed to load file")):
-    #         with self.assertRaises(LoadActionError):
-    #             main()
-
-    # def test_merge_files_error(self):
-    #     # Test if MergeError is raised when merging files fails
-    #     with mock.patch("shutil.copy", side_effect=Exception("Failed to copy file")):
-    #         with self.assertRaises(MergeError):
-    #             main()
-
-    # def test_delete_files_error(self):
-    #     # Test if DeleteError is raised when deleting files fails
-    #     with mock.patch("os.remove", side_effect=Exception("Failed to delete file")):
-    #         with self.assertRaises(DeleteError):
-    #             main()
-
-    # def test_overwrite_config_error(self):
-    #     # Test if ConfigOverwriteError is raised when overwriting config fails
-    #     with mock.patch("shutil.copy", side_effect=Exception("Failed to overwrite config")):
-    #         with self.assertRaises(ConfigOverwriteError):
-    #             main()
-
-    # def test_overwrite_hash_db_error(self):
-    #     # Test if DBOverwriteError is raised when overwriting hash database fails
-    #     with mock.patch("shutil.copy", side_effect=Exception("Failed to overwrite hash database")):
-    #         with self.assertRaises(DBOverwriteError):
-    #             main()
-
-    # def test_gather_details_error(self):
-    #     # Test if GatherDetailsError is raised when gathering update details fails
-    #     with mock.patch("pyupgrader.utilities.file_updater.load_action_file", side_effect=Exception("Failed to gather update details")):
-    #         with self.assertRaises(GatherDetailsError):
-    #             main()
-
-    # def test_update_error(self):
-    #     # Test if UpdateError is raised when update process fails
-    #     with mock.patch("pyupgrader.utilities.file_updater.merge_files", side_effect=Exception("Update process failed")):
-    #         with self.assertRaises(UpdateError):
-    #             main()
 
 if __name__ == "__main__":
     unittest.main()
