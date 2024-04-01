@@ -232,15 +232,9 @@ class Hasher:
     """
     A class that provides methods for hashing files and creating hash databases.
 
-    Attributes:
-    - path_basename (str): The basename of the path. Used to create relative file paths.
-        The create_hash_db method sets this attribute automatically,
-        but it can be set manually if needed.
-
     Methods:
     - create_hash(self, file_path: str) -> (str, str):
         Creates a hash from file bytes using the chunk method.
-        Returns the relative file path and hash as a string.
     - create_hash_db(self, hash_dir_path: str, db_save_path: str,
                     exclude_paths=None, exclude_patterns=None
                     ) -> str:
@@ -249,7 +243,7 @@ class Hasher:
     """
 
     def __init__(self):
-        self.path_basename = None
+        self._path_basename = None
 
     def __str__(self) -> str:
         return "Hasher object"
@@ -312,7 +306,9 @@ class Hasher:
         Returns:
         - Tuple[str, str]: A tuple containing the relative file path and hash as a string.
         """
-        relative_file_path = helper.normalize_paths(file_path.split(self.path_basename)[-1]).lstrip(
+        relative_file_path = helper.normalize_paths(
+            file_path.split(self._path_basename)[-1]
+        ).lstrip(
             "/"
         )  # Remove leading slash and convert to relative path
         LOGGER.debug("Relative file path: %s", relative_file_path)
@@ -576,8 +572,8 @@ class Hasher:
             raise Exception(f"Directory '{hash_dir_path}' does not exist")
 
         # Set basename for relative file paths
-        self.path_basename = os.path.basename(hash_dir_path)
-        LOGGER.debug("Project name: %s", self.path_basename)
+        self._path_basename = os.path.basename(hash_dir_path)
+        LOGGER.debug("Project name: %s", self._path_basename)
 
         if os.path.exists(db_save_path):
             try:
