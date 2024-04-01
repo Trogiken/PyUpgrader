@@ -233,8 +233,9 @@ class Hasher:
     A class that provides methods for hashing files and creating hash databases.
 
     Attributes:
-    - project_name (str):
-        The name of the project directory (Not the full path)
+    - path_basename (str): The basename of the path. Used to create relative file paths.
+        The create_hash_db method sets this attribute automatically,
+        but it can be set manually if needed.
 
     Methods:
     - create_hash(self, file_path: str) -> (str, str):
@@ -247,14 +248,14 @@ class Hasher:
         Returns the file path.
     """
 
-    def __init__(self, project_name: str):
-        self.project_name = project_name
+    def __init__(self):
+        self.path_basename = None
 
     def __str__(self) -> str:
-        return f"Hasher object for '{self.project_name}'"
+        return "Hasher object"
 
     def __repr__(self) -> str:
-        return f"Hasher(project_name={self.project_name})"
+        return "Hasher()"
 
     def _create_hashes_table(self, cursor: sqlite3.Cursor) -> None:
         """
@@ -513,13 +514,15 @@ class Hasher:
                         break
                     hasher.update(chunk)
 
+            # TODO: Remove the relative path functionality somewhere else
             relative_file_path = helper.normalize_paths(
-                file_path.split(self.project_name)[-1]
+                file_path.split(self.path_basename)[-1]
             ).lstrip(
                 "/"
             )  # Remove leading slash and convert to relative path
             file_hash = hasher.hexdigest()
 
+            LOGGER.debug("Relative file path: '%s'", relative_file_path)
             LOGGER.debug("Hash created for '%s'", file_path)
 
             return relative_file_path, file_hash
@@ -563,6 +566,14 @@ class Hasher:
         LOGGER.debug("Excluding paths: %s", exclude_paths)
         LOGGER.debug("Excluding patterns: %s", exclude_patterns)
 
+        if not os.path.exists(hash_dir_path):
+            LOGGER.error("Directory '%s' does not exist", hash_dir_path)
+            raise Exception(f"Directory '{hash_dir_path}' does not exist")
+
+        # Set basename for relative file paths
+        self.path_basename = os.path.basename(hash_dir_path)
+        LOGGER.debug("Project name: %s", self.path_basename)
+
         if os.path.exists(db_save_path):
             try:
                 os.remove(db_save_path)
@@ -588,6 +599,6 @@ class Hasher:
 
         connection.commit()
         hash_db.close()
-        LOGGER.info("Hash database created and saved to '%s'", db_save_path)
+        LOGGER.info("Hash database created at '%s'", db_save_path)
 
         return db_save_path

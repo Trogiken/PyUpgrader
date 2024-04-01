@@ -94,13 +94,15 @@ class HasherTestCase(unittest.TestCase):
         create_dir_structure(self.test_dir)
         os.mkdir(self.save_dir)
 
-        self.hasher = Hasher("test_project")
+        self.hasher = Hasher()
     
     def tearDown(self):
         shutil.rmtree(self.test_dir)
         shutil.rmtree(self.save_dir)
 
     def test_create_hash(self):
+        # TODO: Shouldnt have to set this at all
+        self.hasher.path_basename = os.path.basename(self.test_dir)  # set path_basename manually
         file_path = os.path.join(self.test_dir, "file1.txt")  # created by create_dir_structure
         # hash file
         with open(file_path, "rb") as file:
