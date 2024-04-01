@@ -172,7 +172,7 @@ class Builder:
     def _create_hash_db(self):
         """Creates the hash database"""
         LOGGER.info("Creating hash database at '%s'", self._hash_db_path)
-        hasher = hashing.Hasher(project_name=os.path.basename(self.project_path))
+        hasher = hashing.Hasher()
 
         self.exclude_paths.append(self._pyudpdate_folder)
         self.exclude_patterns.append(r".*/__pycache__/.*")

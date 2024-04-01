@@ -94,7 +94,7 @@ class HasherTestCase(unittest.TestCase):
         create_dir_structure(self.test_dir)
         os.mkdir(self.save_dir)
 
-        self.hasher = Hasher("test_project")
+        self.hasher = Hasher()
     
     def tearDown(self):
         shutil.rmtree(self.test_dir)
@@ -107,12 +107,9 @@ class HasherTestCase(unittest.TestCase):
             file_content = file.read()
             file_hash = hashlib.sha256(file_content).hexdigest()
         
-        expected_relative_file_path = "file1.txt"
         expected_file_hash = file_hash
+        file_hash = self.hasher.create_hash(file_path)
 
-        relative_file_path, file_hash = self.hasher.create_hash(file_path)
-
-        self.assertEqual(relative_file_path, expected_relative_file_path)
         self.assertEqual(file_hash, expected_file_hash)
 
     def test_create_hash_db(self):

@@ -232,14 +232,9 @@ class Hasher:
     """
     A class that provides methods for hashing files and creating hash databases.
 
-    Attributes:
-    - project_name (str):
-        The name of the project directory (Not the full path)
-
     Methods:
     - create_hash(self, file_path: str) -> (str, str):
         Creates a hash from file bytes using the chunk method.
-        Returns the relative file path and hash as a string.
     - create_hash_db(self, hash_dir_path: str, db_save_path: str,
                     exclude_paths=None, exclude_patterns=None
                     ) -> str:
@@ -247,14 +242,14 @@ class Hasher:
         Returns the file path.
     """
 
-    def __init__(self, project_name: str):
-        self.project_name = project_name
+    def __init__(self):
+        self._path_basename = None
 
     def __str__(self) -> str:
-        return f"Hasher object for '{self.project_name}'"
+        return "Hasher object"
 
     def __repr__(self) -> str:
-        return f"Hasher(project_name={self.project_name})"
+        return "Hasher()"
 
     def _create_hashes_table(self, cursor: sqlite3.Cursor) -> None:
         """
@@ -301,13 +296,30 @@ class Hasher:
             LOGGER.exception("Error inserting batch data")
             raise e
 
-    def _map_hashes_creation(self, pool: multiprc.Pool, file_paths: List[str]) -> List[tuple]:
+    def _create_path_and_hash(self, file_path: str) -> Tuple[str, str]:
         """
-        Create a map of hashes for a list of file paths.
+        Create a relative file path and hash for a file.
 
         Args:
-        - pool (multiprocessing.Pool):
-            The multiprocessing pool.
+        - file_path (str): The path of the file.
+
+        Returns:
+        - Tuple[str, str]: A tuple containing the relative file path and hash as a string.
+        """
+        relative_file_path = helper.normalize_paths(
+            file_path.split(self._path_basename)[-1]
+        ).lstrip(
+            "/"
+        )  # Remove leading slash and convert to relative path
+        LOGGER.debug("Relative file path: %s", relative_file_path)
+
+        return relative_file_path, self.create_hash(file_path)
+
+    def _pool_hashes(self, file_paths: List[str]) -> List[tuple]:
+        """
+        Create a pool of processes to create hashes from a list of file paths.
+
+        Args:
         - file_paths (List[str]):
             A list of file paths to create hashes for.
 
@@ -319,7 +331,8 @@ class Hasher:
         """
         LOGGER.debug("Mapping hashes for %d files", len(file_paths) if file_paths else 0)
         try:
-            return pool.map(self.create_hash, file_paths)
+            with multiprc.Pool() as pool:
+                return pool.map(self._create_path_and_hash, file_paths)
         except Exception as e:
             LOGGER.exception("Error mapping hashes creation")
             raise e
@@ -448,47 +461,44 @@ class Hasher:
         max_time_per_batch = 3  # seconds
         batch_data = []
 
-        # Create a pool, default number of processes is the number of cores on the machine
-        with multiprc.Pool() as pool:
-            start_time = time.time()  # Start timer
-            for root, dirs, files in os.walk(hash_dir_path):
-                # Skip excluded directories
-                if self._should_exclude_directory(
-                    exclude_dir_paths, root
-                ) or self._should_exclude_directory_by_pattern(exclude_patterns, root):
-                    LOGGER.debug("Skipping %s", root)
-                    dirs[:] = []  # Skip subdirectories
-                    continue
+        start_time = time.time()  # Start timer
+        for root, dirs, files in os.walk(hash_dir_path):
+            # Skip excluded directories
+            if self._should_exclude_directory(
+                exclude_dir_paths, root
+            ) or self._should_exclude_directory_by_pattern(exclude_patterns, root):
+                LOGGER.debug("Skipping %s", root)
+                dirs[:] = []  # Skip subdirectories
+                continue
 
-                # Get full file paths and filter out excluded files
-                file_paths = helper.normalize_paths([os.path.join(root, file) for file in files])
-                file_paths = self._exclude_files_by_path(file_paths, exclude_file_paths)
-                file_paths = self._exclude_files_by_pattern(file_paths, exclude_patterns)
+            # Get full file paths and filter out excluded files
+            file_paths = helper.normalize_paths([os.path.join(root, file) for file in files])
+            file_paths = self._exclude_files_by_path(file_paths, exclude_file_paths)
+            file_paths = self._exclude_files_by_pattern(file_paths, exclude_patterns)
 
-                results = self._map_hashes_creation(pool, file_paths)
-                batch_data.extend(results)
+            results = self._pool_hashes(file_paths)
+            batch_data.extend(results)
 
-                elapsed_time = time.time() - start_time
+            elapsed_time = time.time() - start_time
 
-                # If the max time per batch has been reached and there are files to be inserted
-                if elapsed_time >= max_time_per_batch and batch_data:
-                    self._process_batch_data(cursor, batch_data)
-                    batch_data = []
-                    start_time = time.time()
-
-            if batch_data:  # If there are any remaining files to be inserted
+            # If the max time per batch has been reached and there are files to be inserted
+            if elapsed_time >= max_time_per_batch and batch_data:
                 self._process_batch_data(cursor, batch_data)
+                batch_data = []
+                start_time = time.time()
 
-    def create_hash(self, file_path: str) -> Tuple[str, str]:
+        if batch_data:  # If there are any remaining files to be inserted
+            self._process_batch_data(cursor, batch_data)
+
+    def create_hash(self, file_path: str) -> str:
         """
-        Create a hash from file bytes using the chunk method,
-        return the relative file path and hash as a string.
+        Create a hash from file bytes using the chunk method.
 
         Args:
         - file_path (str): The path of the file to be hashed.
 
         Returns:
-        - Tuple[str, str]: The relative file path and hash as a string.
+        - str: The hash as a string.
 
         Raises:
         - HashingError: If there is an error hashing the file.
@@ -513,16 +523,10 @@ class Hasher:
                         break
                     hasher.update(chunk)
 
-            relative_file_path = helper.normalize_paths(
-                file_path.split(self.project_name)[-1]
-            ).lstrip(
-                "/"
-            )  # Remove leading slash and convert to relative path
             file_hash = hasher.hexdigest()
-
             LOGGER.debug("Hash created for '%s'", file_path)
 
-            return relative_file_path, file_hash
+            return file_hash
         except Exception as error:
             LOGGER.exception("Error hashing '%s'", file_path)
             raise HashingError(f"Error hashing file '{file_path}'") from error
@@ -563,6 +567,14 @@ class Hasher:
         LOGGER.debug("Excluding paths: %s", exclude_paths)
         LOGGER.debug("Excluding patterns: %s", exclude_patterns)
 
+        if not os.path.exists(hash_dir_path):
+            LOGGER.error("Directory '%s' does not exist", hash_dir_path)
+            raise Exception(f"Directory '{hash_dir_path}' does not exist")
+
+        # Set basename for relative file paths
+        self._path_basename = os.path.basename(hash_dir_path)
+        LOGGER.debug("Project name: %s", self._path_basename)
+
         if os.path.exists(db_save_path):
             try:
                 os.remove(db_save_path)
@@ -588,6 +600,6 @@ class Hasher:
 
         connection.commit()
         hash_db.close()
-        LOGGER.info("Hash database created and saved to '%s'", db_save_path)
+        LOGGER.info("Hash database created at '%s'", db_save_path)
 
         return db_save_path
