@@ -128,10 +128,10 @@ class Builder:
     def env_names(self) -> List[str]:
         """Returns a list of common virtual environment folder names"""
         hidden_env_names = [f".{env_name}" for env_name in self._env_names]
-        LOGGER.debug("Common virtual environment folder names: %s",
-                     self._env_names + hidden_env_names)
+        LOGGER.debug(
+            "Common virtual environment folder names: %s", self._env_names + hidden_env_names
+        )
         return self._env_names + hidden_env_names
-
 
     def _validate_paths(self):
         """Validates and set paths"""
