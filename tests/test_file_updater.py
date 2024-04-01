@@ -5,7 +5,7 @@ import argparse
 import pickle
 import sys
 import unittest.mock as mock
-from pyupgrader.utilities.file_updater import main
+from pyupgrader.utilities.file_updater import main, LoadActionError, MergeError, DeleteError, ConfigOverwriteError, DBOverwriteError, GatherDetailsError, UpdateError
 
 class FileUpdaterTestCase(unittest.TestCase):
     def setUp(self):

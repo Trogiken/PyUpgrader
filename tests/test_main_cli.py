@@ -33,7 +33,6 @@ class CLITestCase(unittest.TestCase):
 
         # Assert that the logging is configured correctly
         mock_logging.assert_called_once_with(
-            level='DEBUG',
             format='%(asctime)s | %(levelname)-8s | %(message)s',
             datefmt='%H:%M:%S'
         )
