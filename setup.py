@@ -6,7 +6,7 @@ with open('README.md', encoding="utf-8") as f:
 
 setup(
     name='pyupgrader',
-    version='2.3.11b1',
+    version='2.5.13b2',
     author='Noah Blaszak',
     author_email='technology.misc@gmail.com',
     description='Keep your Python code up to date on client machines.',
@@ -20,7 +20,7 @@ setup(
         'Issues': 'https://github.com/Trogiken/PyUpgrader/issues',
     },
     packages=['pyupgrader', 'pyupgrader.utilities'],
-    install_requires=['pyyaml', 'requests', 'packaging', 'setuptools'],
+    install_requires=['pyyaml', 'requests', 'responses', 'packaging', 'setuptools'],
     python_requires='>=3.8',
     entry_points={
         'console_scripts': [

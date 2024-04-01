@@ -1,4 +1,5 @@
 pyyaml
 requests
+responses
 packaging
 setuptools

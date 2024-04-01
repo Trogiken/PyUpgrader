@@ -17,9 +17,13 @@ import tempfile
 import shutil
 import pickle
 import sys
+import logging
 import requests
 from packaging.version import Version
 from pyupgrader.utilities import helper, hashing
+
+LOGGER = logging.getLogger(__name__)
+LOGGER.addHandler(logging.NullHandler())
 
 
 class DBSumError(Exception):
@@ -74,16 +78,27 @@ class UpdateManager:
     """
 
     def __init__(self, url: str, project_path: str):
-        self._url = helper.normalize_paths(url)
-        self._project_path = helper.normalize_paths(project_path)
-        self._pyupgrader_path = os.path.join(self._project_path, ".pyupgrader")
-        self._config_path = os.path.join(self._pyupgrader_path, "config.yaml")
-        self._local_hash_db_path = None  # Set in _validate_attributes
+        LOGGER.info("Initializing UpdateManager")
+        try:
+            self._url = url
+            self._project_path = project_path
+            self._pyupgrader_path = os.path.join(self._project_path, ".pyupgrader")
+            self._config_path = os.path.join(self._pyupgrader_path, "config.yaml")
+            self._local_hash_db_path = None  # Set in _validate_attributes
 
-        self._config_man = helper.Config()
-        self._web_man = None  # Set in _validate_attributes
+            self._config_man = helper.Config()
+            self._web_man = None  # Set in _validate_attributes
 
-        self._validate_attributes()
+            self._validate_attributes()
+        except Exception as e:
+            LOGGER.exception("Error occurred during initialization")
+            raise e
+
+    def __str__(self) -> str:
+        return f"UpdateManager for {self._project_path} using {self._url}"
+
+    def __repr__(self) -> str:
+        return f"UpdateManager(url={self.url}, project_path={self.project_path})"
 
     @property
     def url(self) -> str:
@@ -103,9 +118,14 @@ class UpdateManager:
         Args:
         - value (str): The URL to the .pyupgrader folder.
         """
-        self._url = helper.normalize_paths(value)
-        self._web_man = helper.Web(self._url)
-        self._validate_attributes()
+        LOGGER.debug("Setting URL to: '%s'", value)
+        try:
+            self._url = value
+            self._web_man = helper.Web(self._url)
+            self._validate_attributes()
+        except Exception as e:
+            LOGGER.exception("Error occurred while setting URL")
+            raise e
 
     @property
     def project_path(self) -> str:
@@ -125,11 +145,16 @@ class UpdateManager:
         Args:
         - value (str): The path to the project folder.
         """
-        self._project_path = value
-        self._pyupgrader_path = os.path.join(self._project_path, ".pyupgrader")
-        self._config_path = os.path.join(self._pyupgrader_path, "config.yaml")
-        self._local_hash_db_path = None  # Set in _validate_attributes
-        self._validate_attributes()
+        LOGGER.debug("Setting project path to: '%s'", value)
+        try:
+            self._project_path = value
+            self._pyupgrader_path = os.path.join(self._project_path, ".pyupgrader")
+            self._config_path = os.path.join(self._pyupgrader_path, "config.yaml")
+            self._local_hash_db_path = None  # Set in _validate_attributes
+            self._validate_attributes()
+        except Exception as e:
+            LOGGER.exception("Error occurred while setting project path")
+            raise e
 
     @property
     def config_path(self) -> str:
@@ -159,23 +184,36 @@ class UpdateManager:
         - FileNotFoundError: If the path does not exist.
         - URLNotValidError: If the URL is not valid.
         """
-        if not os.path.exists(self._project_path):
-            raise FileNotFoundError(self._project_path)
+        LOGGER.info("Validating attributes")
         try:
-            requests.get(self._url, timeout=5)
-        except Exception as error:
-            raise URLNotValidError(self._url) from error
-        if not os.path.exists(self._pyupgrader_path):
-            raise FileNotFoundError(self._pyupgrader_path)
-        if not os.path.exists(self._config_path):
-            raise FileNotFoundError(self._config_path)
+            LOGGER.debug("Project Path: '%s'", self._project_path)
+            LOGGER.debug("URL: '%s'", self._url)
+            LOGGER.debug("PyUpgrader Path: '%s'", self._pyupgrader_path)
+            LOGGER.debug("Config Path: '%s'", self._config_path)
 
-        config_data = self._config_man.load_yaml(self._config_path)
-        self._local_hash_db_path = os.path.join(self._pyupgrader_path, config_data["hash_db"])
-        self._web_man = helper.Web(self._url)
+            if not os.path.exists(self._project_path):
+                raise FileNotFoundError(self._project_path)
+            try:
+                requests.get(self._url, timeout=5)
+            except Exception as error:
+                raise URLNotValidError(self._url) from error
+            if not os.path.exists(self._pyupgrader_path):
+                raise FileNotFoundError(self._pyupgrader_path)
+            if not os.path.exists(self._config_path):
+                raise FileNotFoundError(self._config_path)
 
-        if not os.path.exists(self._local_hash_db_path):
-            raise FileNotFoundError(self._local_hash_db_path)
+            config_data = self._config_man.load_yaml(self._config_path)
+            self._local_hash_db_path = os.path.join(self._pyupgrader_path, config_data["hash_db"])
+            self._web_man = helper.Web(self._url)
+
+            LOGGER.debug("Local Hash DB Path: '%s'", self._local_hash_db_path)
+            LOGGER.debug("Web Manager: '%s'", self._web_man)
+
+            if not os.path.exists(self._local_hash_db_path):
+                raise FileNotFoundError(self._local_hash_db_path)
+        except Exception as e:
+            LOGGER.exception("Error occurred during attribute validation")
+            raise e
 
     def check_update(self) -> dict:
         """
@@ -188,23 +226,34 @@ class UpdateManager:
             - web_version (str): The version number from the cloud.
             - local_version (str): The version number from the local configuration.
         """
-        web_config = self._web_man.get_config()
-        local_config = self._config_man.load_yaml(self._config_path)
+        LOGGER.info("Checking for updates")
+        try:
+            web_config = self._web_man.get_config()
+            local_config = self._config_man.load_yaml(self._config_path)
 
-        web_version = Version(web_config["version"])
-        local_version = Version(local_config["version"])
+            web_version = Version(web_config["version"])
+            local_version = Version(local_config["version"])
 
-        if web_version > local_version:
-            has_update, description = True, web_config["description"]
-        else:
-            has_update, description = False, local_config["description"]
+            LOGGER.debug("Web Version: '%s'", web_version)
+            LOGGER.debug("Local Version: '%s'", local_version)
 
-        return {
-            "has_update": has_update,
-            "description": description,
-            "web_version": str(web_version),
-            "local_version": str(local_version),
-        }
+            if web_version > local_version:
+                has_update, description = True, web_config["description"]
+            else:
+                has_update, description = False, local_config["description"]
+
+            LOGGER.debug("Update Available: '%s'", has_update)
+            LOGGER.debug("Update Description: '%s'", description)
+
+            return {
+                "has_update": has_update,
+                "description": description,
+                "web_version": str(web_version),
+                "local_version": str(local_version),
+            }
+        except Exception as e:
+            LOGGER.exception("Error occurred while checking for updates")
+            raise e
 
     def db_sum(self) -> hashing.DBSummary:
         """
@@ -213,19 +262,31 @@ class UpdateManager:
         Returns:
         - hashing.DBSummary: A DBSummary object.
         """
-        tmp_path = ""
+        LOGGER.info("Creating DBSummary")
         try:
-            tmp_path = tempfile.mkdtemp()
-            cloud_hash_db_path = self._web_man.download_hash_db(
-                os.path.join(tmp_path, "cloud_hashes.db")
-            )
+            db_tmp_path = ""
+            try:
+                db_tmp_path = tempfile.mkdtemp()
+                cloud_hash_db_path = self._web_man.download_hash_db(
+                    os.path.join(db_tmp_path, "cloud_hashes.db")
+                )
 
-            return hashing.compare_databases(self._local_hash_db_path, cloud_hash_db_path)
-        except Exception as error:
-            raise DBSumError from error
-        finally:
-            if os.path.exists(tmp_path):
-                shutil.rmtree(tmp_path)
+                LOGGER.debug("DB Temp Dir Path: '%s'", self._local_hash_db_path)
+                LOGGER.debug("Cloud Hash DB Path: '%s'", cloud_hash_db_path)
+
+                db_summary = hashing.compare_databases(self._local_hash_db_path, cloud_hash_db_path)
+                LOGGER.debug("DBSummary: '%s'", db_summary)
+
+                return db_summary
+            finally:
+                if os.path.exists(db_tmp_path):
+                    shutil.rmtree(db_tmp_path)
+                    LOGGER.debug("Deleted '%s'", db_tmp_path)
+                else:
+                    LOGGER.warning("Tried deleting '%s' but did not exist", db_tmp_path)
+        except Exception as e:
+            LOGGER.exception("Error occurred while creating DBSummary")
+            raise e
 
     def get_files(self, updated_only: bool = False) -> list:
         """
@@ -243,33 +304,51 @@ class UpdateManager:
         Raises:
         - GetFilesError: If an error occurs during the download process.
         """
-        db_temp_path = ""
-        cloud_db = None
+        LOGGER.info("Retrieving files from cloud database")
         try:
-            db_temp_path = tempfile.mkdtemp()
+            db_tmp_path = ""
+            cloud_db = None
+            try:
+                db_tmp_path = tempfile.mkdtemp()
+                cloud_hash_db_path = self._web_man.download_hash_db(
+                    os.path.join(db_tmp_path, "cloud_hashes.db")
+                )
 
-            cloud_hash_db_path = self._web_man.download_hash_db(
-                os.path.join(db_temp_path, "cloud_hashes.db")
-            )
-            cloud_db = hashing.HashDB(cloud_hash_db_path)
-            compare_db = self.db_sum()
+                LOGGER.debug("DB Temp Dir Path: '%s'", db_tmp_path)
+                LOGGER.debug("Cloud Hash DB Path: '%s'", cloud_hash_db_path)
 
-            files = None
+                if not os.path.exists(cloud_hash_db_path):
+                    raise FileNotFoundError(cloud_hash_db_path)
 
-            if updated_only:
-                bad_files = [path for path, _, _ in compare_db.bad_files]
-                files = compare_db.unique_files_cloud_db + bad_files
-            else:
-                files = list(cloud_db.get_file_paths())
+                cloud_db = hashing.HashDB(cloud_hash_db_path)
+                LOGGER.debug("Cloud DB Manager: '%s'", cloud_db)
 
-            return files
-        except Exception as error:
-            raise GetFilesError from error
-        finally:
-            if cloud_db is not None:
-                cloud_db.close()
-            if db_temp_path:
-                shutil.rmtree(db_temp_path)
+                compare_db = self.db_sum()
+
+                files = None
+
+                if updated_only:
+                    bad_files = [path for path, _, _ in compare_db.bad_files]
+                    files = compare_db.unique_files_cloud_db + bad_files
+                else:
+                    files = list(cloud_db.get_file_paths())
+
+                LOGGER.debug("Files Retrieved: '%s'", files)
+
+                return files
+            finally:
+                if isinstance(cloud_db, type(hashing.HashDB)):
+                    cloud_db.close()
+                else:
+                    LOGGER.warning("Cloud DB is not a HashDB object")
+                if db_tmp_path:
+                    shutil.rmtree(db_tmp_path)
+                    LOGGER.debug("Deleted '%s'", db_tmp_path)
+                else:
+                    LOGGER.warning("Tried deleting '%s' but did not exist", db_tmp_path)
+        except Exception as e:
+            LOGGER.exception("Error occurred while retrieving files from cloud database")
+            raise e
 
     def download_files(self, save_path: str = "", updated_only: bool = False) -> str:
         """
@@ -288,9 +367,12 @@ class UpdateManager:
         Raises:
         - Exception: If an error occurs during the download process.
         """
+        LOGGER.info("Downloading files from cloud")
         try:
             if not save_path:
                 save_path = tempfile.mkdtemp()
+
+            LOGGER.debug("Save Path: '%s'", save_path)
 
             files_to_download = None
 
@@ -299,10 +381,13 @@ class UpdateManager:
             else:
                 files_to_download = self.get_files()
 
-            # Download all files in db and copy structure
             base_url = self._url.split(".pyupgrader")[0]
+            LOGGER.debug("Base Url: '%s'", base_url)
+
+            # Download files while maintaining directory structure
             for file_path in files_to_download:
                 download_url = base_url + "/" + file_path
+                LOGGER.debug("Download Url: '%s'", download_url)
 
                 # Create save path
                 relative_path = os.path.dirname(file_path)
@@ -312,9 +397,12 @@ class UpdateManager:
 
                 self._web_man.download(download_url, save_file)
 
+            LOGGER.info("Files downloaded to %s", save_path)
+
             return save_path
-        except Exception as error:
-            raise DownloadFilesError from error
+        except Exception as e:
+            LOGGER.exception("Error occurred while downloading files from cloud")
+            raise e
 
     def prepare_update(self, file_dir: str = "") -> str:
         """
@@ -334,64 +422,85 @@ class UpdateManager:
         - NoUpdateError: If there are no files to update.
             Set 'required_only' to False in the cloud config to update anyway.
         """
-        # init values
-        cloud_config = self._web_man.get_config()
-        db_summary = self.db_sum()
-        download_files = False
-        if not file_dir:
-            file_dir = tempfile.mkdtemp()
-            download_files = True
+        LOGGER.info("Preparing update")
+        try:
+            # init values
+            cloud_config = self._web_man.get_config()
+            db_summary = self.db_sum()
+            download_files = False
+            if not file_dir:
+                file_dir = tempfile.mkdtemp()
+                download_files = True
 
-        # Create temp folder in file_dir for holding update settings
-        tmp_setting_dir = tempfile.mkdtemp(dir=file_dir)
+            LOGGER.debug("File Dir: '%s'", file_dir)
+            LOGGER.debug("Download Files: '%s'", download_files)
 
-        # Populate settings folder
-        cloud_config_path = os.path.join(tmp_setting_dir, "config.yaml")
-        cloud_hash_db_path = os.path.join(tmp_setting_dir, "hashes.db")
-        self._web_man.download_hash_db(cloud_hash_db_path)
-        self._config_man.write_yaml(cloud_config_path, cloud_config)
+            # Create temp folder in file_dir for holding update settings
+            tmp_setting_dir = tempfile.mkdtemp(dir=file_dir)
 
-        update_details = {
-            "update": None,
-            "delete": list(db_summary.unique_files_local_db),
-            "project_path": self._project_path,
-            "downloads_directory": file_dir,
-            "startup_path": os.path.join(self._project_path, cloud_config["startup_path"]),
-            "cloud_config_path": cloud_config_path,
-            "cloud_hash_db_path": cloud_hash_db_path,
-            "cleanup": cloud_config["cleanup"],
-        }
+            LOGGER.debug("Settings Directory: '%s'", tmp_setting_dir)
 
-        # Set the 'update' value and download files as needed
-        if not cloud_config["required_only"]:
-            if download_files:
-                self.download_files(file_dir, updated_only=False)
-            update_details["update"] = self.get_files(updated_only=False)
-        else:
-            if download_files:
-                self.download_files(file_dir, updated_only=True)
-            bad_files_paths = [file_path for file_path, _, _ in db_summary.bad_files]
-            update_details["update"] = list(db_summary.unique_files_cloud_db) + bad_files_paths
+            # Populate settings folder
+            cloud_config_path = os.path.join(tmp_setting_dir, "config.yaml")
+            cloud_hash_db_path = os.path.join(tmp_setting_dir, "hashes.db")
+            self._web_man.download_hash_db(cloud_hash_db_path)
+            self._config_man.write_yaml(cloud_config_path, cloud_config)
 
-        # Check if there are files to update
-        if all(
-            [
-                cloud_config["required_only"],
-                not update_details["update"],
-                not update_details["delete"],
-            ]
-        ):
-            shutil.rmtree(file_dir)
-            raise NoUpdateError(
-                "No files to update. Set 'required_only' to 'false' for forced update."
-            )
+            LOGGER.debug("Cloud Config Path: '%s'", cloud_config_path)
+            LOGGER.debug("Cloud Hash DB Path: '%s'", cloud_hash_db_path)
 
-        # save actions to pickle file
-        action_pkl = os.path.join(tmp_setting_dir, "actions.pkl")
-        with open(action_pkl, "wb") as file:
-            pickle.dump(update_details, file)
+            update_details = {
+                "update": None,
+                "delete": list(db_summary.unique_files_local_db),
+                "project_path": self._project_path,
+                "downloads_directory": file_dir,
+                "startup_path": os.path.join(self._project_path, cloud_config["startup_path"]),
+                "cloud_config_path": cloud_config_path,
+                "cloud_hash_db_path": cloud_hash_db_path,
+                "cleanup": cloud_config["cleanup"],
+            }
 
-        return action_pkl
+            # Set the 'update' value and download files as needed
+            if not cloud_config["required_only"]:
+                if download_files:
+                    self.download_files(file_dir, updated_only=False)
+                update_details["update"] = self.get_files(updated_only=False)
+            else:
+                if download_files:
+                    self.download_files(file_dir, updated_only=True)
+                bad_files_paths = [file_path for file_path, _, _ in db_summary.bad_files]
+                update_details["update"] = list(db_summary.unique_files_cloud_db) + bad_files_paths
+
+            LOGGER.debug("Update Details: '%s'", update_details)
+
+            # Check if there are no files to update and required_only is True
+            if all(
+                [
+                    cloud_config["required_only"],
+                    not update_details["update"],
+                    not update_details["delete"],
+                ]
+            ):
+                shutil.rmtree(file_dir)
+                LOGGER.debug("Deleted '%s'", file_dir)
+                raise NoUpdateError(
+                    "No files to update. Set 'required_only' to 'false' for forced update."
+                )
+
+            # save actions to pickle file
+            action_pkl = os.path.join(tmp_setting_dir, "actions.pkl")
+
+            LOGGER.debug("Action File Path: '%s'", action_pkl)
+
+            with open(action_pkl, "wb") as file:
+                pickle.dump(update_details, file)
+
+            LOGGER.info("Update prepared at %s", file_dir)
+
+            return action_pkl
+        except Exception as e:
+            LOGGER.exception("Error occurred while preparing update")
+            raise e
 
     def update(self, actions_path: str) -> None:
         """
@@ -403,9 +512,22 @@ class UpdateManager:
         Raises:
         - FileNotFoundError: If the actions file does not exist.
         """
-        if not os.path.exists(actions_path):
-            raise FileNotFoundError(actions_path)
+        LOGGER.info("Starting update process")
+        try:
+            if not os.path.exists(actions_path):
+                raise FileNotFoundError(actions_path)
 
-        updater_path = os.path.join(os.path.dirname(__file__), "utilities", "file_updater.py")
-        args = ["-a", actions_path]
-        os.execv(sys.executable, [sys.executable, updater_path] + args)
+            LOGGER.debug("Actions Path: '%s'", actions_path)
+
+            updater_path = os.path.join(os.path.dirname(__file__), "utilities", "file_updater.py")
+
+            LOGGER.debug("Updater Path: '%s'", updater_path)
+
+            args = ["-a", actions_path]
+
+            LOGGER.debug("Args: '%s'", args)
+
+            os.execv(sys.executable, [sys.executable, updater_path] + args)
+        except Exception as e:
+            LOGGER.exception("Error occurred during update process")
+            raise e
