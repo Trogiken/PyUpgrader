@@ -20,7 +20,7 @@ import sys
 import logging
 import requests
 from packaging.version import Version
-from pyupgrader.utilities import helper, hashing
+from pyupgrader.utilities import helper, hashing, web
 
 LOGGER = logging.getLogger(__name__)
 LOGGER.addHandler(logging.NullHandler())
@@ -121,7 +121,7 @@ class UpdateManager:
         LOGGER.debug("Setting URL to: '%s'", value)
         try:
             self._url = value
-            self._web_man = helper.Web(self._url)
+            self._web_man = web.WebHandler(self._url)
             self._validate_attributes()
         except Exception as e:
             LOGGER.exception("Error occurred while setting URL")
@@ -204,10 +204,10 @@ class UpdateManager:
 
             config_data = self._config_man.load_yaml(self._config_path)
             self._local_hash_db_path = os.path.join(self._pyupgrader_path, config_data["hash_db"])
-            self._web_man = helper.Web(self._url)
+            self._web_man = web.WebHandler(self._url)
 
             LOGGER.debug("Local Hash DB Path: '%s'", self._local_hash_db_path)
-            LOGGER.debug("Web Manager: '%s'", self._web_man)
+            LOGGER.debug("Web Handler: '%s'", self._web_man)
 
             if not os.path.exists(self._local_hash_db_path):
                 raise FileNotFoundError(self._local_hash_db_path)
