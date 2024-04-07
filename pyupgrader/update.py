@@ -255,6 +255,7 @@ class UpdateManager:
             LOGGER.exception("Error occurred while checking for updates")
             raise e
 
+    # TODO: Move this to Web()
     def db_sum(self) -> hashing.DBSummary:
         """
         Return a DBSummary object using the cloud and local hash databases.
@@ -288,6 +289,7 @@ class UpdateManager:
             LOGGER.exception("Error occurred while creating DBSummary")
             raise e
 
+    # TODO: Move this to Web()
     def get_files(self, updated_only: bool = False) -> list:
         """
         Retrieves a list of files from the cloud database.
@@ -350,6 +352,7 @@ class UpdateManager:
             LOGGER.exception("Error occurred while retrieving files from cloud database")
             raise e
 
+    # TODO: Move this to Web()
     def download_files(self, save_path: str = "", updated_only: bool = False) -> str:
         """
         Download cloud files and return the path where the files are saved.
@@ -460,6 +463,7 @@ class UpdateManager:
                 "cleanup": cloud_config["cleanup"],
             }
 
+            # TODO: Do not download files from here
             # Set the 'update' value and download files as needed
             if not cloud_config["required_only"]:
                 if download_files:

@@ -162,7 +162,7 @@ class Config:
 
         return is_valid, error
 
-
+# TODO: Make this class more generic and move it to a separate module
 class Web:
     """
     Class for managing web requests
@@ -176,7 +176,7 @@ class Web:
         Get a request from the url
     - get_config() -> dict
         Get the config file from the url
-    - download(url_path: str, save_path) -> str
+    - download(url_path: str, save_path: str) -> str
         Download a file from the url_path and save it to save_path
     - download_hash_db(save_path: str) -> str
         Download the hash database and save it to save_path
@@ -200,13 +200,14 @@ class Web:
         """
         return self._url
 
-    def get_request(self, url: str, timeout: int = 5) -> requests.Response:
+    def get_request(self, url: str, timeout: int = 5, **kwargs) -> requests.Response:
         """
         Get a request from the specified URL.
 
         Parameters:
         - url (str): URL to send the request to
         - timeout (int): The timeout for the request
+        - **kwargs: Additional keyword arguments to pass to requests.get
 
         Returns:
         - requests.Response: The response object from the request
@@ -215,7 +216,7 @@ class Web:
         - requests.ConnectionError: If the request fails
         """
         try:
-            response = requests.get(url, timeout=timeout)
+            response = requests.get(url, timeout=timeout, **kwargs)
             response.raise_for_status()
         except Exception as e:
             LOGGER.exception("Failed to get request from '%s'", url)
@@ -246,10 +247,12 @@ class Web:
         - str: The save path of the downloaded file
         """
         LOGGER.debug("Downloading '%s' to '%s'", url_path, save_path)
+        response = self.get_request(url_path, stream=True)
 
-        response = self.get_request(url_path)
         with open(save_path, "wb") as f:
-            f.write(response.content)
+            for chunk in response.iter_content(chunk_size=8192):
+                if chunk:
+                    f.write(chunk)
 
         return save_path
 
