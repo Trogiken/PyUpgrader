@@ -1,11 +1,11 @@
 import os
 import unittest
 import responses
-from pyupgrader.utilities.web import WebHandler
+import pyupgrader.utilities.web as web
 
 class WebTestCase(unittest.TestCase):
     def setUp(self):
-        self.web = WebHandler("https://example.com")
+        self.web = web.WebHandler("https://example.com")
 
         self.config_data = {
             "version": "1.0.0",
@@ -22,7 +22,7 @@ class WebTestCase(unittest.TestCase):
         url = "https://example.com"
         responses.add(responses.GET, url, json={'key': 'value'}, status=200)
 
-        res = self.web.get_request(url)
+        res = web.get_request(url)
 
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.json(), {'key': 'value'})
