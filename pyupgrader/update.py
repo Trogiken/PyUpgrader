@@ -5,9 +5,6 @@ Classes:
 - UpdateManager: Manages updates for a program
 
 Exceptions:
-- DBSumError: Raised when there is an error in comparing values from the databases.
-- GetFilesError: Raised when there is an error in retrieving file paths from the cloud.
-- DownloadFilesError: Raised when there is an error in downloading files from the cloud.
 - NoUpdateError: Raised when there is no files downloaded during an update.
 - URLNotValidError: Raised when the URL is not valid.
 """
@@ -20,22 +17,10 @@ import sys
 import logging
 import requests
 from packaging.version import Version
-from pyupgrader.utilities import helper, hashing, web
+from pyupgrader.utilities import helper, web
 
 LOGGER = logging.getLogger(__name__)
 LOGGER.addHandler(logging.NullHandler())
-
-
-class DBSumError(Exception):
-    """This exception is raised when there is an error in comparing values from the databases."""
-
-
-class GetFilesError(Exception):
-    """This exception is raised when there is an error in retrieving file paths from the cloud."""
-
-
-class DownloadFilesError(Exception):
-    """This exception is raised when there is an error in downloading files from the cloud."""
 
 
 class NoUpdateError(Exception):
@@ -63,13 +48,6 @@ class UpdateManager:
     Methods:
     - check_update() -> dict
         Compare cloud and local version and return a dict with the results
-    - db_sum() -> DBSummary
-        Return a DBSummary object using the cloud and local hash databases
-    - get_files(updated_only: bool = False) -> list
-        Retrieves a list of files from the cloud database.
-    - download_files(save_path: str = "", required: bool = False) -> str
-        Download files to save_path, if save_path is empty, create a temp folder.
-        Return the save_path
     - prepare_update(file_dir: str = "") -> str
         A 'actions' file will be created.
         This file is used by file_updater.py.
@@ -121,7 +99,7 @@ class UpdateManager:
         LOGGER.debug("Setting URL to: '%s'", value)
         try:
             self._url = value
-            self._web_man = web.WebHandler(self._url)
+            self._web_man = web.WebHandler(self._url, self._local_hash_db_path)
             self._validate_attributes()
         except Exception as e:
             LOGGER.exception("Error occurred while setting URL")
@@ -204,7 +182,7 @@ class UpdateManager:
 
             config_data = self._config_man.load_yaml(self._config_path)
             self._local_hash_db_path = os.path.join(self._pyupgrader_path, config_data["hash_db"])
-            self._web_man = web.WebHandler(self._url)
+            self._web_man = web.WebHandler(self._url, self._local_hash_db_path)
 
             LOGGER.debug("Local Hash DB Path: '%s'", self._local_hash_db_path)
             LOGGER.debug("Web Handler: '%s'", self._web_man)
@@ -255,168 +233,15 @@ class UpdateManager:
             LOGGER.exception("Error occurred while checking for updates")
             raise e
 
-    # TODO: Move this to Web()
-    def db_sum(self) -> hashing.DBSummary:
-        """
-        Return a DBSummary object using the cloud and local hash databases.
-
-        Returns:
-        - hashing.DBSummary: A DBSummary object.
-        """
-        LOGGER.info("Creating DBSummary")
-        try:
-            db_tmp_path = ""
-            try:
-                db_tmp_path = tempfile.mkdtemp()
-                cloud_hash_db_path = self._web_man.download_hash_db(
-                    os.path.join(db_tmp_path, "cloud_hashes.db")
-                )
-
-                LOGGER.debug("DB Temp Dir Path: '%s'", self._local_hash_db_path)
-                LOGGER.debug("Cloud Hash DB Path: '%s'", cloud_hash_db_path)
-
-                db_summary = hashing.compare_databases(self._local_hash_db_path, cloud_hash_db_path)
-                LOGGER.debug("DBSummary: '%s'", db_summary)
-
-                return db_summary
-            finally:
-                if os.path.exists(db_tmp_path):
-                    shutil.rmtree(db_tmp_path)
-                    LOGGER.debug("Deleted '%s'", db_tmp_path)
-                else:
-                    LOGGER.warning("Tried deleting '%s' but did not exist", db_tmp_path)
-        except Exception as e:
-            LOGGER.exception("Error occurred while creating DBSummary")
-            raise e
-
-    # TODO: Move this to Web()
-    def get_files(self, updated_only: bool = False) -> list:
-        """
-        Retrieves a list of files from the cloud database.
-        Note that this function does not return files that have been deleted from the cloud.
-
-        Args:
-        - updated_only (bool): optional
-            If True, only returns files that have been updated.
-            Defaults to False.
-
-        Returns:
-        - list: A list of file paths.
-
-        Raises:
-        - GetFilesError: If an error occurs during the download process.
-        """
-        LOGGER.info("Retrieving files from cloud database")
-        try:
-            db_tmp_path = ""
-            cloud_db = None
-            try:
-                db_tmp_path = tempfile.mkdtemp()
-                cloud_hash_db_path = self._web_man.download_hash_db(
-                    os.path.join(db_tmp_path, "cloud_hashes.db")
-                )
-
-                LOGGER.debug("DB Temp Dir Path: '%s'", db_tmp_path)
-                LOGGER.debug("Cloud Hash DB Path: '%s'", cloud_hash_db_path)
-
-                if not os.path.exists(cloud_hash_db_path):
-                    raise FileNotFoundError(cloud_hash_db_path)
-
-                cloud_db = hashing.HashDB(cloud_hash_db_path)
-                LOGGER.debug("Cloud DB Manager: '%s'", cloud_db)
-
-                compare_db = self.db_sum()
-
-                files = None
-
-                if updated_only:
-                    bad_files = [path for path, _, _ in compare_db.bad_files]
-                    files = compare_db.unique_files_cloud_db + bad_files
-                else:
-                    files = list(cloud_db.get_file_paths())
-
-                LOGGER.debug("Files Retrieved: '%s'", files)
-
-                return files
-            finally:
-                if isinstance(cloud_db, type(hashing.HashDB)):
-                    cloud_db.close()
-                else:
-                    LOGGER.warning("Cloud DB is not a HashDB object")
-                if db_tmp_path:
-                    shutil.rmtree(db_tmp_path)
-                    LOGGER.debug("Deleted '%s'", db_tmp_path)
-                else:
-                    LOGGER.warning("Tried deleting '%s' but did not exist", db_tmp_path)
-        except Exception as e:
-            LOGGER.exception("Error occurred while retrieving files from cloud database")
-            raise e
-
-    # TODO: Move this to Web()
-    def download_files(self, save_path: str = "", updated_only: bool = False) -> str:
-        """
-        Download cloud files and return the path where the files are saved.
-
-        Args:
-        - save_path (str): optional
-            The path to save the downloaded files.
-            If not provided, a temporary folder will be created.
-        - updated_only (bool): optional
-            If True, only download files that have changed or have been added.
-
-        Returns:
-        - str: The path where the files are saved.
-
-        Raises:
-        - Exception: If an error occurs during the download process.
-        """
-        LOGGER.info("Downloading files from cloud")
-        try:
-            if not save_path:
-                save_path = tempfile.mkdtemp()
-
-            LOGGER.debug("Save Path: '%s'", save_path)
-
-            files_to_download = None
-
-            if updated_only:
-                files_to_download = self.get_files(updated_only=True)
-            else:
-                files_to_download = self.get_files()
-
-            base_url = self._url.split(".pyupgrader")[0]
-            LOGGER.debug("Base Url: '%s'", base_url)
-
-            # Download files while maintaining directory structure
-            for file_path in files_to_download:
-                download_url = base_url + "/" + file_path
-                LOGGER.debug("Download Url: '%s'", download_url)
-
-                # Create save path
-                relative_path = os.path.dirname(file_path)
-                save_folder = os.path.join(save_path, relative_path)
-                os.makedirs(save_folder, exist_ok=True)
-                save_file = os.path.join(save_folder, os.path.basename(file_path))
-
-                self._web_man.download(download_url, save_file)
-
-            LOGGER.info("Files downloaded to %s", save_path)
-
-            return save_path
-        except Exception as e:
-            LOGGER.exception("Error occurred while downloading files from cloud")
-            raise e
-
-    def prepare_update(self, file_dir: str = "") -> str:
+    def prepare_update(self, file_dir: str) -> str:
         """
         Start the application update process.
         A 'actions' file will be created.
         This file is used by file_updater.py.
 
         Args:
-        - file_dir (str): optional
-            The directory where temporary files will be stored.
-            If not provided, a temporary directory will be created.
+        - file_dir (str):
+            Directory that has contains the downloaded files
 
         Returns:
         - str: The path to the actions file.
@@ -429,14 +254,9 @@ class UpdateManager:
         try:
             # init values
             cloud_config = self._web_man.get_config()
-            db_summary = self.db_sum()
-            download_files = False
-            if not file_dir:
-                file_dir = tempfile.mkdtemp()
-                download_files = True
+            db_summary = self._web_man.get_db_sum()
 
             LOGGER.debug("File Dir: '%s'", file_dir)
-            LOGGER.debug("Download Files: '%s'", download_files)
 
             # Create temp folder in file_dir for holding update settings
             tmp_setting_dir = tempfile.mkdtemp(dir=file_dir)
@@ -463,15 +283,10 @@ class UpdateManager:
                 "cleanup": cloud_config["cleanup"],
             }
 
-            # TODO: Do not download files from here
             # Set the 'update' value and download files as needed
             if not cloud_config["required_only"]:
-                if download_files:
-                    self.download_files(file_dir, updated_only=False)
-                update_details["update"] = self.get_files(updated_only=False)
+                update_details["update"] = self._web_man.get_files(updated_only=False)
             else:
-                if download_files:
-                    self.download_files(file_dir, updated_only=True)
                 bad_files_paths = [file_path for file_path, _, _ in db_summary.bad_files]
                 update_details["update"] = list(db_summary.unique_files_cloud_db) + bad_files_paths
 

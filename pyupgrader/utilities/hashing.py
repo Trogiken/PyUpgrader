@@ -11,6 +11,7 @@ Classes:
 
 Functions:
 - compare_databases(db1: str, db2: str) -> DBSummary
+    Compare two hash databases and return a summary of the differences.
 
 Exceptions:
 - HashingError: Exception raised for errors in the hashing process.

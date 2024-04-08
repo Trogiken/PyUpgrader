@@ -6,10 +6,10 @@ with open('README.md', encoding="utf-8") as f:
 
 setup(
     name='pyupgrader',
-    version='2.6.13b2',
+    version='3.5.13b2',
     author='Noah Blaszak',
     author_email='technology.misc@gmail.com',
-    description='Keep your Python code up to date on client machines.',
+    description='Keep your code up to date on client machines.',
     long_description=readme,
     long_description_content_type='text/markdown',
     project_urls={
