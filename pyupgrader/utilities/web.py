@@ -122,6 +122,7 @@ class DownloadThread(threading.Thread):
 
         return self._save_path
 
+
 # TODO: make a method that compiles the download percents and returns it
 class WebHandler:
     """
@@ -150,9 +151,15 @@ class WebHandler:
         Download cloud files and return the path where the files are saved
     """
 
-    def __init__(self, url: str, local_db_path: str, max_threads: int = 5):
+    def __init__(self, url: str, project_path: str, max_threads: int = 5):
+        config_man = helper.Config()
         self.url = url
-        self.local_db_path = local_db_path
+        self.project_path = project_path
+        self.pyupgrader_path = os.path.join(self.project_path, ".pyupgrader")
+        self.config_path = os.path.join(self.pyupgrader_path, "config.yaml")
+        self.local_db_path = os.path.join(
+            self.pyupgrader_path, config_man.load_yaml(self.config_path)["hash_db"]
+        )
         self._max_threads = max_threads
         self._config_url = self.url + "/config.yaml"
         self._config_man = helper.Config()

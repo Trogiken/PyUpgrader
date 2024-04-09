@@ -99,7 +99,7 @@ class UpdateManager:
         LOGGER.debug("Setting URL to: '%s'", value)
         try:
             self._url = value
-            self._web_man = web.WebHandler(self._url, self._local_hash_db_path)
+            self._web_man = web.WebHandler(self._url, self._project_path)
             self._validate_attributes()
         except Exception as e:
             LOGGER.exception("Error occurred while setting URL")
@@ -182,7 +182,7 @@ class UpdateManager:
 
             config_data = self._config_man.load_yaml(self._config_path)
             self._local_hash_db_path = os.path.join(self._pyupgrader_path, config_data["hash_db"])
-            self._web_man = web.WebHandler(self._url, self._local_hash_db_path)
+            self._web_man = web.WebHandler(self._url, self._project_path)
 
             LOGGER.debug("Local Hash DB Path: '%s'", self._local_hash_db_path)
             LOGGER.debug("Web Handler: '%s'", self._web_man)
@@ -283,7 +283,7 @@ class UpdateManager:
                 "cleanup": cloud_config["cleanup"],
             }
 
-            # Set the 'update' value and download files as needed
+            # Set the 'update' value
             if not cloud_config["required_only"]:
                 update_details["update"] = self._web_man.get_files(updated_only=False)
             else:

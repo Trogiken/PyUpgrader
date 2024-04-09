@@ -8,7 +8,7 @@ Classes:
 - Config: Helper class for managing configuration files.
 """
 
-from typing import List, Tuple, Union
+from typing import List, Tuple
 import logging
 import yaml
 
@@ -16,16 +16,16 @@ LOGGER = logging.getLogger(__name__)
 LOGGER.addHandler(logging.NullHandler())
 
 
-def normalize_paths(paths: Union[str, List[str]]) -> Union[str, List[str]]:
+def normalize_paths(paths: str | List[str]) -> str | List[str]:
     """
     Replace backslashes with forward slashes and remove trailing slashes
     in a path or a list of paths.
 
     Args:
-    - paths (Union[str, List[str]]): A path or a list of paths.
+    - paths (str | List[str]): The path or list of paths to normalize.
 
     Returns:
-    - Union[str, List[str]]: The normalized path or list of paths.
+    - str | List[str]: The normalized path or list of paths.
 
     Raises:
     - TypeError: If the input is not a string or a list of strings.
