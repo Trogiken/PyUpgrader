@@ -23,7 +23,7 @@ import threading
 import queue
 import requests
 from typing import List, Tuple
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, wait
 from pyupgrader.utilities import helper, hashing
 
 LOGGER = logging.getLogger(__name__)
@@ -131,8 +131,8 @@ class WebHandler:
     Attributes:
     - url: str
         URL to the .pyupgrader folder
-    - local_db_path: str
-        Path to the local hash database
+    - project_path: str
+        Path to the project folder
     - _max_threads: int
         Maximum number of threads to use for downloading files
 
@@ -152,6 +152,8 @@ class WebHandler:
     """
 
     def __init__(self, url: str, project_path: str, max_threads: int = 5):
+        LOGGER.debug("Initializing Web Handler...")
+
         config_man = helper.Config()
         self.url = url
         self.project_path = project_path
@@ -164,8 +166,18 @@ class WebHandler:
         self._config_url = self.url + "/config.yaml"
         self._config_man = helper.Config()
 
+        self.num_downloaded = 0
         self.task_queue = queue.Queue()
         self.executor = ThreadPoolExecutor(max_workers=self._max_threads)
+
+        LOGGER.debug("URL: '%s'", self.url)
+        LOGGER.debug("Project Path: '%s'", self.project_path)
+        LOGGER.debug("PyUpgrader Path: '%s'", self.pyupgrader_path)
+        LOGGER.debug("Config Path: '%s'", self.config_path)
+        LOGGER.debug("Local DB Path: '%s'", self.local_db_path)
+        LOGGER.debug("Max Threads: '%s'", self._max_threads)
+        LOGGER.debug("Config URL: '%s'", self._config_url)
+        LOGGER.debug("Web Handler Initialized")
 
     def __str__(self) -> str:
         return f"Web Handler for {self.url}"
@@ -177,16 +189,39 @@ class WebHandler:
         """
         Start downloading files from the task queue.
         """
-        while not self.task_queue.empty():
-            # Limit the number of threads to avoid exceeding the maximum
-            num_threads = min(self._max_threads, self.task_queue.qsize())
-            # Submit download tasks to the executor
-            for _ in range(num_threads):
-                url, save_path = self.task_queue.get()
-                download_thread = DownloadThread(url, save_path)
-                self.executor.submit(download_thread.start)
+        LOGGER.debug("Starting downloads...")
+        try:
+            futures = set()
+            while not self.task_queue.empty():
+                # Limit the number of threads to avoid exceeding the maximum
+                while len(futures) < self._max_threads and not self.task_queue.empty():
+                    LOGGER.debug("Starting new download...")
+                    url, save_path = self.task_queue.get()
+                    download_thread = DownloadThread(url, save_path)
+                    future = self.executor.submit(download_thread.start)
+                    # use add_done_callback to handle the result of the download??
+                    futures.add(future)
+                while len(futures) >= self._max_threads:
+                    # Wait for at least one download to finish before starting a new one
+                    LOGGER.debug("Waiting for downloads to finish...")
+                    done, futures = wait(futures, return_when='FIRST_COMPLETED')
+                    self.num_downloaded += len(done)
+                    LOGGER.debug("Number of completed downloads: %s", self.num_downloaded)
+                    LOGGER.debug("Number of remaining downloads: %s", self.task_queue.qsize())
 
-    def download(self, downloads: List[Tuple[str, str]] | Tuple) -> queue.Queue:
+            if futures:
+                # Wait for all remaining downloads to finish
+                LOGGER.debug("Waiting for remaining downloads to finish...")
+                done, _ = wait(futures)
+                self.num_downloaded += len(done)
+                LOGGER.debug("Number of completed downloads: %s", self.num_downloaded)
+                LOGGER.debug("Number of remaining downloads: %s", self.task_queue.qsize())
+            LOGGER.debug("Downloads completed")
+        except Exception as e:
+            LOGGER.exception("Error occurred while downloading files")
+            raise e
+
+    def download(self, downloads: List[Tuple[str, str]] | Tuple) -> None:
         """
         Download files from the specified URLs and save them to the specified paths.
 
@@ -195,6 +230,8 @@ class WebHandler:
             List of tuples containing the URL and the save path,
             Or a single tuple containing the URL and the save path.
         """
+        LOGGER.debug("Downloading: %s", downloads)
+
         if isinstance(downloads, tuple):
             self.task_queue.put(downloads)
         elif isinstance(downloads, list):
@@ -203,9 +240,10 @@ class WebHandler:
         else:
             raise TypeError(f"Task must be a tuple or list, not {type(downloads)}")
 
-        self._start_downloads()
-
-        return self.task_queue
+        # FIXME: This is causing a problem, running it as a thread.
+        download_thread = threading.Thread(target=self._start_downloads)
+        download_thread.daemon = True
+        download_thread.start()
 
     def get_config(self) -> dict:
         """
@@ -232,7 +270,9 @@ class WebHandler:
         db_name = config["hash_db"]
         LOGGER.debug("DB Name: '%s'", db_name)
 
-        return self.download((self.url + "/" + db_name, save_path))
+        self.download((self.url + "/" + db_name, save_path))
+
+        return save_path
 
     def get_db_sum(self) -> hashing.DBSummary:
         """
