@@ -157,6 +157,16 @@ class UpdateManager:
             raise e
 
     @property
+    def pyupgrader_path(self) -> str:
+        """
+        Get the path to the .pyupgrader folder.
+
+        Returns:
+        - str: The path to the .pyupgrader folder.
+        """
+        return self._pyupgrader_path
+
+    @property
     def config_path(self) -> str:
         """
         Get the path to the config file.
