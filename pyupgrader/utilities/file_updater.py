@@ -249,10 +249,14 @@ def main():
     else:
         LOGGER.info("Downloads directory left at %s", downloads_dir)
 
-    LOGGER.info("Update completed successfully. Restarting application...")
+    LOGGER.info("Update completed successfully")
 
     # Start the application
-    os.execv(sys.executable, [sys.executable, startup_path])
+    if os.path.exists(startup_path):
+        LOGGER.info("Starting application...")
+        os.execv(sys.executable, [sys.executable, startup_path])
+    else:
+        LOGGER.warning("Startup path not found at %s", startup_path)
 
 
 if __name__ == "__main__":
