@@ -249,7 +249,7 @@ def main():
     else:
         LOGGER.info("Downloads directory left at %s", downloads_dir)
 
-    LOGGER.info("Update completed successfully.")
+    LOGGER.info("Update completed successfully")
 
     # Start the application
     if os.path.exists(startup_path):
