@@ -13,10 +13,11 @@ Exceptions:
 """
 
 import os
+import sys
+import subprocess
 import tempfile
 import shutil
 import pickle
-import sys
 import logging
 import requests
 from packaging.version import Version
@@ -155,6 +156,16 @@ class UpdateManager:
         except Exception as e:
             LOGGER.exception("Error occurred while setting project path")
             raise e
+
+    @property
+    def pyupgrader_path(self) -> str:
+        """
+        Get the path to the .pyupgrader folder.
+
+        Returns:
+        - str: The path to the .pyupgrader folder.
+        """
+        return self._pyupgrader_path
 
     @property
     def config_path(self) -> str:
@@ -504,7 +515,8 @@ class UpdateManager:
 
     def update(self, actions_path: str) -> None:
         """
-        Start the application update process. This function will replace the current process.
+        Start the application update process. This function will start a new process.
+        It is advised to unlink all file descriptors before calling this function.
 
         Args:
         - actions_path (str): The path to the actions file.
@@ -523,11 +535,11 @@ class UpdateManager:
 
             LOGGER.debug("Updater Path: '%s'", updater_path)
 
-            args = ["-a", actions_path]
+            args = [sys.executable, updater_path, "-a", actions_path]
 
             LOGGER.debug("Args: '%s'", args)
 
-            os.execv(sys.executable, [sys.executable, updater_path] + args)
+            subprocess.run(args, check=True)
         except Exception as e:
             LOGGER.exception("Error occurred during update process")
             raise e
