@@ -2,9 +2,10 @@
 
 import argparse
 import os
+import sys
+import subprocess
 import pickle
 import shutil
-import sys
 import datetime
 import logging
 from time import sleep
@@ -254,7 +255,8 @@ def main():
     # Start the application
     if os.path.exists(startup_path):
         LOGGER.info("Starting application...")
-        os.execv(sys.executable, [sys.executable, startup_path])
+        args = [sys.executable, startup_path]
+        subprocess.run(args, check=True)
     else:
         LOGGER.warning("Startup path not found at %s", startup_path)
 
