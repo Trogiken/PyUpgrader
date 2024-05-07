@@ -7,6 +7,7 @@ import shutil
 import sys
 import datetime
 import logging
+import subprocess
 from time import sleep
 
 dump_dir = os.path.join(os.path.dirname(__file__), "Update_Logs")
@@ -254,7 +255,8 @@ def main():
     # Start the application
     if os.path.exists(startup_path):
         LOGGER.info("Starting application...")
-        os.execv(sys.executable, [sys.executable, startup_path])
+        args = [sys.executable, startup_path]
+        subprocess.run(args, check=True)
     else:
         LOGGER.warning("Startup path not found at %s", startup_path)
 
