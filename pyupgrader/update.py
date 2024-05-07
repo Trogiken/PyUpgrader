@@ -13,13 +13,13 @@ Exceptions:
 """
 
 import os
+import sys
+import subprocess
 import tempfile
 import shutil
 import pickle
-import sys
 import logging
 import requests
-import subprocess
 from packaging.version import Version
 from pyupgrader.utilities import helper, hashing
 

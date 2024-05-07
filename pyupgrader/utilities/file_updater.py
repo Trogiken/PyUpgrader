@@ -2,12 +2,12 @@
 
 import argparse
 import os
+import sys
+import subprocess
 import pickle
 import shutil
-import sys
 import datetime
 import logging
-import subprocess
 from time import sleep
 
 dump_dir = os.path.join(os.path.dirname(__file__), "Update_Logs")
